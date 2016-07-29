@@ -26,6 +26,10 @@ public class StorageManagerTest extends InstrumentationTestCase {
         context = getInstrumentation().getTargetContext();
     }
 
+
+    /**
+     * list of paths for all mountable volumes.
+     */
     public void testGetDeviceStorageInfo() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         ArrayList<StorageEntity> storageEntities = new ArrayList<StorageEntity>();
         StorageManager storageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
@@ -50,6 +54,7 @@ public class StorageManagerTest extends InstrumentationTestCase {
                     availableCapacityMessage);
             storageEntities.add(storageEntity);
         }
+        assertTrue(storageEntities.size() > 0);
 
         // print infos
         Log.i(TAG, "[testGetDeviceStorageInfo]storage count = " + storageEntities.size());
