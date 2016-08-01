@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 /**
+ * use StorageManager to get device's storage info;
  * Created by Kaede on 16/7/29.
  */
 public class StorageManagerTest extends InstrumentationTestCase {
