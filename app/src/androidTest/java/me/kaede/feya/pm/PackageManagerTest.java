@@ -49,4 +49,18 @@ public class PackageManagerTest extends InstrumentationTestCase {
             Log.i(TAG, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> package info end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         }
     }
+
+    public void testIsPackageInstalled() {
+        String packageName = "tv.danmaku.bili";
+        PackageInfo packageInfo = null;
+        try {
+            packageInfo = mContext.getPackageManager().getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        Log.d(TAG, "is " + packageName + " installed = " + (packageInfo != null));
+        if (packageInfo != null) {
+            Log.d(TAG, packageName + "'s packageInfo = " + packageInfo.toString());
+        }
+    }
 }

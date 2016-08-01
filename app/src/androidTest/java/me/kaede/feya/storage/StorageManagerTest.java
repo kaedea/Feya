@@ -36,6 +36,7 @@ public class StorageManagerTest extends InstrumentationTestCase {
         StorageManager storageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
 
         String[] paths = (String[]) storageManager.getClass().getMethod("getVolumePaths", null).invoke(storageManager, null);
+        assertNotNull(paths);
         for (String path : paths) {
             StatFs mStatFs = new StatFs(path);
             long blockSize = mStatFs.getBlockSize();
@@ -48,6 +49,7 @@ public class StorageManagerTest extends InstrumentationTestCase {
             String availableCapacityMessage = Formatter.formatFileSize(context, availableCapacity);
 
             String status = (String) storageManager.getClass().getMethod("getVolumeState", String.class).invoke(storageManager, path);
+            assertNotNull(status);
             if (status.equals(Environment.MEDIA_MOUNTED)) {
                 isEnable = true;
             }
