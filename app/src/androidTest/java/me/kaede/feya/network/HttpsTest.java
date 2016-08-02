@@ -48,7 +48,7 @@ public class HttpsTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    public void testGetHttpsByHttpsUrlConnection() {
+    public void testHttpsGetByHttpsUrlConnection() {
         String url = "https://yande.re/post?tags=arsenixc";
         String html = null;
         try {
@@ -74,7 +74,7 @@ public class HttpsTest extends InstrumentationTestCase {
                     return true;
                 }
             });
-
+            // use https url connection
             HttpsURLConnection connection = (HttpsURLConnection) mUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setReadTimeout(10000);
@@ -96,7 +96,7 @@ public class HttpsTest extends InstrumentationTestCase {
         Log.d(TAG, "html = " + html);
     }
 
-    public void testGetHttpsByHttpClient() {
+    public void testHttpsGetByHttpClient() {
         // this test should success, but the ssl socket factory is not suitable
         String url = "https://yande.re/post?tags=arsenixc";
         String html = null;
