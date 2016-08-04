@@ -22,7 +22,10 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +33,6 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
 /**
  * test get https response using custom ssl socket factory.
@@ -48,61 +49,53 @@ public class HttpsTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
+    // 使用默认的 HttpsURLConnection 实现，直接能完成
     public void testHttpsGetByHttpsUrlConnection() {
-        String url = "https://www.google.com";
+        String url = "https://yande.re/post?tags=arsenixc";
         String html = null;
+        InputStream mInputStream = null;
+        ByteArrayOutputStream mByteArrayOutputStream = null;
+        HttpsURLConnection connection = null;
         try {
             URL mUrl = new URL(url);
-            // Create a trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                    return new java.security.cert.X509Certificate[]{};
-                }
 
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                    for (X509Certificate item :
-                            chain) {
-                        Log.d(TAG, "[checkClientTrusted]certificate = " + item.toString());
-                    }
-                }
-
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                    for (X509Certificate item :
-                            chain) {
-                        chain[0].checkValidity();
-                        Log.d(TAG, "[checkServerTrusted]certificate = " + item.toString());
-                    }
-                }
-            }};
-            SSLContext sc = SSLContext.getInstance("TLS");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
             // use https url connection
-            HttpsURLConnection connection = (HttpsURLConnection) mUrl.openConnection();
+            connection = (HttpsURLConnection) mUrl.openConnection();
             connection.setRequestMethod("GET");
             connection.setReadTimeout(10000);
-            InputStream mInputStream = connection.getInputStream();
-            ByteArrayOutputStream mByteArrayOutputStream = new ByteArrayOutputStream();
+            mInputStream = connection.getInputStream();
+            mByteArrayOutputStream = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
             int len = 0;
             while ((len = mInputStream.read(buffer)) != -1) {
                 mByteArrayOutputStream.write(buffer, 0, len);
             }
-            mInputStream.close();
-            connection.disconnect();
             html = new String(mByteArrayOutputStream.toByteArray(), "utf-8");
         } catch (Exception e) {
             e.printStackTrace();
             Log.w(TAG, "exception = " + e);
+        } finally {
+            if (mInputStream != null) {
+                try {
+                    mInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (mByteArrayOutputStream != null) {
+                try {
+                    mByteArrayOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
+
         }
         assertNotNull(html);
-        Log.d(TAG, "html = " + html);
+        Log.d(TAG, "url content = " + html);
     }
 
     public void testHttpsGetByHttpClient() {

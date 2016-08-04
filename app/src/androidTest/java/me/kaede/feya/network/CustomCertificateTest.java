@@ -28,6 +28,7 @@ public class CustomCertificateTest extends InstrumentationTestCase {
 
     // custom certificate with empty verify
     // work, but this is unsafe
+    // https url connection
     public void testCustomCer1() {
         String url = "https://certs.cac.washington.edu/CAtest/";
         String html = null;
