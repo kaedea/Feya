@@ -49,7 +49,7 @@ public class HttpsTest extends InstrumentationTestCase {
     }
 
     public void testHttpsGetByHttpsUrlConnection() {
-        String url = "https://yande.re/post?tags=arsenixc";
+        String url = "https://www.google.com";
         String html = null;
         try {
             URL mUrl = new URL(url);
@@ -60,9 +60,18 @@ public class HttpsTest extends InstrumentationTestCase {
                 }
 
                 public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    for (X509Certificate item :
+                            chain) {
+                        Log.d(TAG, "[checkClientTrusted]certificate = " + item.toString());
+                    }
                 }
 
                 public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    for (X509Certificate item :
+                            chain) {
+                        chain[0].checkValidity();
+                        Log.d(TAG, "[checkServerTrusted]certificate = " + item.toString());
+                    }
                 }
             }};
             SSLContext sc = SSLContext.getInstance("TLS");
