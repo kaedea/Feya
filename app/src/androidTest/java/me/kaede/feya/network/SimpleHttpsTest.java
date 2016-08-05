@@ -26,6 +26,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,9 +39,9 @@ import java.security.*;
  * test get https response using custom ssl socket factory.
  * Created by Kaede on 16/8/1.
  */
-public class HttpsTest extends InstrumentationTestCase {
+public class SimpleHttpsTest extends InstrumentationTestCase {
 
-    public static final String TAG = "HttpsTest";
+    public static final String TAG = "SimpleHttpsTest";
     private Context mContext;
 
     @Override
@@ -51,7 +52,8 @@ public class HttpsTest extends InstrumentationTestCase {
 
     // 使用默认的 HttpsURLConnection 实现，直接能完成
     public void testHttpsGetByHttpsUrlConnection() {
-        String url = "https://yande.re/post?tags=arsenixc";
+        // String url = "https://www.google.com";
+        String url = "https://certs.cac.washington.edu/CAtest/";
         String html = null;
         InputStream mInputStream = null;
         ByteArrayOutputStream mByteArrayOutputStream = null;
@@ -99,10 +101,9 @@ public class HttpsTest extends InstrumentationTestCase {
     }
 
     public void testHttpsGetByHttpClient() {
-        // this test should success, but the ssl socket factory is not suitable
-        String url = "https://yande.re/post?tags=arsenixc";
+        String url = "https://www.google.com";
         String html = null;
-        HttpClient httpClient = getHttpsClient();
+        HttpClient httpClient = new DefaultHttpClient();
         assertNotNull(httpClient);
 
         HttpGet httpget = new HttpGet(url);
@@ -125,6 +126,8 @@ public class HttpsTest extends InstrumentationTestCase {
         assertNotNull(html);
         Log.d(TAG, "html = " + html);
     }
+
+
 
     private static HttpClient getHttpsClient() {
         // allow all host name
@@ -163,7 +166,7 @@ public class HttpsTest extends InstrumentationTestCase {
                 }
 
                 @Override
-                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                public void checkClientTrusted(X509Certificate[] chain, String authType)
                         throws java.security.cert.CertificateException {
                 }
 
