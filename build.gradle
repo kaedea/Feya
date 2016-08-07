@@ -3,8 +3,8 @@
 buildscript {
     ext {
         buildGradle = '2.1.2';
-        buildToolsVersion = '23.0.2'
-        targetSdkVersion = 22
+        buildToolsVersion = '22.0.1'
+        targetSdkVersion = 24
         minSdkVersion = 15
         androidSupportLibraryVersion = '22.2.1'
     }

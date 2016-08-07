@@ -5,6 +5,7 @@ import android.test.InstrumentationTestCase;
 import android.util.Log;
 
 import javax.net.ssl.*;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
 /**
+ * dealing with https of self-signed certificate
  * Created by Kaede on 16/8/4.
  */
 public class CustomCertificateTest extends InstrumentationTestCase {
@@ -54,9 +56,11 @@ public class CustomCertificateTest extends InstrumentationTestCase {
 
     }
 
-    // custom certificate with empty verify
-    // work, but this is unsafe, the client will not will check server's validity
-    // use https url connection
+    /**
+     * use https url connection
+     * use built-in certificates with empty TrustManager (no verifying)
+     * work, but this is unsafe, the client will not will check server's validity
+     */
     public void testCustomCer1() {
         String url = "https://certs.cac.washington.edu/CAtest/";
         String html = null;
@@ -136,9 +140,12 @@ public class CustomCertificateTest extends InstrumentationTestCase {
         Log.d(TAG, "url content = " + html);
     }
 
-
+    /**
+     * use https url connection
+     * custom certificate with default TrustManager (default algorithm)
+     */
     public void testCustomCer2() {
-        String url = "https://certs.cac.washington.edu/CAtest/";
+        String url = "https://www.google.com";
         String html = null;
         InputStream mInputStream = null;
         ByteArrayOutputStream mByteArrayOutputStream = null;
@@ -153,24 +160,26 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             Log.i("Longer", "ca=" + ((X509Certificate) ca).getSubjectDN());
             Log.i("Longer", "key=" + ca.getPublicKey());
             caInput.close();
-            // Create a KeyStore containing our trusted CAs
+            // 1. Create a KeyStore containing our trusted CAs
+            // but this keystore do not contain Android Central KeyStore, therefore it can only
+            // work with our custom server url
             String keyStoreType = KeyStore.getDefaultType();
             KeyStore keyStore = KeyStore.getInstance(keyStoreType);
             keyStore.load(null, null);
             keyStore.setCertificateEntry("ca", ca);
-            // Create a TrustManager that trusts the CAs in our KeyStore
+            // 2. Create a TrustManager that trusts the CAs in our KeyStore
             String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
             tmf.init(keyStore);
-            // Create an SSLContext that uses our TrustManager
+            // 3. Create an SSLContext that uses our TrustManager
             SSLContext sslContext = SSLContext.getInstance("TLSv1", "AndroidOpenSSL");
             sslContext.init(null, tmf.getTrustManagers(), null);
-            // ssl socket factory
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-
-            // use https url connection
+            // 4. create https url connection
             URL mUrl = new URL(url);
             connection = (HttpsURLConnection) mUrl.openConnection();
+            // 5. ssl socket factory
+            // or use HttpsURLConnection#setDefaultSSLSocketFactory for all connection
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setRequestMethod("GET");
             connection.setReadTimeout(10000);
             mInputStream = connection.getInputStream();
