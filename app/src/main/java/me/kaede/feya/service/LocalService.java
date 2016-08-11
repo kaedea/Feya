@@ -19,6 +19,8 @@ import me.kaede.feya.R;
  * Created by Kaede on 16/8/10.
  */
 public class LocalService extends Service {
+    public static final String TAG = "LocalService";
+
     private NotificationManager mNM;
 
     // Unique Identification Number for the Notification.
@@ -38,20 +40,29 @@ public class LocalService extends Service {
 
     @Override
     public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        Log.i(TAG, "[onCreate]");
+        mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
     }
 
     @Override
+    public void onStart(Intent intent, int startId) {
+        super.onStart(intent, startId);
+        Log.i(TAG, "[onStart]service start id " + startId + ": " + intent);
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("LocalService", "Received start id " + startId + ": " + intent);
+        Log.i(TAG, "[onStartCommand]Received flags" + flags + "start id " + startId + ": " + intent);
         return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, "[onDestroy]");
+
         // Cancel the persistent notification.
         mNM.cancel(NOTIFICATION);
 
@@ -61,7 +72,20 @@ public class LocalService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.i(TAG, "[onBind]");
         return mBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.i(TAG, "[onUnbind]");
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        Log.i(TAG, "[onRebind]");
+        super.onRebind(intent);
     }
 
     // This is the object that receives interactions from clients.  See

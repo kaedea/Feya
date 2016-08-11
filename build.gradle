@@ -4,7 +4,7 @@ buildscript {
     ext {
         buildGradle = '2.1.2';
         buildToolsVersion = '23.0.2'
-        targetSdkVersion = 24
+        targetSdkVersion = 23
         minSdkVersion = 15
         androidSupportLibraryVersion = '23.4.0'
     }
@@ -13,6 +13,7 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${rootProject.ext.buildGradle}"
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
