@@ -8,7 +8,7 @@ import android.support.v7.widget.Toolbar;
 
 import me.kaede.feya.home.DemoPagerAdapter;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

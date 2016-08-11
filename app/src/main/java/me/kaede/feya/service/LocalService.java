@@ -8,10 +8,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
+import me.kaede.feya.InternalUtils;
 import me.kaede.feya.MainActivity;
 import me.kaede.feya.R;
 
@@ -20,28 +22,25 @@ import me.kaede.feya.R;
  */
 public class LocalService extends Service {
     public static final String TAG = "LocalService";
+    public static final String EXTRA_STOPSELF = "extra_stopself_1";
 
+    private Handler mHandler;
     private NotificationManager mNM;
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
     private int NOTIFICATION = 10086;
 
-    /**
-     * Class for clients to access.  Because we know this service always
-     * runs in the same process as its clients, we don't need to deal with
-     * IPC.
-     */
-    public class LocalBinder extends Binder {
-        LocalService getService() {
-            return LocalService.this;
-        }
-    }
+    // This is the object that receives interactions from clients.  See
+    // RemoteService for a more complete example.
+    private final IBinder mBinder = new LocalBinder();
 
     @Override
     public void onCreate() {
         Log.i(TAG, "[onCreate]");
+        toast("onCreate");
         mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mHandler = new Handler(Looper.getMainLooper());
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
@@ -50,47 +49,67 @@ public class LocalService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.i(TAG, "[onStart]service start id " + startId + ": " + intent);
+        Log.i(TAG, "[onStart]service start id = " + startId + " : " + intent);
+        toast("onStart");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "[onStartCommand]Received flags" + flags + "start id " + startId + ": " + intent);
+        Log.i(TAG, "[onStartCommand]Received flags " + flags + ", start id = " + startId + " : " + intent);
+        toast("onStartCommand startId = " + startId);
+        int type = intent.getIntExtra(EXTRA_STOPSELF, -1);
+        if (type == 1) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    stopSelf();
+                }
+            }, 2000);
+        } else if (type == 2) {
+            final int id = startId;
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    stopSelf(id);
+                }
+            }, 2000);
+        }
         return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
         Log.i(TAG, "[onDestroy]");
+        toast("onDestroy");
 
         // Cancel the persistent notification.
         mNM.cancel(NOTIFICATION);
-
-        // Tell the user we stopped.
-        Toast.makeText(this, "service stop", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "[onBind]");
+        toast("onBind");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, "[onUnbind]");
+        toast("onUnbind");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onRebind(Intent intent) {
         Log.i(TAG, "[onRebind]");
+        toast("onRebind");
         super.onRebind(intent);
     }
 
-    // This is the object that receives interactions from clients.  See
-    // RemoteService for a more complete example.
-    private final IBinder mBinder = new LocalBinder();
+    public void toast(String msg) {
+        InternalUtils.toast(this, msg);
+    }
 
     /**
      * Show a notification while this service is running.
@@ -116,5 +135,16 @@ public class LocalService extends Service {
 
         // Send the notification.
         mNM.notify(NOTIFICATION, notification);
+    }
+
+    /**
+     * Class for clients to access.  Because we know this service always
+     * runs in the same process as its clients, we don't need to deal with
+     * IPC.
+     */
+    public class LocalBinder extends Binder {
+        LocalService getService() {
+            return LocalService.this;
+        }
     }
 }
