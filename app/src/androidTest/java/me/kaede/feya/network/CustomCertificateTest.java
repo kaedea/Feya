@@ -66,8 +66,9 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             // provided by https://itconnect.uw.edu/security/securing-computer/install/safari-os-x/
             InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
             Certificate ca = cf.generateCertificate(caInput);
-            Log.i(TAG, "ca = " + ((X509Certificate) ca).getSubjectDN());
-            Log.i(TAG, "key = " + ca.getPublicKey());
+            Log.i(TAG, "distinguished name = " + ((X509Certificate) ca).getSubjectDN());
+            Log.i(TAG, "public key = " + ca.getPublicKey());
+            Log.i(TAG, "certificate = " + ca.toString());
             caInput.close();
             keyStore.setCertificateEntry("ca", ca);
             aliases = keyStore.aliases();
@@ -197,8 +198,6 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             // provided by https://itconnect.uw.edu/security/securing-computer/install/safari-os-x/
             InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
             Certificate ca = cf.generateCertificate(caInput);
-            Log.i("Longer", "ca=" + ((X509Certificate) ca).getSubjectDN());
-            Log.i("Longer", "key=" + ca.getPublicKey());
             caInput.close();
             // 1. Create a KeyStore containing our trusted CAs
             // but this keystore do not contain Android Central KeyStore, therefore it can only
@@ -311,8 +310,6 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             // provided by https://itconnect.uw.edu/security/securing-computer/install/safari-os-x/
             InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
             final Certificate ca = cf.generateCertificate(caInput);
-            Log.i("Longer", "ca=" + ((X509Certificate) ca).getSubjectDN());
-            Log.i("Longer", "key=" + ca.getPublicKey());
             caInput.close();
             // 1. Create a KeyStore containing our trusted CAs
             // but this keystore do not contain Android Central KeyStore, therefore it can only
@@ -341,6 +338,8 @@ public class CustomCertificateTest extends InstrumentationTestCase {
                                 cert.checkValidity();
 
                                 // Verify the certificate's public key chain.
+                                // Verifies that this certificate was signed using the private key
+                                // that corresponds to the specified public key.
                                 try {
                                     cert.verify(ca.getPublicKey());
                                 } catch (NoSuchAlgorithmException | InvalidKeyException
