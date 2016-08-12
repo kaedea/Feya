@@ -35,7 +35,7 @@ public class StorageManagerTest extends InstrumentationTestCase {
         ArrayList<StorageEntity> storageEntities = new ArrayList<StorageEntity>();
         StorageManager storageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
 
-        String[] paths = (String[]) storageManager.getClass().getMethod("getVolumePaths", null).invoke(storageManager, null);
+        String[] paths = (String[]) storageManager.getClass().getMethod("getVolumePaths").invoke(storageManager);
         assertNotNull(paths);
         for (String path : paths) {
             StatFs mStatFs = new StatFs(path);
