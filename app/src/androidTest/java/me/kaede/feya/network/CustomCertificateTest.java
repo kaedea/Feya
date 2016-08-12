@@ -46,42 +46,6 @@ public class CustomCertificateTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    public void testGetLocalKeyStore() {
-        try {
-            //// TODO: 16/8/7 is there a way to access device‘s central keystore ？
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-            Enumeration<String> aliases = keyStore.aliases();
-            Log.i(TAG, "================= Android Central KeyStore =================");
-            while (aliases.hasMoreElements()) {
-                String item = aliases.nextElement();
-                // get nothing here
-                Log.i(TAG, "keystore alias = " + item);
-            }
-
-            Log.i(TAG, "Custom KeyStore");
-            Log.i(TAG, "================= Custom KeyStore =================");
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            // uwca.crt is custom certificate put in asset folder
-            // provided by https://itconnect.uw.edu/security/securing-computer/install/safari-os-x/
-            InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
-            Certificate ca = cf.generateCertificate(caInput);
-            Log.i(TAG, "distinguished name = " + ((X509Certificate) ca).getSubjectDN());
-            Log.i(TAG, "public key = " + ca.getPublicKey());
-            Log.i(TAG, "certificate = " + ca.toString());
-            caInput.close();
-            keyStore.setCertificateEntry("ca", ca);
-            aliases = keyStore.aliases();
-            while (aliases.hasMoreElements()) {
-                String item = aliases.nextElement();
-                // get only custom certificate here
-                Log.i(TAG, "keystore alias = " + item);
-            }
-        } catch (KeyStoreException | CertificateException | IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * use https url connection
      * use built-in certificates with empty TrustManager (no verifying)
