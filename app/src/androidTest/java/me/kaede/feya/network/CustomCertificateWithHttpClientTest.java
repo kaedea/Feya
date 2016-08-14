@@ -29,16 +29,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
@@ -169,14 +174,102 @@ public class CustomCertificateWithHttpClientTest extends InstrumentationTestCase
         return html;
     }
 
-    public static class SSLSocketFactoryEx extends SSLSocketFactory {
-        SSLContext sslContext = SSLContext.getInstance("TLS");
+    /**
+     * https server with custom certificate
+     * using {@link DefaultHttpClient}
+     * should succeed, since we use SSLSocketFactory with custom TrustManager that trust our custom certificate
+     */
+    public void testCustomSocketFactory1() {
+        String url = "https://certs.cac.washington.edu/CAtest/";
+        String html = doHttpsWithCustomSocketFactory(url);
+        assertNotNull(html);
+        Log.i(TAG, "html = " + html);
+    }
 
-        public SSLSocketFactoryEx(KeyStore truststore) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException,
-                UnrecoverableKeyException {
+    /**
+     * https server with custom certificate
+     * using {@link DefaultHttpClient}
+     * should fail, since our custom TrustManager had not yet support Central KeyStore (System)
+     */
+    public void testCustomSocketFactory2() {
+        String url = "https://qq.hao.com";
+        String html = doHttpsWithCustomSocketFactory(url);
+        assertTrue(TextUtils.isEmpty(html));
+    }
+
+    public String doHttpsWithCustomSocketFactory(String url) {
+        String html = null;
+        HttpGet httpget = new HttpGet(url);
+        HttpClient httpClient = null;
+        try {
+            // custom keystore
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            // uwca.crt is custom certificate put in asset folder
+            // provided by https://itconnect.uw.edu/security/securing-computer/install/safari-os-x/
+            InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
+            Certificate ca = cf.generateCertificate(caInput);
+            Log.i(TAG, "ca=" + ((X509Certificate) ca).getSubjectDN());
+            Log.i(TAG, "key=" + ca.getPublicKey());
+            caInput.close();
+
+            // 1. Create a KeyStore containing our trusted CAs
+            // but this keystore do not contain Android Central KeyStore, therefore it can only
+            // work with our custom server url
+            String keyStoreType = KeyStore.getDefaultType();
+            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("ca", ca);
+
+            // 2. Create custom SSLSocketFactory
+            SSLSocketFactory sslSocketFactory = new SSLSocketFactoryEx(keyStore);
+            HttpParams params = new BasicHttpParams();
+            HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+            HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+            SchemeRegistry registry = new SchemeRegistry();
+            registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+            registry.register(new Scheme("https", sslSocketFactory, 443));
+            ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
+
+            // 3. create HttpClient
+            httpClient = new DefaultHttpClient(ccm, params);
+
+            // 4. execute HttpClient
+            HttpResponse response = httpClient.execute(httpget);
+            int statusCode = response.getStatusLine().getStatusCode();
+            Log.i(TAG, "statusCode = " + statusCode);
+            if (statusCode == HttpStatus.SC_OK) {
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    html = EntityUtils.toString(entity);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "exception = " + e);
+        } finally {
+            if (httpClient != null) {
+                httpClient.getConnectionManager().shutdown();
+            }
+        }
+        return html;
+    }
+
+    public static class SSLSocketFactoryEx extends SSLSocketFactory {
+        SSLContext sslContext;
+        KeyStore keyStore;
+
+        public SSLSocketFactoryEx(KeyStore truststore) throws NoSuchAlgorithmException, KeyManagementException,
+                KeyStoreException, UnrecoverableKeyException {
             super(truststore);
+            this.keyStore = truststore;
+            init();
+        }
+
+        private void init() throws KeyManagementException, NoSuchAlgorithmException {
+            // SSLSocketFactory use builtin SSLContext (and TrustManager)
+            // so we need create and custom SSLContext
             TrustManager tm = new X509TrustManager() {
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                public X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
 
@@ -186,21 +279,51 @@ public class CustomCertificateWithHttpClientTest extends InstrumentationTestCase
                 }
 
                 @Override
-                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                public void checkServerTrusted(X509Certificate[] chain, String authType)
                         throws java.security.cert.CertificateException {
+                    for (X509Certificate cert : chain) {
+
+                        // Make sure that it hasn't expired.
+                        cert.checkValidity();
+
+                        // Verify the certificate's public key chain.
+                        try {
+                            Certificate certificate = keyStore.getCertificate("ca");
+                            cert.verify(certificate.getPublicKey());
+                        } catch (KeyStoreException | NoSuchAlgorithmException | InvalidKeyException
+                                | SignatureException | NoSuchProviderException e) {
+                            e.printStackTrace();
+                            Log.w(TAG, "verify exception = " + e);
+                            throw new CertificateException("invalidate certificate", e);
+                        }
+                    }
                 }
             };
+            sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{tm}, null);
         }
 
         @Override
         public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-            return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
+            // using custom SSLContext instead of the builtin one
+            SSLSocket sslSocket = (SSLSocket) sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
+            // BEGIN android-added
+            /*
+             * Make sure we have started the handshake before verifying.
+             * Otherwise when we go to the hostname verifier, it directly calls
+             * SSLSocket#getSession() which swallows SSL handshake errors.
+             */
+            sslSocket.startHandshake();
+            // END android-added
+            getHostnameVerifier().verify(host, sslSocket);
+            return sslSocket;
         }
 
         @Override
         public Socket createSocket() throws IOException {
-            return sslContext.getSocketFactory().createSocket();
+            // using custom SSLContext instead of the builtin one
+            javax.net.ssl.SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            return (SSLSocket) socketFactory.createSocket();
         }
     }
 }
