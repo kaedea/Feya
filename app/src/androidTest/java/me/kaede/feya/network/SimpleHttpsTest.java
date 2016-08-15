@@ -36,12 +36,13 @@ import java.net.UnknownHostException;
 import java.security.*;
 
 /**
- * test get https response using custom ssl socket factory.
+ * test get https response
+ * use Android's {@link HttpsURLConnection} & Apache's {@link HttpClient}
  * Created by Kaede on 16/8/1.
  */
 public class SimpleHttpsTest extends InstrumentationTestCase {
 
-    public static final String TAG = "SimpleHttpsTest";
+    public static final String TAG = "CustomCertificateTest";
     private Context mContext;
 
     @Override
@@ -50,10 +51,12 @@ public class SimpleHttpsTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    // 使用默认的 HttpsURLConnection 实现，直接能完成
+    /**
+     * curl normal https url
+     * use {@link HttpsURLConnection}
+     */
     public void testHttpsGetByHttpsUrlConnection() {
-        // String url = "https://www.google.com";
-        String url = "https://certs.cac.washington.edu/CAtest/";
+        String url = "https://hao.qq.com";
         String html = null;
         InputStream mInputStream = null;
         ByteArrayOutputStream mByteArrayOutputStream = null;
@@ -100,8 +103,12 @@ public class SimpleHttpsTest extends InstrumentationTestCase {
         Log.d(TAG, "url content = " + html);
     }
 
+    /**
+     * curl normal https url
+     * use {@link HttpClient}
+     */
     public void testHttpsGetByHttpClient() {
-        String url = "https://www.google.com";
+        String url = "https://hao.qq.com";
         String html = null;
         HttpClient httpClient = new DefaultHttpClient();
         assertNotNull(httpClient);
@@ -126,67 +133,4 @@ public class SimpleHttpsTest extends InstrumentationTestCase {
         assertNotNull(html);
         Log.d(TAG, "html = " + html);
     }
-
-
-
-    private static HttpClient getHttpsClient() {
-        // allow all host name
-        try {
-            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            trustStore.load(null, null);
-
-            SSLSocketFactory sf = new SSLSocketFactoryEx(trustStore);
-            sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-
-            HttpParams params = new BasicHttpParams();
-            HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-            HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
-
-            SchemeRegistry registry = new SchemeRegistry();
-            registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-            registry.register(new Scheme("https", sf, 443));
-
-            ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
-
-            return new DefaultHttpClient(ccm, params);
-        } catch (Exception e) {
-            return new DefaultHttpClient();
-        }
-    }
-
-    public static class SSLSocketFactoryEx extends SSLSocketFactory {
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-
-        public SSLSocketFactoryEx(KeyStore truststore) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException,
-                UnrecoverableKeyException {
-            super(truststore);
-            TrustManager tm = new X509TrustManager() {
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-
-                @Override
-                public void checkClientTrusted(X509Certificate[] chain, String authType)
-                        throws java.security.cert.CertificateException {
-                }
-
-                @Override
-                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
-                        throws java.security.cert.CertificateException {
-                }
-            };
-            sslContext.init(null, new TrustManager[]{tm}, null);
-        }
-
-        @Override
-        public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-            return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
-        }
-
-        @Override
-        public Socket createSocket() throws IOException {
-            return sslContext.getSocketFactory().createSocket();
-        }
-    }
-
 }

@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
@@ -20,7 +19,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -35,7 +33,7 @@ import javax.net.ssl.X509TrustManager;
  * using {@link HttpsURLConnection}
  * Created by Kaede on 16/8/4.
  */
-public class CustomCertificateTest extends InstrumentationTestCase {
+public class CustomCertificateWithUrlConnectionTest extends InstrumentationTestCase {
 
     public static final String TAG = "CustomCertificateTest";
     private Context mContext;
@@ -44,6 +42,59 @@ public class CustomCertificateTest extends InstrumentationTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         mContext = getInstrumentation().getTargetContext();
+    }
+
+    /**
+     * https server with custom certificate
+     * using {@link HttpsURLConnection}
+     * will fail, because the Central KeyStore (System) do not have our custom certificate
+     */
+    public void testHttpsWithUrlConnection() {
+        String url = "https://certs.cac.washington.edu/CAtest/";
+        String html = null;
+        InputStream mInputStream = null;
+        ByteArrayOutputStream mByteArrayOutputStream = null;
+        HttpsURLConnection connection = null;
+        try {
+            // use https url connection
+            URL mUrl = new URL(url);
+            connection = (HttpsURLConnection) mUrl.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setReadTimeout(10000);
+            mInputStream = connection.getInputStream();
+            mByteArrayOutputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int len = 0;
+            while ((len = mInputStream.read(buffer)) != -1) {
+                mByteArrayOutputStream.write(buffer, 0, len);
+            }
+            html = new String(mByteArrayOutputStream.toByteArray(), "utf-8");
+        } catch (Exception e) {
+            // will throw "javax.net.ssl.SSLHandshakeException: Unacceptable certificate: EMAILADDRESS=help@cac.washington.edu,
+            // CN=UW Services CA, OU=UW Services, O=University of Washington, ST=WA, C=US"
+            e.printStackTrace();
+            Log.w(TAG, "exception = " + e);
+        } finally {
+            if (mInputStream != null) {
+                try {
+                    mInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (mByteArrayOutputStream != null) {
+                try {
+                    mByteArrayOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
+
+        }
+        assertTrue(TextUtils.isEmpty(html));
     }
 
     /**
@@ -72,8 +123,7 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             }};
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustManagers, new java.security.SecureRandom());
-            // ssl socket factory
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
             // empty host name verifier
             HostnameVerifier hostnameVerifier = new HostnameVerifier() {
                 @Override
@@ -82,11 +132,15 @@ public class CustomCertificateTest extends InstrumentationTestCase {
                     return true;
                 }
             };
-            HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
 
             // use https url connection
             URL mUrl = new URL(url);
             connection = (HttpsURLConnection) mUrl.openConnection();
+
+            // set ssl socket factory & host name verifier
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setHostnameVerifier(hostnameVerifier);
+
             connection.setRequestMethod("GET");
             connection.setReadTimeout(10000);
             mInputStream = connection.getInputStream();
@@ -163,6 +217,7 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
             Certificate ca = cf.generateCertificate(caInput);
             caInput.close();
+
             // 1. Create a KeyStore containing our trusted CAs
             // but this keystore do not contain Android Central KeyStore, therefore it can only
             // work with our custom server url
@@ -170,13 +225,16 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             KeyStore keyStore = KeyStore.getInstance(keyStoreType);
             keyStore.load(null, null);
             keyStore.setCertificateEntry("ca", ca);
+
             // 2. Create a TrustManager that trusts the CAs in our KeyStore
             String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
             tmf.init(keyStore);
+
             // 3. Create an SSLContext that uses our TrustManager
             SSLContext sslContext = SSLContext.getInstance("TLSv1", "AndroidOpenSSL");
             sslContext.init(null, tmf.getTrustManagers(), null);
+
             // 4. set ssl socket factory for the connection
             // or use HttpsURLConnection#setDefaultSSLSocketFactory for all connection
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
@@ -275,6 +333,7 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             InputStream caInput = new BufferedInputStream(mContext.getAssets().open("uwca.crt"));
             final Certificate ca = cf.generateCertificate(caInput);
             caInput.close();
+
             // 1. Create a KeyStore containing our trusted CAs
             // but this keystore do not contain Android Central KeyStore, therefore it can only
             // work with our custom server url
@@ -282,6 +341,7 @@ public class CustomCertificateTest extends InstrumentationTestCase {
             KeyStore keyStore = KeyStore.getInstance(keyStoreType);
             keyStore.load(null, null);
             keyStore.setCertificateEntry("ca", ca);
+
             // 2. Create a custom TrustManager[]
             TrustManager[] trustManagers = {
                     new X509TrustManager() {

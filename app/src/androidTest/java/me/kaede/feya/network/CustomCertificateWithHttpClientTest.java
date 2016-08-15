@@ -94,30 +94,29 @@ public class CustomCertificateWithHttpClientTest extends InstrumentationTestCase
         assertTrue(TextUtils.isEmpty(html));
     }
 
-    /**
-     * https server with custom certificate
-     * using {@link DefaultHttpClient}
-     * should succeed, since we now have set custom certificate with custom KeyStore
-     */
     public void testCustomCertificate1() {
         String url = "https://certs.cac.washington.edu/CAtest/";
+
+        // should succeed, since we now have set custom certificate with custom KeyStore
         String html = doHttpsWithCustomKeyStore(url);
         assertNotNull(html);
         Log.i(TAG, "html = " + html);
     }
 
-    /**
-     * https server with custom certificate
-     * using {@link DefaultHttpClient}
-     * should fail, since our custom KeyStore only have our custom certificate
-     */
     public void testCustomCertificate2() {
         String url = "https://qq.hao.com";
+
+        // should fail, since our custom KeyStore only have our custom certificate
         String html = doHttpsWithCustomKeyStore(url);
         assertTrue(TextUtils.isEmpty(html));
     }
 
-    public String doHttpsWithCustomKeyStore(String url) {
+    /**
+     * https server with custom certificate
+     * using {@link DefaultHttpClient}
+     * using custom KeyStore with our server's custom certificate (self-signed)
+     */
+    private String doHttpsWithCustomKeyStore(String url) {
         String html = null;
         HttpGet httpget = new HttpGet(url);
         HttpClient httpClient = null;
@@ -174,29 +173,28 @@ public class CustomCertificateWithHttpClientTest extends InstrumentationTestCase
         return html;
     }
 
-    /**
-     * https server with custom certificate
-     * using {@link DefaultHttpClient}
-     * should succeed, since we use SSLSocketFactory with custom TrustManager that trust our custom certificate
-     */
     public void testCustomSocketFactory1() {
         String url = "https://certs.cac.washington.edu/CAtest/";
+
+        // should succeed, you know why~
         String html = doHttpsWithCustomSocketFactory(url);
         assertNotNull(html);
         Log.i(TAG, "html = " + html);
     }
 
-    /**
-     * https server with custom certificate
-     * using {@link DefaultHttpClient}
-     * should fail, since our custom TrustManager had not yet support Central KeyStore (System)
-     */
     public void testCustomSocketFactory2() {
         String url = "https://qq.hao.com";
+
+        // should fail, since our custom TrustManager had not yet support Central KeyStore (System)
         String html = doHttpsWithCustomSocketFactory(url);
         assertTrue(TextUtils.isEmpty(html));
     }
 
+    /**
+     * https server with custom certificate
+     * using {@link DefaultHttpClient}
+     * use SSLSocketFactory with custom TrustManager that trust our server's custom certificate (self-signed)
+     */
     public String doHttpsWithCustomSocketFactory(String url) {
         String html = null;
         HttpGet httpget = new HttpGet(url);
