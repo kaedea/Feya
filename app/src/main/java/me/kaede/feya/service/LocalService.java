@@ -22,7 +22,7 @@ import me.kaede.feya.R;
  */
 public class LocalService extends Service {
     public static final String TAG = "LocalService";
-    public static final String EXTRA_STOPSELF = "extra_stopself_1";
+    public static final String EXTRA_STOP_SELF = "extra_stop_self";
 
     private Handler mHandler;
     private NotificationManager mNM;
@@ -57,7 +57,7 @@ public class LocalService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "[onStartCommand]Received flags " + flags + ", start id = " + startId + " : " + intent);
         toast("onStartCommand startId = " + startId);
-        int type = intent.getIntExtra(EXTRA_STOPSELF, -1);
+        int type = intent.getIntExtra(EXTRA_STOP_SELF, -1);
         if (type == 1) {
             mHandler.postDelayed(new Runnable() {
                 @Override

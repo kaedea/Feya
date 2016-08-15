@@ -12,7 +12,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 /**
- * internal utils, do not use this utils in other modules.
+ * internal utils (˃◡˂)
+ * do not use this utils in other modules.
  */
 public class InternalUtils {
 

@@ -67,12 +67,12 @@ public class ServiceDemoActivity extends BaseActivity implements View.OnClickLis
                 break;
             case R.id.btn_stopSelf1:
                 intent = new Intent(this, LocalService.class);
-                intent.putExtra(LocalService.EXTRA_STOPSELF, 1);
+                intent.putExtra(LocalService.EXTRA_STOP_SELF, 1);
                 startService(intent);
                 break;
             case R.id.btn_stopSelf2:
                 intent = new Intent(this, LocalService.class);
-                intent.putExtra(LocalService.EXTRA_STOPSELF, 2);
+                intent.putExtra(LocalService.EXTRA_STOP_SELF, 2);
                 startService(intent);
                 break;
             default:

@@ -13,10 +13,9 @@ public class DemoProvider {
     static {
         demos = new ArrayMap<>();
         ActivityHolder camera = new ActivityHolder();
-        // media recorder
-        camera.addActivity("Service",
-                "Service api usage example",
-                ServiceDemoActivity.class);
+
+        // default demos
+        camera.addActivity("Service", "Service api usage example", ServiceDemoActivity.class);
         demos.put("Default", camera);
     }
 }
