@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,40 +10,74 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="me.kaede.feya.service.ServiceDemoActivity">
 
-    <Button
-        android:id="@+id/btn_start"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Service"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_stop"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Stop Service"/>
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Service" />
 
-    <Button
-        android:id="@+id/btn_bind"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Bind Service"/>
+        <Button
+            android:id="@+id/btn_stop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service" />
 
-    <Button
-        android:id="@+id/btn_unbind"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Unbind Service"/>
+        <Button
+            android:id="@+id/btn_bind"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bind Service" />
 
-    <Button
-        android:id="@+id/btn_stopSelf1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="stopSelf()"/>
+        <Button
+            android:id="@+id/btn_unbind"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unbind Service" />
 
-    <Button
-        android:id="@+id/btn_stopSelf2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="stopSelf(startId)"/>
+        <Button
+            android:id="@+id/btn_stopSelf1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="stopSelf()" />
+
+        <Button
+            android:id="@+id/btn_stopSelf2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="stopSelf(startId)" />
+
+        <android.support.v4.widget.Space
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+        <Button
+            android:id="@+id/btn_start_remote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Remote Service" />
+
+        <Button
+            android:id="@+id/btn_stop_remote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Remote Service" />
+
+        <Button
+            android:id="@+id/btn_bind_remote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bind Remote Service" />
+
+        <Button
+            android:id="@+id/btn_unbind_remote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unbind Remote Service" />
+    </LinearLayout>
 
 </LinearLayout>

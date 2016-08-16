@@ -25,13 +25,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".service.ServiceDemoActivity" />
 
         <service android:name=".service.LocalService" />
+
+        <service
+            android:name=".service.RemoteService"
+            android:process=":remote" />
+
         <service
             android:name=".ashmem.RemoteService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
     </application>
 
 </manifest>

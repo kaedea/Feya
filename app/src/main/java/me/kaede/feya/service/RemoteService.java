@@ -6,11 +6,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.RemoteException;
 import android.util.Log;
 
 import me.kaede.feya.InternalUtils;
@@ -20,9 +20,8 @@ import me.kaede.feya.R;
 /**
  * service run in remote process
  */
-public class LocalService extends Service {
+public class RemoteService extends Service {
     public static final String TAG = ServiceDemoActivity.TAG;
-    public static final String EXTRA_STOP_SELF = "extra_stop_self";
 
     private Handler mHandler;
     private NotificationManager mNM;
@@ -31,9 +30,21 @@ public class LocalService extends Service {
     // We use it on Notification start, and to cancel it.
     private int NOTIFICATION = 10086;
 
-    // This is the object that receives interactions from clients.  See
-    // RemoteService for a more complete example.
-    private final IBinder mBinder = new LocalBinder();
+    /**
+     * using aidl for IRemoteService
+     * see {@link IRemoteService}
+     */
+    private IBinder mBinder = new IRemoteService.Stub() {
+        @Override
+        public void toast(final String msg) throws RemoteException {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    RemoteService.this.toast(msg);
+                }
+            });
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -49,31 +60,14 @@ public class LocalService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
-        Log.i(TAG, "[onStart]service start id = " + startId + " : " + intent);
+        Log.i(TAG, "[onStart]remote service start id = " + startId + " : " + intent);
         toast("onStart");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "[onStartCommand]received flags " + flags + ", start id = " + startId + " : " + intent);
+        Log.i(TAG, "[onStartCommand]remote received flags " + flags + ", start id = " + startId + " : " + intent);
         toast("onStartCommand startId = " + startId);
-        int type = intent.getIntExtra(EXTRA_STOP_SELF, -1);
-        if (type == 1) {
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    stopSelf();
-                }
-            }, 2000);
-        } else if (type == 2) {
-            final int id = startId;
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    stopSelf(id);
-                }
-            }, 2000);
-        }
         return START_NOT_STICKY;
     }
 
@@ -128,23 +122,12 @@ public class LocalService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)  // the status icon
                 .setTicker(text)  // the status text
                 .setWhen(System.currentTimeMillis())  // the time stamp
-                .setContentTitle("Local Service")  // the label of the entry
+                .setContentTitle("Remote Service")  // the label of the entry
                 .setContentText(text)  // the contents of the entry
                 .setContentIntent(contentIntent)  // The intent to send when the entry is clicked
                 .build();
 
         // Send the notification.
         mNM.notify(NOTIFICATION, notification);
-    }
-
-    /**
-     * Class for clients to access.  Because we know this service always
-     * runs in the same process as its clients, we don't need to deal with
-     * IPC.
-     */
-    public class LocalBinder extends Binder {
-        LocalService getService() {
-            return LocalService.this;
-        }
     }
 }
