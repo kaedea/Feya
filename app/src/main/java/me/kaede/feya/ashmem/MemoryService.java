@@ -30,7 +30,9 @@ public class MemoryService extends IMemoryService.Stub {
 
         ParcelFileDescriptor pfd = null;
 
-        // // TODO: 16/8/15 ashmem usage accomplish
+        // TODO: 16/8/15 ashmem usage accomplish
+        // google remove MemoryFile#getParcelFileDescriptor from android 3.0
+        // how can we use MemoryFile and ashmem now ?
         /*try {
             pfd = file.getParcelFileDescriptor();
         } catch (IOException ex) {
