@@ -5,4 +5,6 @@ package me.kaede.feya.service;
 
 interface IRemoteService {
     void toast(String msg);
+
+    String talk(String msg);
 }

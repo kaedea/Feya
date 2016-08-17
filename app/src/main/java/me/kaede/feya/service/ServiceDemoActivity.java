@@ -162,7 +162,9 @@ public class ServiceDemoActivity extends BaseActivity implements View.OnClickLis
 
             // Tell the user about this for our demo.
             try {
-                remoteBinder.toast("call api from remote service");
+                // remoteBinder.toast("call api from remote service");
+                String msg = remoteBinder.talk("echo hello");
+                toast(msg);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }

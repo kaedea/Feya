@@ -44,6 +44,11 @@ public class RemoteService extends Service {
                 }
             });
         }
+
+        @Override
+        public String talk(String msg) throws RemoteException {
+            return "reply " + msg;
+        }
     };
 
     @Override
