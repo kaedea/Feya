@@ -12,7 +12,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.webkit.CookieManager;
+import android.webkit.JsPromptResult;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -129,7 +131,30 @@ public class WebActivity extends BaseActivity {
 
             @Override
             public void onReceivedTitle(WebView view, String title) {
+                // 1. 获得Page标题，再次可近似获取“白屏时间”
+                Log.i(TAG, "[onReceivedTitle] title = " + title);
                 getSupportActionBar().setTitle(title);
+
+                // 注入JS脚本, 监听 DOMContentLoaded 事件
+                view.loadUrl("javascript:" +
+                        "window.addEventListener('DOMContentLoaded', function() {" +
+                        "prompt('domc:' + new Date().getTime());" +
+                        "})");
+            }
+
+            @Override
+            public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+                Log.d(TAG, "[onJsPrompt] message = " + message);
+                if(message != null){
+                    String[] strs = message.split(":");
+                    if(2 == strs.length){
+                        if("domc".equals(strs[0])){
+                            Log.i(TAG, "[onReceivedTitle] DOMContentLoaded time = " + strs[1].trim());
+                        }
+                    }
+                }
+                result.confirm(defaultValue);
+                return true;
             }
 
             @Override
