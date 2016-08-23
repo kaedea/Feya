@@ -19,6 +19,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import me.kaede.feya.BaseActivity;
 import me.kaede.feya.BuildConfig;
 import me.kaede.feya.R;
@@ -28,8 +30,11 @@ public class WebActivity extends BaseActivity {
     static final String TAG = "WebActivity";
     private static final boolean DEBUG = BuildConfig.DEBUG;
 
-    private Toolbar toolbar;
-    private WebView webView;
+    @BindView(R.id.toolbar)
+    protected Toolbar toolbar;
+    @BindView(R.id.webview)
+    protected WebView webView;
+
     private JavaScriptBridge mJsbApp;
     private StopWatch stopWatch;
 
@@ -37,9 +42,9 @@ public class WebActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        ButterKnife.bind(this);
+
         setSupportActionBar(toolbar);
-        webView = (WebView) findViewById(R.id.webview);
         prepareWebView();
         stopWatch = new StopWatch();
         stopWatch.start("load url");
