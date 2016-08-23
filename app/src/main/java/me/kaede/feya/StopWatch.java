@@ -58,6 +58,14 @@ public class StopWatch implements Serializable {
         return stringBuilder.toString();
     }
 
+    @Override
+    public String toString() {
+        if (stringBuilder == null) {
+            return "not start yet";
+        }
+        return String.format("stop watch = %s", stringBuilder.toString());
+    }
+
     public interface Ticker {
         long currentTime();
 
