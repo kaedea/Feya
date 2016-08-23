@@ -56,13 +56,13 @@ public class WebActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         if (mJsbApp != null) {
             mJsbApp.onActivityDestoryed();
             mJsbApp = null;
         }
-
-        super.onDestroy();
         webView.destroy();
+        webView = null;
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -133,6 +133,7 @@ public class WebActivity extends BaseActivity {
                 return getApplicationContext();
             }
 
+            @TargetApi(Build.VERSION_CODES.KITKAT)
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 // 1. 获得Page标题，再次可近似获取“白屏时间”
@@ -141,11 +142,9 @@ public class WebActivity extends BaseActivity {
                 getSupportActionBar().setTitle(title);
 
                 // 注入JS脚本, 监听 DOMContentLoaded 事件
-                view.loadUrl("javascript:" +
-                        "window.addEventListener('DOMContentLoaded', function() {" +
-                        "prompt('domc:' + new Date().getTime());" +
-                        "})");
+                JavaScriptInjector.injectJS(view, JavaScriptInjector.getMonitorScript(getContext()));
             }
+
 
             @Override
             public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
@@ -156,6 +155,9 @@ public class WebActivity extends BaseActivity {
                         if ("domc".equals(strs[0])) {
                             stopWatch.split("DOMContentLoaded");
                             Log.i(TAG, "[onReceivedTitle] DOMContentLoaded time = " + strs[1].trim());
+                        } else if ("firstscreen".equals(strs[0])) {
+                            stopWatch.split("on first screen");
+                            Log.i(TAG, "[onReceivedTitle] first screen time = " + strs[1].trim());
                         }
                     }
                 }
@@ -204,13 +206,14 @@ public class WebActivity extends BaseActivity {
                     Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(url));
                     startActivity(intent);
                     return true;
-                } catch (Exception e) {
-
+                } catch (Exception ignore) {
+                    return false;
                 }
-                return false;
+
             }
 
             private boolean loadHttpScheme(Uri parsedUri) {
+                // Other custom scheme
                 return false;
             }
 
@@ -230,6 +233,7 @@ public class WebActivity extends BaseActivity {
     }
 
     protected boolean onOverrideUrlLoading(WebView view, Uri uri) {
+        // override by children
         return false;
     }
 }
