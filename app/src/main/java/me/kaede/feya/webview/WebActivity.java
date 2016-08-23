@@ -22,6 +22,7 @@ import android.webkit.WebViewClient;
 import me.kaede.feya.BaseActivity;
 import me.kaede.feya.BuildConfig;
 import me.kaede.feya.R;
+import me.kaede.feya.StopWatch;
 
 public class WebActivity extends BaseActivity {
     static final String TAG = "WebActivity";
@@ -30,6 +31,7 @@ public class WebActivity extends BaseActivity {
     private Toolbar toolbar;
     private WebView webView;
     private JavaScriptBridge mJsbApp;
+    private StopWatch stopWatch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +41,8 @@ public class WebActivity extends BaseActivity {
         setSupportActionBar(toolbar);
         webView = (WebView) findViewById(R.id.webview);
         prepareWebView();
+        stopWatch = new StopWatch();
+        stopWatch.start("load url");
         webView.loadUrl("http://www.bilibili.com/html/2233birthday-test-m.html");
     }
 
@@ -132,6 +136,7 @@ public class WebActivity extends BaseActivity {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 // 1. 获得Page标题，再次可近似获取“白屏时间”
+                stopWatch.split("title" + title);
                 Log.i(TAG, "[onReceivedTitle] title = " + title);
                 getSupportActionBar().setTitle(title);
 
@@ -145,10 +150,11 @@ public class WebActivity extends BaseActivity {
             @Override
             public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
                 Log.d(TAG, "[onJsPrompt] message = " + message);
-                if(message != null){
+                if (message != null) {
                     String[] strs = message.split(":");
-                    if(2 == strs.length){
-                        if("domc".equals(strs[0])){
+                    if (2 == strs.length) {
+                        if ("domc".equals(strs[0])) {
+                            stopWatch.split("DOMContentLoaded");
                             Log.i(TAG, "[onReceivedTitle] DOMContentLoaded time = " + strs[1].trim());
                         }
                     }
@@ -167,6 +173,7 @@ public class WebActivity extends BaseActivity {
         return new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                stopWatch.split("shouldOverrideUrlLoading");
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.addCategory(Intent.CATEGORY_DEFAULT);
                 Uri parsedUri = Uri.parse(url);
@@ -210,11 +217,14 @@ public class WebActivity extends BaseActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+                stopWatch.split("page started");
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                String msg = stopWatch.end("page finished");
+                Log.i(TAG, msg);
             }
         };
     }
