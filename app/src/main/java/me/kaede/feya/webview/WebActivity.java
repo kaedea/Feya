@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ *
+ */
+
 package me.kaede.feya.webview;
 
 import android.annotation.SuppressLint;
@@ -141,7 +146,7 @@ public class WebActivity extends BaseActivity {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 // 1. 获得Page标题，再次可近似获取“白屏时间”
-                stopWatch.split("title" + title);
+                stopWatch.split("title " + title);
                 Log.i(TAG, "[onReceivedTitle] title = " + title);
                 getSupportActionBar().setTitle(title);
 
@@ -168,6 +173,7 @@ public class WebActivity extends BaseActivity {
                         }
                     }
                 }
+
                 result.confirm(defaultValue);
                 return true;
             }

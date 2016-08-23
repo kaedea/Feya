@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2016. Kaede <kidhaibra@gmail.com>
+ * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ *
  */
 
 package me.kaede.feya;

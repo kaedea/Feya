@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ *
+ */
+
 package me.kaede.feya.home;
 
 import android.support.v4.app.Fragment;
