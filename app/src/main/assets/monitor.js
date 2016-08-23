@@ -4,6 +4,12 @@ function() {
     prompt('domc:' + new Date().getTime());
 })
 
+// log Page Loaded time
+window.addEventListener('load',
+function() {
+    prompt('load:' + new Date().getTime());
+})
+
 // log FirsScreen time (all visible images loaded)
 window.addEventListener('DOMContentLoaded',
 function() {

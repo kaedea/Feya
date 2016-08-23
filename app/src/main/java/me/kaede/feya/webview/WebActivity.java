@@ -133,7 +133,6 @@ public class WebActivity extends BaseActivity {
                 return getApplicationContext();
             }
 
-            @TargetApi(Build.VERSION_CODES.KITKAT)
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 // 1. 获得Page标题，再次可近似获取“白屏时间”
@@ -153,11 +152,14 @@ public class WebActivity extends BaseActivity {
                     String[] strs = message.split(":");
                     if (2 == strs.length) {
                         if ("domc".equals(strs[0])) {
-                            stopWatch.split("DOMContentLoaded");
-                            Log.i(TAG, "[onReceivedTitle] DOMContentLoaded time = " + strs[1].trim());
+                            stopWatch.split("on DOMContentLoaded");
+                            Log.i(TAG, "[onJsPrompt] DOMContentLoaded time = " + strs[1].trim());
                         } else if ("firstscreen".equals(strs[0])) {
                             stopWatch.split("on first screen");
-                            Log.i(TAG, "[onReceivedTitle] first screen time = " + strs[1].trim());
+                            Log.i(TAG, "[onJsPrompt] first screen time = " + strs[1].trim());
+                        } else if ("load".equals(strs[0])) {
+                            stopWatch.split("on page loaded");
+                            Log.i(TAG, "[onJsPrompt] page loaded time = " + strs[1].trim());
                         }
                     }
                 }
