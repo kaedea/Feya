@@ -40,4 +40,6 @@ dependencies {
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
 
     compile 'com.squareup.wire:wire-runtime:2.2.0'
+
+    compile 'commons-io:commons-io:2.4'
 }
