@@ -7,6 +7,7 @@ package me.kaede.feya.home;
 
 import android.support.v4.util.ArrayMap;
 
+import me.kaede.feya.protobuff.ProtobuffActivity;
 import me.kaede.feya.service.ServiceDemoActivity;
 import me.kaede.feya.webview.WebActivity;
 
@@ -23,6 +24,7 @@ public class DemoProvider {
         // default demos
         camera.addActivity("Service", "Service api usage example", ServiceDemoActivity.class);
         camera.addActivity("WebView", "JS Bridge, performance monitor", WebActivity.class);
+        camera.addActivity("Protobuff", "Protobuff, using square wire", ProtobuffActivity.class);
         demos.put("Default", camera);
     }
 }

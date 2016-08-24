@@ -3,7 +3,7 @@
  *
  */
 
-package me.kaede.feya.network;
+package me.kaede.feya.security;
 
 import android.content.Context;
 import android.test.InstrumentationTestCase;

@@ -3,7 +3,7 @@
  *
  */
 
-package me.kaede.feya.network;
+package me.kaede.feya.security;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -15,9 +15,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -28,7 +31,8 @@ import java.util.Enumeration;
  * Created by Kaede on 16/8/12.
  */
 public class KeyStoreTest extends InstrumentationTestCase {
-    public static final String TAG = "CustomCertificateTest";
+    public static final String TAG = "KeyStoreTest";
+
     private Context mContext;
 
     @Override
@@ -37,7 +41,10 @@ public class KeyStoreTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    public void testGetLocalKeyStore() {
+    /**
+     * create {@link KeyStore} with custom certificate
+     */
+    public void testCreateLocalKeyStore() {
         try {
             //// TODO: 16/8/7 is there a way to access device‘s central keystore ？
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -79,6 +86,9 @@ public class KeyStoreTest extends InstrumentationTestCase {
         return ca;
     }
 
+    /**
+     * load certificate form java string
+     */
     public void testLoadCertificateFromString() {
         try {
             Log.i(TAG, "================= certificate from file =================");
@@ -99,7 +109,7 @@ public class KeyStoreTest extends InstrumentationTestCase {
         }
     }
 
-    public InputStream getStringInputStream() throws UnsupportedEncodingException {
+    private InputStream getStringInputStream() throws UnsupportedEncodingException {
         // uwca.crt's content
         String uwca_crt = "-----BEGIN CERTIFICATE-----\n" +
                 "MIIEBzCCA3CgAwIBAgIBADANBgkqhkiG9w0BAQQFADCBlDELMAkGA1UEBhMCVVMx\n" +
@@ -126,5 +136,36 @@ public class KeyStoreTest extends InstrumentationTestCase {
                 "EskaIXSx0PywbyfIR1wWxMpr8gbCjAEUHNF/\n" +
                 "-----END CERTIFICATE-----\n";
         return new ByteArrayInputStream(uwca_crt.getBytes("UTF-8"));
+    }
+
+    /**
+     * load {@link KeyStore} form keystore file
+     */
+    public void testLoadKeyStoreFromJKS() {
+        try {
+
+            InputStream is = mContext.getAssets().open("keysotre_test-02.jks");
+            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+            String password = "123456";
+            char[] passwd = password.toCharArray();
+            keystore.load(is, passwd);
+            String alias = "test";
+            Key key = keystore.getKey(alias, passwd);
+            if (key instanceof PrivateKey) {
+                // Get certificate of public key
+                Certificate cert = keystore.getCertificate(alias);
+                Log.i(TAG, "distinguished name = " + ((X509Certificate) cert).getSubjectDN());
+                Log.i(TAG, "public key = " + cert.getPublicKey());
+                Log.i(TAG, "certificate = " + cert.toString());
+                // Get public key
+                PublicKey publicKey = cert.getPublicKey();
+
+                // String publicKeyString = Base64.de(publicKey.getEncoded());
+                // System.out.println(publicKeyString);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
