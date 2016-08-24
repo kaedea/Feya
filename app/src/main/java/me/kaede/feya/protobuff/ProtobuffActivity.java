@@ -14,16 +14,23 @@ import android.widget.Button;
 import com.squareup.dinosaurs.Dinosaur;
 import com.squareup.geology.Period;
 
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import me.kaede.feya.BaseActivity;
 import me.kaede.feya.R;
 
-public class ProtobuffActivity extends AppCompatActivity implements View.OnClickListener {
+public class ProtobuffActivity extends BaseActivity implements View.OnClickListener {
 
     public static final String TAG = "Protobuff";
 
     @BindView(R.id.btn1)
     Button btn1;
+    @BindView(R.id.btn2)
+    Button btn2;
+
+    private byte[] stegosaurusBytes = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +38,7 @@ public class ProtobuffActivity extends AppCompatActivity implements View.OnClick
         setContentView(R.layout.activity_protobuff);
         ButterKnife.bind(this);
         btn1.setOnClickListener(this);
+        btn2.setOnClickListener(this);
     }
 
     @Override
@@ -43,6 +51,30 @@ public class ProtobuffActivity extends AppCompatActivity implements View.OnClick
                         .build();
                 Log.d(TAG, "dinosaur name = " + stegosaurus.name + ", existed in the "
                         + stegosaurus.period + " period.");
+                toast("dinosaur name = " + stegosaurus.name + ", existed in the "
+                        + stegosaurus.period + " period.");
+
+                stegosaurusBytes = Dinosaur.ADAPTER.encode(stegosaurus);
+                String byteContent =  new String(stegosaurusBytes);
+                Log.d(TAG, "encoded byte content = " + byteContent);
+                toast("encoded byte content = " + byteContent);
+                break;
+
+            case R.id.btn2:
+                if (stegosaurusBytes == null) {
+                    Log.d(TAG, "pls create byte content first.");
+                    toast("pls create byte content first.");
+                    return;
+                }
+                try {
+                    Dinosaur tyrannosaurus = Dinosaur.ADAPTER.decode(stegosaurusBytes);
+                    Log.d(TAG, "dinosaur name = " + tyrannosaurus.name + ", existed in the "
+                            + tyrannosaurus.period + " period.");
+                    toast("dinosaur name = " + tyrannosaurus.name + ", existed in the "
+                            + tyrannosaurus.period + " period.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             default:
                 break;

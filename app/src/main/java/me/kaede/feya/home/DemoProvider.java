@@ -24,7 +24,7 @@ public class DemoProvider {
         // default demos
         camera.addActivity("Service", "Service api usage example", ServiceDemoActivity.class);
         camera.addActivity("WebView", "JS Bridge, performance monitor", WebActivity.class);
-        camera.addActivity("Protobuff", "Protobuff, using square wire", ProtobuffActivity.class);
+        camera.addActivity("Protocol Buff", "Protobuff, using square wire", ProtobuffActivity.class);
         demos.put("Default", camera);
     }
 }
