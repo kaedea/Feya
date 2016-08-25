@@ -24,6 +24,11 @@ public class JavaScriptBridge {
         if (mActivity != null) mActivity.finish();
     }
 
+    @JavascriptInterface
+    public long getCurrentTime() {
+        return System.currentTimeMillis();
+    }
+
     public void onActivityDestoryed() {
         mActivity = null;
     }

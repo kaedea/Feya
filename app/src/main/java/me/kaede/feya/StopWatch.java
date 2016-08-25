@@ -8,17 +8,19 @@ package me.kaede.feya;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Watch Dog
  * Created by Kaede on 16/8/17.
  */
 public class StopWatch implements Serializable {
-    private long startTime;
-    private long splitTime;
-    private long endTime;
-    private StringBuilder stringBuilder;
-    private Ticker ticker;
+
+    protected long startTime;
+    protected long endTime;
+    protected StringBuilder stringBuilder;
+    protected Ticker ticker;
 
     /**
      * {name → [tag1 = 100 ms] → [tag1 = 100 ms] ：all = 200 ms}
@@ -33,7 +35,6 @@ public class StopWatch implements Serializable {
 
     public StopWatch start(String name) {
         startTime = ticker.currentTime();
-        splitTime = ticker.currentTime();
         endTime = ticker.currentTime();
         stringBuilder = new StringBuilder(String.format("{%s", name));
         return this;
@@ -44,10 +45,13 @@ public class StopWatch implements Serializable {
     }
 
     public StopWatch split(String tag) {
-        endTime = ticker.currentTime();
-        String interval = ticker.getInterval(splitTime, endTime);
+        return split(tag, ticker.currentTime());
+    }
+
+    public StopWatch split(String tag, long splitTime) {
+        endTime = splitTime;
+        long interval = ticker.getInterval(this.startTime, splitTime);
         stringBuilder.append(String.format(" → [%s = %s ms]", tag, interval));
-        splitTime = endTime;
         return this;
     }
 
@@ -57,8 +61,7 @@ public class StopWatch implements Serializable {
 
     public String end(String tag) {
         split(tag);
-        endTime = ticker.currentTime();
-        String interval = ticker.getInterval(startTime, endTime);
+        long interval = ticker.getInterval(startTime, endTime);
         stringBuilder.append(String.format(" ：all = %s ms}", interval));
         return stringBuilder.toString();
     }
@@ -74,7 +77,9 @@ public class StopWatch implements Serializable {
     public interface Ticker {
         long currentTime();
 
-        String getInterval(long start, long end);
+        long getInterval(long start, long end);
+
+        TimeUnit getUnite();
     }
 
     /**
@@ -87,8 +92,13 @@ public class StopWatch implements Serializable {
         }
 
         @Override
-        public String getInterval(long start, long end) {
-            return String.valueOf(end - start);
+        public long getInterval(long start, long end) {
+            return end - start;
+        }
+
+        @Override
+        public TimeUnit getUnite() {
+            return TimeUnit.MILLISECONDS;
         }
     }
 
@@ -102,9 +112,13 @@ public class StopWatch implements Serializable {
         }
 
         @Override
-        public String getInterval(long start, long end) {
-            long l = end - start;
-            return String.valueOf(l / 1000000f);
+        public long getInterval(long start, long end) {
+            return end - start;
+        }
+
+        @Override
+        public TimeUnit getUnite() {
+            return TimeUnit.NANOSECONDS;
         }
     }
 }

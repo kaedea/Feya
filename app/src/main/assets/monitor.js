@@ -40,7 +40,7 @@ function first_screen() {
         }
         fsItems.push({
             img: this,
-            time: +new Date
+            time: window.JavaScriptBridge.getCurrentTime()
         });
     }
     for (var i = 0; i < imgs.length; i++) { (function() {

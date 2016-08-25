@@ -29,7 +29,7 @@ import butterknife.ButterKnife;
 import me.kaede.feya.BaseActivity;
 import me.kaede.feya.BuildConfig;
 import me.kaede.feya.R;
-import me.kaede.feya.StopWatch;
+import me.kaede.feya.StopWatchEh;
 
 public class WebActivity extends BaseActivity {
     static final String TAG = "WebActivity";
@@ -41,7 +41,7 @@ public class WebActivity extends BaseActivity {
     protected WebView webView;
 
     private JavaScriptBridge mJsbApp;
-    private StopWatch stopWatch;
+    private StopWatchEh stopWatch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +51,7 @@ public class WebActivity extends BaseActivity {
 
         setSupportActionBar(toolbar);
         prepareWebView();
-        stopWatch = new StopWatch();
+        stopWatch = new StopWatchEh();
         stopWatch.start("load url");
         webView.loadUrl("http://www.bilibili.com/html/2233birthday-test-m.html");
     }
@@ -146,7 +146,7 @@ public class WebActivity extends BaseActivity {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 // 1. 获得Page标题，再次可近似获取“白屏时间”
-                stopWatch.split("title " + title);
+                stopWatch.split("visible");
                 Log.i(TAG, "[onReceivedTitle] title = " + title);
                 getSupportActionBar().setTitle(title);
 
@@ -162,13 +162,13 @@ public class WebActivity extends BaseActivity {
                     String[] strs = message.split(":");
                     if (2 == strs.length) {
                         if ("domc".equals(strs[0])) {
-                            stopWatch.split("on DOMContentLoaded");
+                            stopWatch.split("dom_loaded", Long.valueOf(strs[1].trim()));
                             Log.i(TAG, "[onJsPrompt] DOMContentLoaded time = " + strs[1].trim());
                         } else if ("firstscreen".equals(strs[0])) {
-                            stopWatch.split("on first screen");
+                            stopWatch.split("first_screen", Long.valueOf(strs[1].trim()));
                             Log.i(TAG, "[onJsPrompt] first screen time = " + strs[1].trim());
                         } else if ("load".equals(strs[0])) {
-                            stopWatch.split("on page loaded");
+                            stopWatch.split("page_loaded", Long.valueOf(strs[1].trim()));
                             Log.i(TAG, "[onJsPrompt] page loaded time = " + strs[1].trim());
                         }
                     }
@@ -233,13 +233,13 @@ public class WebActivity extends BaseActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                stopWatch.split("page started");
+                stopWatch.split("page_started");
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                String msg = stopWatch.end("page finished");
+                String msg = stopWatch.end("page_finished");
                 Log.i(TAG, msg);
             }
         };
