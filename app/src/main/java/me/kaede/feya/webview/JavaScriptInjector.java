@@ -7,13 +7,18 @@ package me.kaede.feya.webview;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 
 /**
  * @author kaede
@@ -66,14 +71,40 @@ public class JavaScriptInjector {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException ignore) {
-                }
-            }
+            IOUtils.closeQuietly(inputStream);
         }
         Log.v(TAG, "[getMonitorScript] js = " + String.valueOf(encoded));
         return encoded;
+    }
+
+    public static void injectJs(WebView webView) {
+        new AysncInject(webView).start();
+    }
+
+    private static class AysncInject extends Thread {
+        WeakReference<WebView> view;
+        Context context;
+
+        public AysncInject(WebView view) {
+            this.view = new WeakReference<WebView>(view);
+            this.context = view.getContext().getApplicationContext();
+        }
+
+        @Override
+        public void run() {
+            final String js = getMonitorScript(context);
+            if (!TextUtils.isEmpty(js)) {
+                final WebView webView = view.get();
+                if (webView != null) {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            injectJS(webView, js);
+                        }
+                    });
+                }
+            }
+        }
     }
 }

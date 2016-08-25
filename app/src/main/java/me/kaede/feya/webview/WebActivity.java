@@ -145,13 +145,12 @@ public class WebActivity extends BaseActivity {
 
             @Override
             public void onReceivedTitle(WebView view, String title) {
-                // 1. 获得Page标题，再次可近似获取“白屏时间”
                 stopWatch.split("visible");
                 Log.i(TAG, "[onReceivedTitle] title = " + title);
                 getSupportActionBar().setTitle(title);
 
                 // 注入JS脚本, 监听 DOMContentLoaded 事件
-                JavaScriptInjector.injectJS(view, JavaScriptInjector.getMonitorScript(getContext()));
+                JavaScriptInjector.injectJs(view);
             }
 
 
@@ -241,6 +240,13 @@ public class WebActivity extends BaseActivity {
                 super.onPageFinished(view, url);
                 String msg = stopWatch.end("page_finished");
                 Log.i(TAG, msg);
+
+                // print tag
+                Log.i(TAG, "开始 = " + stopWatch.getTag("page_started") +
+                        ", 白屏 = " + stopWatch.getTag("visible") +
+                        ", DOM = " + stopWatch.getTag("dom_loaded") +
+                        ", 首屏 = " + stopWatch.getTag("first_screen") +
+                        ", 整屏 = " + stopWatch.getTag("page_loaded"));
             }
         };
     }
