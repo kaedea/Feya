@@ -6,17 +6,28 @@
 package me.kaede.feya.protobuff;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.os.Environment;
 import android.test.InstrumentationTestCase;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
 import org.apache.commons.lang3.text.translate.LookupTranslator;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+
+import me.kaede.feya.StopWatch;
+import me.kaede.feya.protobuff.danmaku.DanmakuDoc;
+import me.kaede.feya.protobuff.danmaku.DanmakuItem;
 
 /**
  * @author kaede
@@ -33,11 +44,34 @@ public class CommentParseTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    public void testParseCommentFile() {
+    public void testParseComments() {
+        try {
+            // list "assets/danmaku/"
+            String[] danmakus = mContext.getAssets().list("danmaku");
+            for (String xml : danmakus) {
+                parseComments("danmaku" + File.separator + xml);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * test parse xml compared with protobuf (wire)
+     * @param xml
+     */
+    private void parseComments(String xml) {
         Pattern pattern = Pattern.compile("<d.+?p=\"(.+?)\">(.*?)</d>");
         Scanner scanner = null;
+        StopWatch stopWatch = new StopWatch();
         try {
-            scanner = new Scanner(mContext.getAssets().open("1221.xml"));
+            AssetFileDescriptor fd = mContext.getAssets().openFd(xml);
+            Log.i(TAG, "xml file size = " + fd.getLength());
+
+            // parse xml
+            scanner = new Scanner(mContext.getAssets().open(xml));
+            List<DanmakuItem> danmakuItems = new ArrayList<>();
+            stopWatch.start("parse " + xml);
             while (scanner.findWithinHorizon(pattern, 0) != null) {
                 MatchResult match = scanner.match();
                 if (match.groupCount() >= 2) {
@@ -45,14 +79,61 @@ public class CommentParseTest extends InstrumentationTestCase {
                     String dmkText = unescapeHtmlQuietly(match.group(2));
                     if (TextUtils.isEmpty(dmkAttr) || TextUtils.isEmpty(dmkText))
                         continue;
-                    Log.i(TAG, "dmkAttr = " + dmkAttr + ", dmkText = " + dmkText);
+                    Log.v(TAG, "dmkAttr = " + dmkAttr + ", dmkText = " + dmkText);
+                    DanmakuItem danmakuItem = new DanmakuItem.Builder()
+                            .dmk_attr(dmkAttr)
+                            .dmk_text(dmkText)
+                            .build();
+                    danmakuItems.add(danmakuItem);
                 }
             }
+
+            // create protobuff object
+            DanmakuDoc danmakuDoc = new DanmakuDoc.Builder()
+                    .items(danmakuItems)
+                    .build();
+            stopWatch.split("create DanmakuDoc");
+            assertNotNull(danmakuDoc);
+            byte[] bytes = DanmakuDoc.ADAPTER.encode(danmakuDoc);
+            String bytesContent = new String(bytes);
+            Log.v(TAG, "danmakuDoc = " + String.valueOf(danmakuDoc));
+
+            // write bytes to file
+            File file = new File(Environment.getExternalStorageDirectory() +
+                    File.separator + "danmaku_" + xml + "bytes");
+            FileUtils.writeByteArrayToFile(file, bytes);
+            stopWatch.split("write bytes");
+            Log.i(TAG, "bytes file size = " + file.length());
+
+            // read bytes from file again
+            bytes = FileUtils.readFileToByteArray(file);
+            stopWatch.split("read bytes");
+
+            // create protobuff object from bytes
+            DanmakuDoc danmakuDocBytes = DanmakuDoc.ADAPTER.decode(bytes);
+            Log.v(TAG, "danmakuDocBytes = " + String.valueOf(danmakuDocBytes));
+            stopWatch.end("parse DanmakuDoc");
+
+            same(danmakuDoc, danmakuDocBytes);
+
+            Log.i(TAG, "stop watch = " + stopWatch);
+
         } catch (Throwable t) {
+            assertNull(t);
             t.printStackTrace();
         } finally {
             if (scanner != null)
                 scanner.close();
+        }
+    }
+
+    private void same(DanmakuDoc first, DanmakuDoc second) {
+        assertTrue(first != null && second != null);
+        assertTrue(first.items != null && second.items != null);
+        assertTrue(first.items.size() == second.items.size());
+        for (int i = 0; i < first.items.size(); i++) {
+            assertTrue(first.items.get(i).dmk_attr.equals(second.items.get(i).dmk_attr));
+            assertTrue(first.items.get(i).dmk_text.equals(second.items.get(i).dmk_text));
         }
     }
 

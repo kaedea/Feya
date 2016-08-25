@@ -7,7 +7,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
 
 android {
-    useLibrary 'org.apache.http.legacy'
+//    useLibrary 'org.apache.http.legacy'
     compileSdkVersion rootProject.ext.targetSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
@@ -26,6 +26,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    aaptOptions {
+        noCompress "xml"
     }
 }
 

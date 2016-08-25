@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+package danmaku;
+
+option java_package = "me.kaede.feya.protobuff.danmaku";
+
+message DanmakuItem {
+  optional string dmk_attr = 1;
+  optional string dmk_text = 2;
+}

@@ -51,12 +51,12 @@ public class DemoListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        RecyclerView recyclerView = new RecyclerView(getContext());
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        RecyclerView recyclerView = new RecyclerView(getActivity());
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(linearLayoutManager);
         MyAdapter adapter = new MyAdapter();
         recyclerView.setAdapter(adapter);
-        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL_LIST));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
         activityHolder = DemoProvider.demos.valueAt(index);
         adapter.notifyDataSetChanged();
         return recyclerView;
@@ -66,7 +66,7 @@ public class DemoListFragment extends Fragment {
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = getItemViewLayout(getContext());
+            View itemView = getItemViewLayout(getActivity());
             return new ViewHolder(itemView);
         }
 
@@ -102,7 +102,7 @@ public class DemoListFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            activityHolder.startActivity(getContext(), position);
+            activityHolder.startActivity(getActivity(), position);
         }
     }
 

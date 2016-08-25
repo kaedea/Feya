@@ -12,6 +12,8 @@ import android.util.Log;
 import com.squareup.dinosaurs.Dinosaur;
 import com.squareup.geology.Period;
 
+import java.io.IOException;
+
 /**
  * @author kaede
  * @version date 16/8/24
@@ -27,12 +29,24 @@ public class ProtobuffTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
-    public void testCreateProtobuffInstance(){
+    public void testProtobuffWithWire() {
         Dinosaur stegosaurus = new Dinosaur.Builder()
                 .name("Stegosaurus")
                 .period(Period.JURASSIC)
                 .build();
         assertNotNull(stegosaurus);
-        Log.d(TAG,"My favorite dinosaur existed in the " + stegosaurus.period + " period.");
+        Log.d(TAG, "My favorite dinosaur existed in the " + stegosaurus.period + " period.");
+
+        byte[] bytes = Dinosaur.ADAPTER.encode(stegosaurus);
+
+        try {
+            Dinosaur stegosaurusBytes = Dinosaur.ADAPTER.decode(bytes);
+            assertNotNull(stegosaurusBytes);
+            stegosaurus = stegosaurusBytes.newBuilder().period(Period.TRIASSIC).build();
+            Log.d(TAG, "My favorite dinosaur existed in the " + stegosaurus.period + " period.");
+        } catch (IOException e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
     }
 }

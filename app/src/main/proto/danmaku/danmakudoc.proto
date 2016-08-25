@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package danmaku;
+
+option java_package = "me.kaede.feya.protobuff.danmaku";
+
+import "danmaku/danmakuitem.proto";
+
+message DanmakuDoc {
+  repeated danmaku.DanmakuItem items = 1;
+}

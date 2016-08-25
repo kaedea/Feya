@@ -3,10 +3,10 @@
 buildscript {
     ext {
         buildGradle = '2.1.2';
-        buildToolsVersion = '23.0.2'
-        targetSdkVersion = 23
+        buildToolsVersion = '22.0.1'
+        targetSdkVersion = 22
         minSdkVersion = 15
-        androidSupportLibraryVersion = '23.4.0'
+        androidSupportLibraryVersion = '22.2.1'
     }
     repositories {
         jcenter()
