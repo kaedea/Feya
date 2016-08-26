@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -231,7 +232,36 @@ public class BoltsTest extends InstrumentationTestCase {
         assertEquals(result, null);
     }
 
+
+    public void testLooperTask() {
+        final AtomicInteger count = new AtomicInteger(0);
+
+        try {
+            Task.call(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    return count.incrementAndGet();
+                }
+            }).continueWhile(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return count.get() < 10;
+                }
+            }, new Continuation<Void, Task<Void>>() {
+                @Override
+                public Task<Void> then(Task<Void> task) throws Exception {
+                    assertEquals(10, count.get());
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
+     * execute parallel tasks.
+     * callback when all tasks are done.
      * {@link Task#whenAll(Collection)}
      */
     public void testParallelTask() {
@@ -273,6 +303,8 @@ public class BoltsTest extends InstrumentationTestCase {
 
 
     /**
+     * execute parallel tasks.
+     * callback when any task is done.
      * {@link Task#whenAny(Collection)}
      */
     public void testParallelTask2() {
