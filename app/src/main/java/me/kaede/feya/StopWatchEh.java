@@ -31,19 +31,26 @@ public class StopWatchEh extends StopWatch {
         tagMaps = new HashMap<>();
     }
 
+    @Override
     public StopWatchEh split(String tag, long splitTime) {
-        endTime = splitTime;
-        long interval = ticker.getInterval(this.startTime, splitTime);
-        tagMaps.put(tag, interval);
-        stringBuilder.append(String.format(" → [%s = %s ms]", tag, interval));
+        if (!isEnd) {
+            endTime = splitTime;
+            long interval = ticker.getInterval(this.startTime, splitTime);
+            tagMaps.put(tag, interval);
+            stringBuilder.append(String.format(" → [%s = %s ms]", tag, interval));
+        }
         return this;
     }
 
+    @Override
     public String end(String tag) {
-        split(tag);
-        long interval = ticker.getInterval(startTime, endTime);
-        stringBuilder.append(String.format(" ：all = %s ms}", interval));
-        tagMaps.put(tag, interval);
+        if (!isEnd) {
+            isEnd = true;
+            split(tag);
+            long interval = ticker.getInterval(startTime, endTime);
+            stringBuilder.append(String.format(" ：all = %s ms}", interval));
+            tagMaps.put(tag, interval);
+        }
         return stringBuilder.toString();
     }
 

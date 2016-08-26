@@ -8,7 +8,6 @@ package me.kaede.feya;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
-import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -19,8 +18,9 @@ public class StopWatch implements Serializable {
 
     protected long startTime;
     protected long endTime;
-    protected StringBuilder stringBuilder;
+    protected boolean isEnd;
     protected Ticker ticker;
+    protected StringBuilder stringBuilder;
 
     /**
      * {name → [tag1 = 100 ms] → [tag1 = 100 ms] ：all = 200 ms}
@@ -34,10 +34,15 @@ public class StopWatch implements Serializable {
     }
 
     public StopWatch start(String name) {
+        isEnd = false;
         startTime = ticker.currentTime();
         endTime = ticker.currentTime();
         stringBuilder = new StringBuilder(String.format("{%s", name));
         return this;
+    }
+
+    public boolean isEnd() {
+        return isEnd;
     }
 
     public StopWatch split() {
@@ -49,9 +54,11 @@ public class StopWatch implements Serializable {
     }
 
     public StopWatch split(String tag, long splitTime) {
-        endTime = splitTime;
-        long interval = ticker.getInterval(this.startTime, splitTime);
-        stringBuilder.append(String.format(" → [%s = %s ms]", tag, interval));
+        if (!isEnd) {
+            endTime = splitTime;
+            long interval = ticker.getInterval(this.startTime, splitTime);
+            stringBuilder.append(String.format(" → [%s = %s ms]", tag, interval));
+        }
         return this;
     }
 
@@ -60,9 +67,12 @@ public class StopWatch implements Serializable {
     }
 
     public String end(String tag) {
-        split(tag);
-        long interval = ticker.getInterval(startTime, endTime);
-        stringBuilder.append(String.format(" ：all = %s ms}", interval));
+        if (!isEnd) {
+            isEnd = true;
+            split(tag);
+            long interval = ticker.getInterval(startTime, endTime);
+            stringBuilder.append(String.format(" ：all = %s ms}", interval));
+        }
         return stringBuilder.toString();
     }
 
