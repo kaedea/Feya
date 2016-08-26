@@ -9,6 +9,7 @@ import android.content.Context;
 import android.os.Looper;
 import android.test.InstrumentationTestCase;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -232,7 +233,23 @@ public class BoltsTest extends InstrumentationTestCase {
         assertEquals(result, null);
     }
 
+    /**
+     * create task from existing result
+     * {@link Task#forResult(Object)}
+     * {@link Task#forError(Exception)}
+     */
+    public void testCreateTaskForResult() {
+        Task<Integer> integerTask = Task.forResult(10086);
+        assertTrue(integerTask.getResult() == 10086);
 
+        Task<Object> failTask = Task.forError(new FileNotFoundException("404"));
+        assertTrue(failTask.getError() instanceof FileNotFoundException);
+    }
+
+    /**
+     * looper task
+     * {@link Task#continueWhile(Callable, Continuation)}
+     */
     public void testLooperTask() {
         final AtomicInteger count = new AtomicInteger(0);
 
