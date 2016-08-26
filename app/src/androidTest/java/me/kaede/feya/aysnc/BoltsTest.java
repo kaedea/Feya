@@ -164,6 +164,36 @@ public class BoltsTest extends InstrumentationTestCase {
         assertEquals(result, "success get 10086");
     }
 
+    public void testContinueWithTask() {
+        String result = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        }).continueWithTask(new Continuation<Integer, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Integer> task) throws Exception {
+                return Task.call(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        if (task.isFaulted()) {
+                            // fail
+                            return "fail";
+                        }
+                        if (task.isCancelled()) {
+                            // canceled
+                            return "canceled";
+                        }
+                        Integer integer = task.getResult();
+                        return "success get " + integer;
+                    }
+                });
+            }
+        }).getResult();
+
+        assertEquals(result, "success get 10086");
+    }
+
     /**
      * {@link Task#onSuccess(Continuation)}
      */
