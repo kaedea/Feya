@@ -99,6 +99,10 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
+    /**
+     * {@link Task#continueWith(Continuation)}
+     * {@link Continuation#then(Task)}
+     */
     public void testContinueWith() {
         String result = Task.call(new Callable<Integer>() {
             @Override
@@ -155,5 +159,56 @@ public class BoltsTest extends InstrumentationTestCase {
         Task<String> stringTask = integerTask.continueWith(stringContinuation);
         String result = stringTask.getResult();
         assertTrue(!TextUtils.isEmpty(result));
+    }
+
+    /**
+     * {@link Task#onSuccess(Continuation)}
+     */
+    public void testOnSuccess() {
+        String result = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        }).onSuccess(new Continuation<Integer, String>() {
+            @Override
+            public String then(Task<Integer> task) throws Exception {
+                if (task.isFaulted()) {
+                    // fail
+                    return "fail";
+                }
+                if (task.isCancelled()) {
+                    // canceled
+                    return "canceled";
+                }
+                Integer integer = task.getResult();
+                return "success get " + integer;
+            }
+        }).getResult();
+
+        assertEquals(result, "success get 10086");
+
+        result = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                throw new RuntimeException("fail");
+            }
+        }).onSuccess(new Continuation<Integer, String>() {
+            @Override
+            public String then(Task<Integer> task) throws Exception {
+                if (task.isFaulted()) {
+                    // fail
+                    return "fail";
+                }
+                if (task.isCancelled()) {
+                    // canceled
+                    return "canceled";
+                }
+                Integer integer = task.getResult();
+                return "success get " + integer;
+            }
+        }).getResult();
+
+        assertEquals(result, null);
     }
 }
