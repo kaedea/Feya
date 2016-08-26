@@ -237,12 +237,7 @@ public class BoltsTest extends InstrumentationTestCase {
         final AtomicInteger count = new AtomicInteger(0);
 
         try {
-            Task.call(new Callable<Integer>() {
-                @Override
-                public Integer call() throws Exception {
-                    return count.incrementAndGet();
-                }
-            }).continueWhile(new Callable<Boolean>() {
+            Task.forResult(null).continueWhile(new Callable<Boolean>() {
                 @Override
                 public Boolean call() throws Exception {
                     return count.get() < 10;
@@ -250,6 +245,12 @@ public class BoltsTest extends InstrumentationTestCase {
             }, new Continuation<Void, Task<Void>>() {
                 @Override
                 public Task<Void> then(Task<Void> task) throws Exception {
+                    count.incrementAndGet();
+                    return null;
+                }
+            }).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
                     assertEquals(10, count.get());
                     return null;
                 }
