@@ -165,24 +165,6 @@ public class BoltsTest extends InstrumentationTestCase {
     }
 
     /**
-     * {@link Task#delay(long)}
-     */
-    public void testDelayContinueWith() {
-        final long millis = System.currentTimeMillis();
-        try {
-            Task.delay(3000).continueWith(new Continuation<Void, Object>() {
-                @Override
-                public Object then(Task<Void> task) throws Exception {
-                    assertTrue((System.currentTimeMillis() - millis) >= 3000);
-                    return null;
-                }
-            }).waitForCompletion();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * {@link Task#onSuccess(Continuation)}
      */
     public void testOnSuccess() {
@@ -234,6 +216,105 @@ public class BoltsTest extends InstrumentationTestCase {
     }
 
     /**
+     * execute parallel tasks.
+     * callback when all tasks are done.
+     * {@link Task#whenAll(Collection)}
+     */
+    public void testParallelTask() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 65535;
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+
+        try {
+            // parallel call both task, and wait for both tasks done
+            Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    // task1 and task2 are both finished
+                    for (int i = 0; i < tasks.size(); i++) {
+                        Task<?> item = tasks.get(i);
+                        assertTrue(item.getResult().equals(10086) || item.getResult().equals(65535));
+                    }
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * execute parallel tasks.
+     * callback when any task is done.
+     * {@link Task#whenAny(Collection)}
+     */
+    public void testParallelTask2() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 65535;
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+
+        try {
+            Task.whenAny(tasks).continueWith(new Continuation<Task<?>, Object>() {
+                @Override
+                public Object then(Task<Task<?>> task) throws Exception {
+                    Task<?> taskFinished = task.getResult();
+                    assertTrue(taskFinished.getResult().equals(10086) || taskFinished.getResult().equals(65535));
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * {@link Task#delay(long)}
+     */
+    public void testDelayTask() {
+        final long millis = System.currentTimeMillis();
+        try {
+            Task.delay(3000).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    assertTrue((System.currentTimeMillis() - millis) >= 3000);
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * create task from existing result
      * {@link Task#forResult(Object)}
      * {@link Task#forError(Exception)}
@@ -277,84 +358,22 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
-    /**
-     * execute parallel tasks.
-     * callback when all tasks are done.
-     * {@link Task#whenAll(Collection)}
-     */
-    public void testParallelTask() {
-        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+    public void testCastTask() {
+        Task<Integer> task = Task.call(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
                 return 10086;
             }
         });
 
-        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return 65535;
-            }
-        });
-
-        final List<Task<?>> tasks = new ArrayList<>();
-        tasks.add(task1);
-        tasks.add(task2);
-
         try {
-            // parallel call both task, and wait for both tasks done
-            Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
-                @Override
-                public Object then(Task<Void> task) throws Exception {
-                    // task1 and task2 are both finished
-                    for (int i = 0; i < tasks.size(); i++) {
-                        Task<?> item = tasks.get(i);
-                        assertTrue(item.getResult().equals(10086) || item.getResult().equals(65535));
-                    }
-                    return null;
-                }
-            }).waitForCompletion();
+            task.waitForCompletion();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
 
-
-    /**
-     * execute parallel tasks.
-     * callback when any task is done.
-     * {@link Task#whenAny(Collection)}
-     */
-    public void testParallelTask2() {
-        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return 10086;
-            }
-        });
-
-        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-                return 65535;
-            }
-        });
-
-        final List<Task<?>> tasks = new ArrayList<>();
-        tasks.add(task1);
-        tasks.add(task2);
-
-        try {
-            Task.whenAny(tasks).continueWith(new Continuation<Task<?>, Object>() {
-                @Override
-                public Object then(Task<Task<?>> task) throws Exception {
-                    Task<?> taskFinished = task.getResult();
-                    assertTrue(taskFinished.getResult().equals(10086) || taskFinished.getResult().equals(65535));
-                    return null;
-                }
-            }).waitForCompletion();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        Task<?> supperTask = task;
+        Task<Integer> childTask = task.cast();
+        assertTrue(childTask.getResult() == 10086);
     }
 }
