@@ -8,8 +8,10 @@ package me.kaede.feya.aysnc;
 import android.content.Context;
 import android.os.Looper;
 import android.test.InstrumentationTestCase;
-import android.text.TextUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
@@ -17,6 +19,7 @@ import bolts.Continuation;
 import bolts.Task;
 
 /**
+ * Bolts api demo
  * Bolts is a collection of low-level libraries designed to make developing mobile apps easier.
  * {@link "https://github.com/BoltsFramework/Bolts-Android"}
  *
@@ -36,7 +39,6 @@ public class BoltsTest extends InstrumentationTestCase {
     }
 
     /**
-     * test api
      * {@link Task#call(Callable)}
      * {@link Task#getResult()}
      */
@@ -52,7 +54,6 @@ public class BoltsTest extends InstrumentationTestCase {
     }
 
     /**
-     * test api
      * {@link Task#callInBackground(Callable)}
      * {@link Task#waitForCompletion()}
      */
@@ -78,7 +79,6 @@ public class BoltsTest extends InstrumentationTestCase {
     }
 
     /**
-     * test api
      * {@link Task#call(Callable, Executor)}
      */
     public void testCallWithExecutor() {
@@ -157,8 +157,27 @@ public class BoltsTest extends InstrumentationTestCase {
 
         Task<Integer> integerTask = Task.call(integerCallable);
         Task<String> stringTask = integerTask.continueWith(stringContinuation);
+
         String result = stringTask.getResult();
-        assertTrue(!TextUtils.isEmpty(result));
+        assertEquals(result, "success get 10086");
+    }
+
+    /**
+     * {@link Task#delay(long)}
+     */
+    public void testDelayContinueWith() {
+        final long millis = System.currentTimeMillis();
+        try {
+            Task.delay(3000).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    assertTrue((System.currentTimeMillis() - millis) >= 3000);
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -210,5 +229,82 @@ public class BoltsTest extends InstrumentationTestCase {
         }).getResult();
 
         assertEquals(result, null);
+    }
+
+    /**
+     * {@link Task#whenAll(Collection)}
+     */
+    public void testParallelTask() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 65535;
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+
+        try {
+            // parallel call both task, and wait for both tasks done
+            Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    // task1 and task2 are both finished
+                    for (int i = 0; i < tasks.size(); i++) {
+                        Task<?> item = tasks.get(i);
+                        assertTrue(item.getResult().equals(10086) || item.getResult().equals(65535));
+                    }
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * {@link Task#whenAny(Collection)}
+     */
+    public void testParallelTask2() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 65535;
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+
+        try {
+            Task.whenAny(tasks).continueWith(new Continuation<Task<?>, Object>() {
+                @Override
+                public Object then(Task<Task<?>> task) throws Exception {
+                    Task<?> taskFinished = task.getResult();
+                    assertTrue(taskFinished.getResult().equals(10086) || taskFinished.getResult().equals(65535));
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

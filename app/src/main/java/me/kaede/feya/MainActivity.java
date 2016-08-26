@@ -22,6 +22,7 @@ public class MainActivity extends BaseActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.app_name);
+        getSupportActionBar().setSubtitle("A Taste of Android API");
         TabLayout tabLayout = (TabLayout) this.findViewById(R.id.tablayout);
         ViewPager viewPager = (ViewPager) this.findViewById(R.id.viewpager);
         viewPager.setAdapter(new DemoPagerAdapter(getSupportFragmentManager()));
