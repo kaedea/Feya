@@ -11,6 +11,7 @@ import android.test.InstrumentationTestCase;
 import android.text.TextUtils;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 
 import bolts.Continuation;
 import bolts.Task;
@@ -34,6 +35,11 @@ public class BoltsTest extends InstrumentationTestCase {
         mContext = getInstrumentation().getTargetContext();
     }
 
+    /**
+     * test api
+     * {@link Task#call(Callable)}
+     * {@link Task#getResult()}
+     */
     public void testCall() {
         Task<Integer> integerTask = Task.call(new Callable<Integer>() {
             @Override
@@ -45,13 +51,18 @@ public class BoltsTest extends InstrumentationTestCase {
         assertTrue(result == 10086);
     }
 
+    /**
+     * test api
+     * {@link Task#callInBackground(Callable)}
+     * {@link Task#waitForCompletion()}
+     */
     public void testCallInBackground() {
         Task<Integer> integerTask = Task.callInBackground(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-
                 // assert in background
                 assertTrue(Looper.myLooper() == null);
+                Thread.sleep(1000);
                 return 10086;
             }
         });
@@ -66,6 +77,10 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
+    /**
+     * test api
+     * {@link Task#call(Callable, Executor)}
+     */
     public void testCallWithExecutor() {
         Task<Integer> integerTask = Task.call(new Callable<Integer>() {
             @Override
@@ -84,7 +99,7 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
-    public void testContinueWith1() {
+    public void testContinueWith() {
         String result = Task.call(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
@@ -93,16 +108,24 @@ public class BoltsTest extends InstrumentationTestCase {
         }).continueWith(new Continuation<Integer, String>() {
             @Override
             public String then(Task<Integer> task) throws Exception {
+                if (task.isFaulted()) {
+                    // fail
+                    return "fail";
+                }
+                if (task.isCancelled()) {
+                    // canceled
+                    return "canceled";
+                }
                 Integer integer = task.getResult();
-                return "on get " + integer;
+                return "success get " + integer;
             }
         }).getResult();
 
-        assertTrue(!TextUtils.isEmpty(result));
+        assertEquals(result, "success get 10086");
     }
 
     /**
-     * equal with {@link BoltsTest#testContinueWith1}
+     * equal with {@link BoltsTest#testContinueWith}
      */
     public void testContinueWith2() {
         Callable<Integer> integerCallable = new Callable<Integer>() {
@@ -115,8 +138,16 @@ public class BoltsTest extends InstrumentationTestCase {
         Continuation<Integer, String> stringContinuation = new Continuation<Integer, String>() {
             @Override
             public String then(Task<Integer> task) throws Exception {
+                if (task.isFaulted()) {
+                    // fail
+                    return "fail";
+                }
+                if (task.isCancelled()) {
+                    // canceled
+                    return "canceled";
+                }
                 Integer integer = task.getResult();
-                return "on get " + integer;
+                return "success get " + integer;
             }
         };
 
