@@ -103,6 +103,7 @@ public class BoltsTest extends InstrumentationTestCase {
 
     /**
      * {@link Task#continueWith(Continuation)}
+     * {@link Continuation}
      * {@link Continuation#then(Task)}
      */
     public void testContinueWith() {
@@ -164,6 +165,9 @@ public class BoltsTest extends InstrumentationTestCase {
         assertEquals(result, "success get 10086");
     }
 
+    /**
+     * {@link Task#continueWithTask(Continuation)}
+     */
     public void testContinueWithTask() {
         String result = Task.call(new Callable<Integer>() {
             @Override
@@ -243,6 +247,40 @@ public class BoltsTest extends InstrumentationTestCase {
         }).getResult();
 
         assertEquals(result, null);
+    }
+
+    /**
+     * {@link Task#onSuccessTask(Continuation)}
+     */
+    public void testOnSuccessTask() {
+        String result = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        }).onSuccessTask(new Continuation<Integer, Task<String>>() {
+            @Override
+            public Task<String> then(final Task<Integer> task) throws Exception {
+                return Task.call(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        if (task.isFaulted()) {
+                            // fail
+                            return "fail";
+                        }
+                        if (task.isCancelled()) {
+                            // canceled
+                            return "canceled";
+                        }
+                        Integer integer = task.getResult();
+                        return "success get " + integer;
+                    }
+                });
+            }
+        }).getResult();
+
+        assertEquals(result, "success get 10086");
+
     }
 
     /**
@@ -388,6 +426,9 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
+    /**
+     * {@link Task#cast()}
+     */
     public void testCastTask() {
         Task<Integer> task = Task.call(new Callable<Integer>() {
             @Override
@@ -403,7 +444,24 @@ public class BoltsTest extends InstrumentationTestCase {
         }
 
         Task<?> supperTask = task;
-        Task<Integer> childTask = task.cast();
+        assertNotNull(supperTask);
+
+        Task<Integer> childTask = supperTask.cast();
         assertTrue(childTask.getResult() == 10086);
+    }
+
+    /**
+     * {@link Task#makeVoid()}
+     */
+    public void testMakeVoidTask() {
+        Task<Integer> task = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Void> voidTask = task.makeVoid();
+        assertTrue(voidTask.getResult() == null);
     }
 }
