@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import bolts.AggregateException;
 import bolts.Continuation;
 import bolts.Task;
+import bolts.TaskCompletionSource;
 
 /**
  * Bolts api demo
@@ -569,5 +570,37 @@ public class BoltsTest extends TestCase {
 
         Task<Void> voidTask = task.makeVoid();
         assertTrue(voidTask.getResult() == null);
+    }
+
+    /**
+     * isolating the Task's completion mechanisms from the consumer.
+     * {@link TaskCompletionSource}
+     * or {@link bolts.Task.TaskCompletionSource}
+     */
+    public void testTaskWrapper() {
+        TaskCompletionSource<Void> tc = new TaskCompletionSource<>();
+        Task<Void> task = tc.getTask();
+        assertTrue(!task.isCompleted());
+        assertTrue(!task.isFaulted());
+        assertTrue(!task.isCancelled());
+
+        tc.setCancelled();
+        assertTrue(task.isCompleted());
+        assertTrue(!task.isFaulted());
+        assertTrue(task.isCancelled());
+
+        tc = new TaskCompletionSource<>();
+        task = tc.getTask();
+        tc.setError(new FileNotFoundException("404"));
+        assertTrue(task.isCompleted());
+        assertTrue(task.isFaulted());
+        assertTrue(!task.isCancelled());
+
+        tc = new TaskCompletionSource<>();
+        task = tc.getTask();
+        tc.setResult(null);
+        assertTrue(task.isCompleted());
+        assertTrue(!task.isFaulted());
+        assertTrue(!task.isCancelled());
     }
 }
