@@ -9,6 +9,8 @@ import android.content.Context;
 import android.os.Looper;
 import android.test.InstrumentationTestCase;
 
+import junit.framework.TestCase;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,17 +30,9 @@ import bolts.Task;
  * @author kaede
  * @version date 16/8/26
  */
-public class BoltsTest extends InstrumentationTestCase {
+public class BoltsTest extends TestCase {
 
     public static final String TAG = "Bolts";
-
-    Context mContext;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        mContext = getInstrumentation().getTargetContext();
-    }
 
     /**
      * {@link Task#call(Callable)}
@@ -364,6 +358,10 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
+    /**
+     * execute 3 parallel tasks with one failed.
+     * get the error fo the failed task.
+     */
     public void testParallelTask3() {
         Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
             @Override
