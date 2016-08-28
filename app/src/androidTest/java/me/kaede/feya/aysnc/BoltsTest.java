@@ -353,6 +353,7 @@ public class BoltsTest extends InstrumentationTestCase {
             Task.whenAny(tasks).continueWith(new Continuation<Task<?>, Object>() {
                 @Override
                 public Object then(Task<Task<?>> task) throws Exception {
+                    // task1 or task2 is finished
                     Task<?> taskFinished = task.getResult();
                     assertTrue(taskFinished.getResult().equals(10086) || taskFinished.getResult().equals(65535));
                     return null;
@@ -363,17 +364,44 @@ public class BoltsTest extends InstrumentationTestCase {
         }
     }
 
+    public void testParallelTask3() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
 
-    /**
-     * {@link Task#delay(long)}
-     */
-    public void testDelayTask() {
-        final long millis = System.currentTimeMillis();
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 65535;
+            }
+        });
+
+        Task<Integer> task3 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                throw new FileNotFoundException("404");
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+        tasks.add(task3);
+
         try {
-            Task.delay(3000).continueWith(new Continuation<Void, Object>() {
+            // parallel call both task, and wait for both tasks done
+            Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
                 @Override
                 public Object then(Task<Void> task) throws Exception {
-                    assertTrue((System.currentTimeMillis() - millis) >= 3000);
+                    // all tasks are completed with one error
+                    assertTrue(task.isCompleted());
+                    assertTrue(task.isFaulted());
+                    assertTrue(!task.isCancelled());
+
+                    assertTrue(task.getError() instanceof FileNotFoundException);
                     return null;
                 }
             }).waitForCompletion();
@@ -405,6 +433,26 @@ public class BoltsTest extends InstrumentationTestCase {
                 @Override
                 public Object then(Task<Void> task) throws Exception {
                     assertEquals(10, count.get());
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // special apis
+
+    /**
+     * {@link Task#delay(long)}
+     */
+    public void testDelayTask() {
+        final long millis = System.currentTimeMillis();
+        try {
+            Task.delay(3000).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    assertTrue((System.currentTimeMillis() - millis) >= 3000);
                     return null;
                 }
             }).waitForCompletion();
