@@ -5,9 +5,7 @@
 
 package me.kaede.feya.aysnc;
 
-import android.content.Context;
 import android.os.Looper;
-import android.test.InstrumentationTestCase;
 
 import junit.framework.TestCase;
 
@@ -19,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import bolts.AggregateException;
 import bolts.Continuation;
 import bolts.Task;
 
@@ -400,6 +399,64 @@ public class BoltsTest extends TestCase {
                     assertTrue(!task.isCancelled());
 
                     assertTrue(task.getError() instanceof FileNotFoundException);
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * execute 3 parallel tasks with 2 failed.
+     * get each error of the failed tasks.
+     */
+    public void testParallelTask4() {
+        Task<Integer> task1 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return 10086;
+            }
+        });
+
+        Task<Integer> task2 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                throw new FileNotFoundException("404");
+            }
+        });
+
+        Task<Integer> task3 = Task.callInBackground(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                throw new FileNotFoundException("302");
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+        tasks.add(task3);
+
+        try {
+            // parallel call both task, and wait for both tasks done
+            Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
+                @Override
+                public Object then(Task<Void> task) throws Exception {
+                    // all tasks are completed with one error
+                    assertTrue(task.isCompleted());
+                    assertTrue(task.isFaulted());
+                    assertTrue(!task.isCancelled());
+
+                    assertTrue(task.getError() instanceof AggregateException);
+                    AggregateException aggregateException = (AggregateException) task.getError();
+                    List<Exception> errors = aggregateException.getErrors();
+                    assertEquals(2, errors.size());
+
+                    for (int i = 0; i < errors.size(); i++) {
+                        Exception exception = errors.get(i);
+                        assertTrue(exception instanceof  FileNotFoundException);
+                    }
                     return null;
                 }
             }).waitForCompletion();
