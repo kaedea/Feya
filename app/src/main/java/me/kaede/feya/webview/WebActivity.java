@@ -98,8 +98,8 @@ public class WebActivity extends BaseActivity {
             }
             mJsbApp = createAppMainJavaScriptBridge();
             if (mJsbApp != null) {
-                webView.removeJavascriptInterface("FeyaApp");
-                webView.addJavascriptInterface(mJsbApp, "FeyaApp");
+                webView.removeJavascriptInterface("app");
+                webView.addJavascriptInterface(mJsbApp, "app");
             }
         }
         CookieManager cookieManager = CookieManager.getInstance();

@@ -63,7 +63,7 @@ public class JavaScriptInjector {
         InputStream inputStream = null;
         String encoded = null;
         try {
-            inputStream = context.getAssets().open("monitor.js");
+            inputStream = context.getAssets().open("h5_monitor.js");
             byte[] buffer = new byte[inputStream.available()];
             inputStream.read(buffer);
             inputStream.close();

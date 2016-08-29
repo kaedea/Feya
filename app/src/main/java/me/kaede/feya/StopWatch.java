@@ -5,6 +5,8 @@
 
 package me.kaede.feya;
 
+import android.os.Build;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
@@ -68,10 +70,10 @@ public class StopWatch implements Serializable {
 
     public String end(String tag) {
         if (!isEnd) {
-            isEnd = true;
             split(tag);
             long interval = ticker.getInterval(startTime, endTime);
             stringBuilder.append(String.format(" ：all = %s ms}", interval));
+            isEnd = true;
         }
         return stringBuilder.toString();
     }
@@ -98,7 +100,7 @@ public class StopWatch implements Serializable {
     public static class MillisTicker implements Ticker {
         @Override
         public long currentTime() {
-            return System.currentTimeMillis();
+            return SystemClock.elapsedRealtime();
         }
 
         @Override
@@ -118,7 +120,11 @@ public class StopWatch implements Serializable {
     public static class NanoTicker implements Ticker {
         @Override
         public long currentTime() {
-            return System.nanoTime();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                return SystemClock.elapsedRealtimeNanos();
+            } else {
+                return System.nanoTime();
+            }
         }
 
         @Override

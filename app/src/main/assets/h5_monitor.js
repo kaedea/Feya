@@ -1,16 +1,13 @@
-// log DOMContentLoaded time
 window.addEventListener('DOMContentLoaded',
 function() {
-    prompt('domc:' + new Date().getTime());
+    prompt('domc:' + window.app.getCurrentTime());
 })
 
-// log Page Loaded time
 window.addEventListener('load',
 function() {
-    prompt('load:' + new Date().getTime());
+    prompt('load:' + window.app.getCurrentTime());
 })
 
-// log FirsScreen time (all visible images loaded)
 window.addEventListener('DOMContentLoaded',
 function() {
     first_screen();
@@ -18,7 +15,7 @@ function() {
 
 function first_screen() {
     var imgs = document.getElementsByTagName("img"),
-    fs = +new Date;
+    fs = +window.app.getCurrentTime();
     var fsItems = [],
     that = this;
     function getOffsetTop(elem) {
@@ -27,11 +24,9 @@ function first_screen() {
         try {
             top += elem.getBoundingClientRect().top;
         } catch(e) {
-
-} finally {
+    } finally {
             return top;
         }
-
     }
     var loadEvent = function() {
         //gif避免
@@ -40,26 +35,21 @@ function first_screen() {
         }
         fsItems.push({
             img: this,
-            time: window.JavaScriptBridge.getCurrentTime()
+            time: window.app.getCurrentTime()
         });
     }
     for (var i = 0; i < imgs.length; i++) { (function() {
             var img = imgs[i];
-
             if (img.addEventListener) {
-
                 ! img.complete && img.addEventListener("load", loadEvent, false);
             } else if (img.attachEvent) {
-
                 img.attachEvent("onreadystatechange",
                 function() {
                     if (img.readyState == "complete") {
                         loadEvent.call(img, loadEvent);
                     }
-
                 });
             }
-
         })();
     }
     function firstscreen_time() {

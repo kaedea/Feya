@@ -6,6 +6,7 @@
 package me.kaede.feya.webview;
 
 import android.app.Activity;
+import android.os.SystemClock;
 import android.webkit.JavascriptInterface;
 
 /**
@@ -26,7 +27,7 @@ public class JavaScriptBridge {
 
     @JavascriptInterface
     public long getCurrentTime() {
-        return System.currentTimeMillis();
+        return SystemClock.elapsedRealtime();
     }
 
     public void onActivityDestoryed() {
