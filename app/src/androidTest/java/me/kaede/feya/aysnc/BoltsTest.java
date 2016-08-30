@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.AggregateException;
@@ -38,7 +39,7 @@ public class BoltsTest extends TestCase {
      * {@link Task#call(Callable)}
      * {@link Task#getResult()}
      */
-    public void testCall() {
+    public void testImmediateTask() {
         Task<Integer> integerTask = Task.call(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
@@ -53,7 +54,7 @@ public class BoltsTest extends TestCase {
      * {@link Task#callInBackground(Callable)}
      * {@link Task#waitForCompletion()}
      */
-    public void testCallInBackground() {
+    public void testTaskInBackground() {
         Task<Integer> integerTask = Task.callInBackground(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
@@ -77,7 +78,7 @@ public class BoltsTest extends TestCase {
     /**
      * {@link Task#call(Callable, Executor)}
      */
-    public void testCallWithExecutor() {
+    public void testTaskWithExecutor() {
         Task<Integer> integerTask = Task.call(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
@@ -90,6 +91,44 @@ public class BoltsTest extends TestCase {
         try {
             integerTask.waitForCompletion();
             assertTrue(integerTask.getResult() == 10086);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static final Executor NETWORK_EXECUTOR = Executors.newCachedThreadPool();
+
+    public void testTaskWithCustomExecutor() {
+        Task<String> task = Task.call(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                // assert in background
+                assertTrue(Looper.myLooper() == null);
+                Thread.sleep(1000);
+                return 10086;
+            }
+        }, NETWORK_EXECUTOR).continueWith(new Continuation<Integer, String>() {
+            @Override
+            public String then(Task<Integer> task) throws Exception {
+                // assert in ui thread
+                assertTrue(Looper.myLooper() == Looper.getMainLooper());
+
+                if (task.isFaulted()) {
+                    // fail
+                    return "fail";
+                }
+                if (task.isCancelled()) {
+                    // canceled
+                    return "canceled";
+                }
+                Integer integer = task.getResult();
+                return "success get " + integer;
+            }
+        }, Task.UI_THREAD_EXECUTOR);
+
+        try {
+            task.waitForCompletion();
+            assertEquals(task.getResult(), "success get 10086");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -496,6 +535,7 @@ public class BoltsTest extends TestCase {
             e.printStackTrace();
         }
     }
+
 
     // special apis
 
