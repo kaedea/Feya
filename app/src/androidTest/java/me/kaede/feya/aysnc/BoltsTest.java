@@ -6,6 +6,7 @@
 package me.kaede.feya.aysnc;
 
 import android.os.Looper;
+import android.util.Log;
 
 import junit.framework.TestCase;
 
@@ -16,9 +17,11 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.AggregateException;
+import bolts.CancellationTokenSource;
 import bolts.Continuation;
 import bolts.Task;
 import bolts.TaskCompletionSource;
@@ -528,6 +531,67 @@ public class BoltsTest extends TestCase {
                 @Override
                 public Object then(Task<Void> task) throws Exception {
                     assertEquals(10, count.get());
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * cancel task
+     * pls take care that canceling a async task need to sync multi-thread,
+     * which is easily causing dead lock
+     *
+     * {@link TaskCompletionSource}
+     * {@link CancellationTokenSource}
+     * also see {@link BoltsTest#testTaskWrapper}
+     */
+    public void testCancelTask() {
+        final CancellationTokenSource cts = new CancellationTokenSource();
+        final TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
+
+        Task.callInBackground(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                int i = 0;
+
+                while (!cts.isCancellationRequested()) {
+                    Thread.sleep(1000);
+                    Log.i(TAG, "[testCancelTask] i =" + String.valueOf(++i));
+                }
+
+                Log.i(TAG, "[testCancelTask] task is canceled");
+                tcs.setCancelled();
+                return null;
+            }
+        });
+
+        assertTrue(!cts.isCancellationRequested());
+        assertTrue(!tcs.getTask().isCompleted());
+        assertTrue(!tcs.getTask().isCancelled());
+
+        try {
+            Task.delay(3000).continueWith(new Continuation<Void, Void>() {
+                @Override
+                public Void then(Task<Void> task) throws Exception {
+                    cts.cancel();
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Task.delay(2000).continueWith(new Continuation<Void, Void>() {
+                @Override
+                public Void then(Task<Void> task) throws Exception {
+                    assertTrue(cts.isCancellationRequested());
+                    assertTrue(tcs.getTask().isCompleted());
+                    assertTrue(tcs.getTask().isCancelled());
+                    assertEquals(tcs.getTask().getResult(), null);
                     return null;
                 }
             }).waitForCompletion();
