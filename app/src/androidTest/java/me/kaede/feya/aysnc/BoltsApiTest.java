@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ * Copyright (c) 2016. Kaede (kidhaibara@gmail.com).
  *
  */
 
@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.AggregateException;
@@ -34,7 +33,7 @@ import bolts.TaskCompletionSource;
  * @author kaede
  * @version date 16/8/26
  */
-public class BoltsTest extends TestCase {
+public class BoltsApiTest extends TestCase {
 
     public static final String TAG = "Bolts";
 
@@ -168,7 +167,7 @@ public class BoltsTest extends TestCase {
     }
 
     /**
-     * equal with {@link BoltsTest#testContinueWith}
+     * equal with {@link BoltsApiTest#testContinueWith}
      */
     public void testContinueWith2() {
         Callable<Integer> integerCallable = new Callable<Integer>() {
@@ -546,7 +545,7 @@ public class BoltsTest extends TestCase {
      *
      * {@link TaskCompletionSource}
      * {@link CancellationTokenSource}
-     * also see {@link BoltsTest#testTaskWrapper}
+     * also see {@link BoltsApiTest#testTaskWrapper}
      */
     public void testCancelTask() {
         final CancellationTokenSource cts = new CancellationTokenSource();

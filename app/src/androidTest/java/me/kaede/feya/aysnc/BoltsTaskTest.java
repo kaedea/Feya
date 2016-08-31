@@ -16,7 +16,7 @@ import bolts.Task;
  * copycat fo Bolts test code
  * {@link "https://github.com/BoltsFramework/Bolts-Java/blob/master/BoltsTest/src/bolts/TaskTest.java"}
  */
-public class TaskTest extends TestCase {
+public class BoltsTaskTest extends TestCase {
     private void runTaskTest(Callable<Task<?>> callable) {
         try {
             Task<?> task = callable.call();
