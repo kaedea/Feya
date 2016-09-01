@@ -11,6 +11,7 @@ import android.util.Log;
 import junit.framework.TestCase;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.AggregateException;
 import bolts.CancellationTokenSource;
+import bolts.Capture;
 import bolts.Continuation;
 import bolts.Task;
 import bolts.TaskCompletionSource;
@@ -597,6 +599,48 @@ public class BoltsApiTest extends TestCase {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void testMutableVariable() {
+        final Capture<Integer> integerCapture = new Capture<>(0);
+
+        Task<Void> task1 = Task.callInBackground(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Log.i(TAG, "[testMutableVariable] execute task 1");
+                integerCapture.set(integerCapture.get() + 1);
+                return null;
+            }
+        });
+        Task<Void> task2 = Task.callInBackground(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Log.i(TAG, "[testMutableVariable] execute task 2");
+                integerCapture.set(integerCapture.get() - 1);
+                return null;
+            }
+        });
+        Task<Void> task3 = Task.callInBackground(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Log.i(TAG, "[testMutableVariable] execute task 3");
+                integerCapture.set(integerCapture.get() + 1);
+                return null;
+            }
+        });
+
+        final List<Task<?>> tasks = new ArrayList<>();
+        tasks.add(task1);
+        tasks.add(task2);
+        tasks.add(task3);
+
+        Task.whenAll(tasks).continueWith(new Continuation<Void, Object>() {
+            @Override
+            public Object then(Task<Void> task) throws Exception {
+                assertEquals(integerCapture.get().intValue(), 1);
+                return null;
+            }
+        });
     }
 
 
