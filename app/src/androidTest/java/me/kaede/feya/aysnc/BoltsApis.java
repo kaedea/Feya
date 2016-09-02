@@ -9,23 +9,30 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+import bolts.AggregateException;
 import bolts.CancellationToken;
+import bolts.CancellationTokenSource;
+import bolts.Capture;
 import bolts.Continuation;
 import bolts.Task;
+import bolts.TaskCompletionSource;
 
 /**
  * Bolts api
  * Bolts is a collection of low-level libraries designed to make developing mobile apps easier.
- * {@link "https://github.com/BoltsFramework/Bolts-Android"}
+ * see {@link "https://github.com/BoltsFramework/Bolts-Android"}
+ * see api test & example code in {@link BoltsApiTest}
+ * see official api test in {@link BoltsApiTest}
  *
  * @author kaede
- * @version date 16/8/31
+ * @version date 16/8/31 bolts 1.4.0
  */
 public class BoltsApis {
     /**
      * bolts.Task
+     * Represents the result of an asynchronous operation.
      *
-     * 1. get a Task implementation
+     * 1. get a Task instance (represent an operation or function)
      *
      * {@link Task#call(Callable)}
      * {@link Task#call(Callable, Executor)}
@@ -90,8 +97,11 @@ public class BoltsApis {
      * {@link Task#getResult()}
      * {@link Task#getError()}
      *
+     * 5. listen task's fail event
      *
-     * 5. others
+     * {@link Task#setUnobservedExceptionHandler(Task.UnobservedExceptionHandler)}
+     *
+     * 6. others
      *
      * {@link Task#delay(long)}
      * {@link Task#delay(long, CancellationToken)}
@@ -100,5 +110,66 @@ public class BoltsApis {
      * {@link Task#getUnobservedExceptionHandler()}
      *
      * {@link Task#create()}
+     */
+
+
+    /**
+     * bolts.Continuation
+     * A function to be called after a task completes.
+     *
+     * {@link Continuation#then(Task)}
+     * */
+
+
+    /**
+     * bolts.AggregateException
+     * Aggregate the errors when 2 or more task failed in multi-task operation.
+     *
+     * {@link AggregateException#getInnerThrowables()}
+     * */
+
+
+    /**
+     * bolts.TaskCompletionSource
+     * It represents the producer side of a Task<TResult>.
+     *
+     * 1. get an empty task instance
+     * {@link TaskCompletionSource#getTask()}
+     *
+     * 2. complete an task
+     *
+     * {@link TaskCompletionSource#setResult(Object)}
+     * {@link TaskCompletionSource#setCancelled()}
+     * {@link TaskCompletionSource#setError(Exception)}
+     * */
+
+
+    /**
+     * bolts.CancellationToken
+     * bolts.CancellationTokenSource
+     * bolts.CancellationTokenRegistration
+     * Cancel a task and notify the observers that the task is canceled.
+     *
+     * 1. cancel a task
+     *
+     * {@link CancellationTokenSource#cancel()}
+     * {@link CancellationTokenSource#cancelAfter(long)}
+     *
+     * 2. check if a task is canceled in an observer
+     *
+     * {@link CancellationToken#isCancellationRequested()}
+     *
+     * 3. do something when a task is canceled in an observer
+     *
+     * {@link CancellationToken#register(Runnable)}
+     * */
+
+
+    /**
+     * bolts.Capture
+     * Capture variables inner different variable scope of tasks.
+     *
+     * {@link Capture#get()}
+     * {@link Capture#set(Object)}
      */
 }

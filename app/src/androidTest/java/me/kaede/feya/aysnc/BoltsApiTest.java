@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bolts.AggregateException;
+import bolts.CancellationToken;
 import bolts.CancellationTokenSource;
 import bolts.Capture;
 import bolts.Continuation;
@@ -494,12 +495,12 @@ public class BoltsApiTest extends TestCase {
 
                     assertTrue(task.getError() instanceof AggregateException);
                     AggregateException aggregateException = (AggregateException) task.getError();
-                    List<Exception> errors = aggregateException.getErrors();
+                    List<Throwable> errors = aggregateException.getInnerThrowables();
                     assertEquals(2, errors.size());
 
                     for (int i = 0; i < errors.size(); i++) {
-                        Exception exception = errors.get(i);
-                        assertTrue(exception instanceof  FileNotFoundException);
+                        Throwable throwable = errors.get(i);
+                        assertTrue(throwable instanceof  FileNotFoundException);
                     }
                     return null;
                 }
@@ -563,7 +564,83 @@ public class BoltsApiTest extends TestCase {
                     Log.i(TAG, "[testCancelTask] i =" + String.valueOf(++i));
                 }
 
-                Log.i(TAG, "[testCancelTask] task is canceled");
+                Log.i(TAG, "[testCancelTask] cts is canceled");
+                tcs.setCancelled();
+                return null;
+            }
+        });
+
+        assertTrue(!cts.isCancellationRequested());
+        assertTrue(!tcs.getTask().isCompleted());
+        assertTrue(!tcs.getTask().isCancelled());
+
+        try {
+            Task.delay(3000).continueWith(new Continuation<Void, Void>() {
+                @Override
+                public Void then(Task<Void> task) throws Exception {
+                    cts.cancel();
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Task.delay(2000).continueWith(new Continuation<Void, Void>() {
+                @Override
+                public Void then(Task<Void> task) throws Exception {
+                    assertTrue(cts.isCancellationRequested());
+                    assertTrue(tcs.getTask().isCompleted());
+                    assertTrue(tcs.getTask().isCancelled());
+                    assertEquals(tcs.getTask().getResult(), null);
+                    return null;
+                }
+            }).waitForCompletion();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void testCancelTask2() {
+        final CancellationTokenSource cts = new CancellationTokenSource();
+        final TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
+
+        Task.callInBackground(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                int i = 0;
+                CancellationToken ctsToken = cts.getToken();
+
+                while (!ctsToken.isCancellationRequested()) {
+                    Thread.sleep(1000);
+                    Log.i(TAG, "[testCancelTask.task1] i =" + String.valueOf(++i));
+                }
+
+                Log.i(TAG, "[testCancelTask.task1] cts is canceled");
+                tcs.setCancelled();
+                return null;
+            }
+        });
+
+        Task.callInBackground(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                int i = 10;
+                CancellationToken ctsToken = cts.getToken();
+                ctsToken.register(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i(TAG, "[testCancelTask.task2] do something when cts is canceled");
+                    }
+                });
+
+                while (!ctsToken.isCancellationRequested()) {
+                    Thread.sleep(1000);
+                    Log.i(TAG, "[testCancelTask.task2] i =" + String.valueOf(--i));
+                }
+
+                Log.i(TAG, "[testCancelTask.task2] cts is canceled");
                 tcs.setCancelled();
                 return null;
             }
