@@ -4,9 +4,14 @@ import android.util.Log;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
+import rx.functions.Func0;
 
 /**
  * RxAndroid api demo
@@ -106,6 +111,74 @@ public class RxApiTest extends TestCase {
             @Override
             public void onNext(String s) {
                 Log.i(TAG, "[onNext] s = " + s);
+            }
+        });
+    }
+
+
+    public void testFrom() {
+        List<String> list = new ArrayList<>();
+        list.add("from1");
+        list.add("from2");
+        list.add("from3");
+
+        Observable.from(list).subscribe(new Observer<String>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(String s) {
+                Log.i(TAG, "[onNext] s = " + s);
+            }
+        });
+    }
+
+    public void testDefer() {
+        Observable.defer(new Func0<Observable<String>>() {
+            @Override
+            public Observable<String> call() {
+                return Observable.just("10086");
+            }
+        }).subscribe(new Observer<String>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(String s) {
+                Log.i(TAG, "[onNext] s = " + s);
+            }
+        });
+    }
+
+    public void testInterval() {
+        Observable.interval(1, TimeUnit.SECONDS).subscribe(new Observer<Long>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+                Log.i(TAG, "[onNext] aLong = " + aLong);
             }
         });
     }
