@@ -11,6 +11,8 @@ import moe.kaede.log.BLog;
 import moe.kaede.log.LogSetting;
 
 /**
+ * repo: https://github.com/kaedea/b-log
+ *
  * Copycat of  {@link
  * "https://github.com/kaedea/b-log/blob/master/library/src/androidTest/java/moe/kaede/log/BLogApiTest.java"}
  *
