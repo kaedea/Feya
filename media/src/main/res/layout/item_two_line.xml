@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+  ~
+  -->
+
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        tools:background="#eee"
+        android:layout_height="wrap_content">
+    <TextView
+            android:textColor="#222"
+            android:layout_marginTop="10dp"
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Title"
+            android:textSize="16sp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:singleLine="true"
+            android:ellipsize="end"/>
+    <TextView
+            android:textColor="#999"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/tv_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Sub Title"
+            android:textSize="14sp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:maxLines="2"
+            android:ellipsize="end"/>
+    <!-- <View android:layout_width="match_parent" android:layout_height="1px" android:background="#aaa"></View>-->
+</LinearLayout>
