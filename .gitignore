@@ -4,5 +4,4 @@
 .DS_Store
 /build
 /captures
-gradle-wrapper.properties
 workspace.xml
