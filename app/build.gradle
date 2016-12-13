@@ -8,7 +8,7 @@ apply plugin: 'android-apt'
 
 android {
     useLibrary 'org.apache.http.legacy'
-    compileSdkVersion rootProject.ext.targetSdkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
