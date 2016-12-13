@@ -3,17 +3,17 @@
  *
  */
 
-package me.kaede.feya;
+package com.kaedea.media;
 
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 
-import me.kaede.feya.home.DemoPagerAdapter;
+import com.kaedea.media.home.DemoPagerAdapter;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,4 +28,5 @@ public class MainActivity extends BaseActivity {
         viewPager.setOffscreenPageLimit(1);
         tabLayout.setupWithViewPager(viewPager);
     }
+
 }

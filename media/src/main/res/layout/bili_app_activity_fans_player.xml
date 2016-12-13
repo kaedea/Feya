@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+  ~
+  -->
+
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:orientation="vertical">
+
+    <FrameLayout
+            android:id="@+id/video_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:background="@android:color/black">
+
+        <ProgressBar
+                android:id="@+id/loading"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
+    </FrameLayout>
+
+    <RelativeLayout
+            android:id="@+id/pre_loading"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/videoplay__preloading_background"
+            tools:visibility="gone">
+
+        <LinearLayout
+                android:id="@+id/back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="8dip"
+                android:layout_marginTop="8dip"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center">
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ica_light_ic_action_previous_item"/>
+        </LinearLayout>
+
+        <ImageView
+                android:id="@+id/iv_pre_loading"
+                android:layout_width="90dip"
+                android:layout_height="90dip"
+                android:layout_centerInParent="true"
+                android:contentDescription="@null"
+                android:scaleType="fitXY"
+                android:src="@drawable/bili_loading_tv_chan"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+            android:id="@+id/layout_error"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+        <LinearLayout
+                android:id="@+id/back_error"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="8dip"
+                android:layout_marginTop="8dip"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center">
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_fans_player_return"/>
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layout_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_fans_refresh"/>
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:text="出错了，点击刷新"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

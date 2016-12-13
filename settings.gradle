@@ -1,1 +1,17 @@
+// Demo App
 include ':app'
+include ':media'
+
+
+// Commons Library
+include ':debugin'
+project(':debugin').projectDir = file("commons/droids/debugin")
+
+include ':dispatcher'
+project(':dispatcher').projectDir = file("commons/droids/dispatcher")
+
+include ':droid-utils'
+project(':droid-utils').projectDir = file("commons/droids/droid-utils")
+
+include ':downloader'
+project(':downloader').projectDir = file("commons/droids/downloader")
