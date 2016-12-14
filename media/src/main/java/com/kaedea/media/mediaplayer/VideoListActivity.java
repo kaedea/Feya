@@ -8,7 +8,6 @@ package com.kaedea.media.mediaplayer;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.os.AsyncTaskCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import com.kaedea.media.R;
 import com.kaedea.media.home.DividerItemDecoration;
 
@@ -65,22 +65,14 @@ public class VideoListActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            this.mDatas = new ArrayList<>();
+            mDatas = new ArrayList<>();
             VideoEntry videoEntry = new VideoEntry();
-            videoEntry.name = "Buck Bunny (YouTube)";
+            videoEntry.name = "Buck Bunny";
             videoEntry.uri = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
-            this.mDatas.add(videoEntry);
-            videoEntry = new VideoEntry();
-            videoEntry.name = "周彦祖";
-            videoEntry.uri = "http://7u2jfl.com1.z0.glb.clouddn.com/705a394902d7d7acf67af917087e42bb_SD_0.mp4";
-            this.mDatas.add(videoEntry);
-            videoEntry = new VideoEntry();
-            videoEntry.name = "周彦祖";
-            videoEntry.uri = "http://shortvideo.bilibili.co/vupload/52/52a4ac36372d2d2a2df62edfb1fccf1c/52a4ac36372d2d2a2df62edfb1fccf1c_SD_0.mp4?wsTime=1470769652&wsSecret2=a5f72d63f5b3ef548fe9a16e77cf4e4d&oi=2886732936";
-            this.mDatas.add(videoEntry);
-            String baseDir = Environment.getExternalStorageDirectory() + File.separator + "Movies";
-            if (new File(baseDir).exists()) {
-                File[] files = new File(baseDir).listFiles();
+            mDatas.add(videoEntry);
+            File baseDir = getApplicationContext().getExternalFilesDir("Movies");
+            if (baseDir != null && baseDir.exists()) {
+                File[] files = baseDir.listFiles();
                 for (File item : files) {
                     if (item.getAbsolutePath().endsWith("mp4")) {
                         videoEntry = new VideoEntry();
