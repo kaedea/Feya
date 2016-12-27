@@ -1,7 +1,7 @@
 // Demo App
 include ':app'
+include ':javatest'
 include ':media'
-
 
 // Commons Library
 include ':debugin'
