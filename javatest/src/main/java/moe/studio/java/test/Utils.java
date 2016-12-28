@@ -111,7 +111,7 @@ class Utils {
                 out.flush();
                 fd.sync();
             } catch (IOException e) {
-                Logger.w(TAG, e);
+                Log.w(TAG, e);
             } finally {
                 closeQuietly(in);
                 closeQuietly(out);
@@ -119,12 +119,12 @@ class Utils {
         }
 
         static void dumpFiles(File file) {
-            if (!Logger.DEBUG) {
+            if (!Log.DEBUG) {
                 return;
             }
 
             boolean isDirectory = file.isDirectory();
-            Logger.v(TAG, "path = " + file.getAbsolutePath() + ", isDir = " + isDirectory);
+            Log.v(TAG, "path = " + file.getAbsolutePath() + ", isDir = " + isDirectory);
             if (isDirectory) {
                 File[] childFiles = file.listFiles();
                 if (childFiles != null && childFiles.length > 0) {
@@ -136,7 +136,7 @@ class Utils {
         }
     }
 
-    final static class Logger {
+    final static class Log {
 
         static final boolean DEBUG = true;
 

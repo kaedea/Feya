@@ -21,7 +21,7 @@ import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import moe.studio.java.test.Utils.Logger;
+import moe.studio.java.test.Utils.Log;
 
 import static moe.studio.java.test.Utils.FileUtils.checkCreateFile;
 import static moe.studio.java.test.Utils.FileUtils.closeQuietly;
@@ -39,14 +39,19 @@ public class Channels {
 
     public static void go() {
         try {
-            File originApk = new File("/Users/Kaede/Desktop/BSDIFF/Channels/no-channel.apk");
-            String originMD5 = getFileMD5(originApk);
-            Logger.d(TAG, "Origin apk's md5 = " + originMD5);
+            File originApk = new File("/Users/Kaede/Desktop/BSDIFF/old/4.10.0.apk");
+            String origin = readChannel(originApk);
+            Log.d(TAG, "Origin apk's channel = " + origin);
+
+            File noChannelApk = new File("/Users/Kaede/Desktop/BSDIFF/Channels/no-channel.apk");
+            removeChannel(originApk, noChannelApk);
+            String originMD5 = getFileMD5(noChannelApk);
+            Log.d(TAG, "Origin apk's md5 = " + originMD5);
 
             String[] channels = new String[]{"aisuru", "beki", "n", "kimi"};
             for (String item : channels) {
                 File output = new File("/Users/Kaede/Desktop/BSDIFF/Channels", item + ".apk");
-                Utils.FileUtils.copyFile(originApk, output);
+                Utils.FileUtils.copyFile(noChannelApk, output);
 
                 Channels.writeChannel(output, item);
                 String channel = Channels.readChannel(output);
@@ -56,17 +61,17 @@ public class Channels {
 
                 File pick = new File("/Users/Kaede/Desktop/BSDIFF/Channels", "pick_from_" + item + ".apk");
                 removeChannel(output, pick);
-                if (originApk.length() != pick.length()) {
+                if (noChannelApk.length() != pick.length()) {
                     throw new Exception("Remove channel fail.");
                 }
                 String pickMD5 = getFileMD5(pick);
-                Logger.d(TAG, "Picked apk's md5 = " + pickMD5);
+                Log.d(TAG, "Picked apk's md5 = " + pickMD5);
                 if (!originMD5.equals(pickMD5)) {
                     throw new Exception("MD5 diff.");
                 }
             }
         } catch (Exception e) {
-            Logger.w(TAG, e);
+            Log.w(TAG, e);
         }
     }
 
@@ -77,49 +82,6 @@ public class Channels {
             e.printStackTrace();
             return DEFAULT_CHANNEL;
         }
-    }
-
-    private static String readPackageChannel(File file) throws Exception {
-        RandomAccessFile in = null;
-        try {
-            in = new RandomAccessFile(file, "r");
-            long index = in.length();
-            byte[] buffer = new byte[MAGIC.length];
-            index -= buffer.length /*bytes*/;
-            // read magic bytes
-            in.seek(index);
-            in.readFully(buffer);
-            if (!Arrays.equals(MAGIC, buffer)) {
-                throw new Exception("No channel.");
-            }
-            index -= 2 /*sizeof short*/;
-            in.seek(index);
-            short len = readShort(in); // should equals to (zipCommentLen - MAGIC.length)
-            if (len <= 0) {
-                throw new Exception("Bad channel.");
-            }
-            index -= len;
-            in.seek(index);
-            final short zipCommentLen = readShort(in);
-            if (zipCommentLen - len != MAGIC.length) {
-                throw new Exception("Bad channel.");
-            }
-            buffer = new byte[len - 2/*sizeof short*/];
-            in.readFully(buffer);
-            return new String(buffer);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException ignored) {
-            }
-        }
-
-        throw new Exception("Bad channel.");
     }
 
     static void writeChannel(File file, String channel) {
@@ -189,7 +151,7 @@ public class Channels {
                 }
 
             } catch (IOException e) {
-                Logger.w(TAG, e);
+                Log.w(TAG, e);
             } finally {
                 closeQuietly(in);
                 closeQuietly(out);
@@ -205,8 +167,50 @@ public class Channels {
         }
     }
 
-    static boolean isNonChannel(File file) {
+    private static String readPackageChannel(File file) throws Exception {
+        RandomAccessFile in = null;
+        try {
+            in = new RandomAccessFile(file, "r");
+            long index = in.length();
+            byte[] buffer = new byte[MAGIC.length];
+            index -= buffer.length /*bytes*/;
+            // read magic bytes
+            in.seek(index);
+            in.readFully(buffer);
+            if (!Arrays.equals(MAGIC, buffer)) {
+                throw new Exception("Bad channel.");
+            }
+            index -= 2 /*sizeof short*/;
+            in.seek(index);
+            short len = readShort(in); // should equals to (zipCommentLen - MAGIC.length)
+            if (len <= 0) {
+                throw new Exception("Bad channel.");
+            }
+            index -= len;
+            in.seek(index);
+            final short zipCommentLen = readShort(in);
+            if (zipCommentLen - len != MAGIC.length) {
+                throw new Exception("Bad channel.");
+            }
+            buffer = new byte[len - 2/*sizeof short*/];
+            in.readFully(buffer);
+            return new String(buffer);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ignored) {
+            }
+        }
+
+        throw new Exception("Bad channel.");
+    }
+
+    private static boolean isNonChannel(File file) {
         RandomAccessFile in = null;
         try {
             in = new RandomAccessFile(file, "r");
