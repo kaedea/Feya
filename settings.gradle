@@ -1,7 +1,13 @@
 // Demo App
-include ':app'
-include ':javatest'
-include ':media'
+include ':Feya'
+project(':Feya').projectDir = file("Application/Feya")
+
+include ':Media'
+project(':Media').projectDir = file("Application/Media")
+
+include ':JavaTest'
+project(':JavaTest').projectDir = file("Application/JavaTest")
+
 
 // Commons Library
 include ':debugin'

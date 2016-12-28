@@ -17,9 +17,24 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    signingConfigs {
+        test {
+            v2SigningEnabled false
+            storeFile rootProject.file('test.keystore.jks')
+            storePassword '123456'
+            keyAlias 'kaedea.com'
+            keyPassword '123456'
+        }
+    }
     buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.test
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.test
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
