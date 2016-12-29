@@ -19,6 +19,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import moe.studio.java.test.Utils.Log;
@@ -45,7 +48,9 @@ public class Channels {
 
             File noChannelApk = new File("/Users/Kaede/Desktop/BSDIFF/Channels/no-channel.apk");
             removeChannel(originApk, noChannelApk);
-            String originMD5 = getFileMD5(noChannelApk);
+            long current = System.currentTimeMillis();
+            String originMD5 = getSparseFileMD5(noChannelApk);
+            Log.d(TAG, "MD5 consumed = " + (System.currentTimeMillis() - current));
             Log.d(TAG, "Origin apk's md5 = " + originMD5);
 
             String[] channels = new String[]{"aisuru", "beki", "n", "kimi"};
@@ -64,7 +69,7 @@ public class Channels {
                 if (noChannelApk.length() != pick.length()) {
                     throw new Exception("Remove channel fail.");
                 }
-                String pickMD5 = getFileMD5(pick);
+                String pickMD5 = getSparseFileMD5(pick);
                 Log.d(TAG, "Picked apk's md5 = " + pickMD5);
                 if (!originMD5.equals(pickMD5)) {
                     throw new Exception("MD5 diff.");
@@ -255,5 +260,36 @@ public class Channels {
         String md5 = DigestUtils.md5Hex(fis);
         closeQuietly(fis);
         return md5;
+    }
+
+    private static String getSparseFileMD5(File file) throws IOException, NoSuchAlgorithmException {
+        return getSparseFileMD5(file, 1024, 1024 * 10);
+    }
+
+    private static String getSparseFileMD5(File file, int block, int offset) throws IOException,
+            NoSuchAlgorithmException {
+        if (block >= file.length()) {
+            return getFileMD5(file);
+        }
+
+        InputStream in = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            in = new FileInputStream(file);
+            in = new DigestInputStream(in, digest);
+            byte[] buffer = new byte[block];
+            int len = 0, read = 0;
+            while (len < file.length() && read != -1) {
+                //noinspection ResultOfMethodCallIgnored
+                in.skip(len);
+                read = in.read(buffer);
+                digest.update(buffer);
+                len = len + block + offset;
+            }
+            return DigestUtils.md5Hex(digest.digest());
+
+        } finally {
+            closeQuietly(in);
+        }
     }
 }
