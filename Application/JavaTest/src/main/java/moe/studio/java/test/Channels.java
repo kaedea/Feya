@@ -6,8 +6,10 @@
 package moe.studio.java.test;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.http.util.TextUtils;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
@@ -23,6 +26,8 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import moe.studio.java.test.Utils.Log;
 
@@ -41,43 +46,45 @@ public class Channels {
     private static final byte[] EMPTY_COMMENT = new byte[]{0x00, 0x00};
 
     public static void go() {
-        try {
-            File originApk = new File("/Users/Kaede/Desktop/BSDIFF/old/4.10.0.apk");
-            String origin = readChannel(originApk);
-            Log.d(TAG, "Origin apk's channel = " + origin);
+//        try {
+//            File originApk = new File("/Users/Kaede/Desktop/BSDIFF/old/4.10.0.apk");
+//            String origin = readChannel(originApk);
+//            Log.d(TAG, "Origin apk's channel = " + origin);
+//
+//            File noChannelApk = new File("/Users/Kaede/Desktop/BSDIFF/Channels/no-channel.apk");
+//            removeChannel(originApk, noChannelApk);
+//            long current = System.currentTimeMillis();
+//            String originMD5 = getSparseFileMD5(noChannelApk);
+//            Log.d(TAG, "MD5 consumed = " + (System.currentTimeMillis() - current));
+//            Log.d(TAG, "Origin apk's md5 = " + originMD5);
+//
+//            String[] channels = new String[]{"aisuru", "beki", "n", "kimi"};
+//            for (String item : channels) {
+//                File output = new File("/Users/Kaede/Desktop/BSDIFF/Channels", item + ".apk");
+//                Utils.FileUtils.copyFile(noChannelApk, output);
+//
+//                Channels.writeChannel(output, item);
+//                String channel = Channels.readChannel(output);
+//                if (!channel.equals(item)) {
+//                    throw new Exception("Write channel fail.");
+//                }
+//
+//                File pick = new File("/Users/Kaede/Desktop/BSDIFF/Channels", "pick_from_" + item + ".apk");
+//                removeChannel(output, pick);
+//                if (noChannelApk.length() != pick.length()) {
+//                    throw new Exception("Remove channel fail.");
+//                }
+//                String pickMD5 = getSparseFileMD5(pick);
+//                Log.d(TAG, "Picked apk's md5 = " + pickMD5);
+//                if (!originMD5.equals(pickMD5)) {
+//                    throw new Exception("MD5 diff.");
+//                }
+//            }
+//        } catch (Exception e) {
+//            Log.w(TAG, e);
+//        }
 
-            File noChannelApk = new File("/Users/Kaede/Desktop/BSDIFF/Channels/no-channel.apk");
-            removeChannel(originApk, noChannelApk);
-            long current = System.currentTimeMillis();
-            String originMD5 = getSparseFileMD5(noChannelApk);
-            Log.d(TAG, "MD5 consumed = " + (System.currentTimeMillis() - current));
-            Log.d(TAG, "Origin apk's md5 = " + originMD5);
-
-            String[] channels = new String[]{"aisuru", "beki", "n", "kimi"};
-            for (String item : channels) {
-                File output = new File("/Users/Kaede/Desktop/BSDIFF/Channels", item + ".apk");
-                Utils.FileUtils.copyFile(noChannelApk, output);
-
-                Channels.writeChannel(output, item);
-                String channel = Channels.readChannel(output);
-                if (!channel.equals(item)) {
-                    throw new Exception("Write channel fail.");
-                }
-
-                File pick = new File("/Users/Kaede/Desktop/BSDIFF/Channels", "pick_from_" + item + ".apk");
-                removeChannel(output, pick);
-                if (noChannelApk.length() != pick.length()) {
-                    throw new Exception("Remove channel fail.");
-                }
-                String pickMD5 = getSparseFileMD5(pick);
-                Log.d(TAG, "Picked apk's md5 = " + pickMD5);
-                if (!originMD5.equals(pickMD5)) {
-                    throw new Exception("MD5 diff.");
-                }
-            }
-        } catch (Exception e) {
-            Log.w(TAG, e);
-        }
+        getManifestMD5(new File("/Users/Kaede/Repository/Kaede/feya/Application/Feya/build/outputs/apk/Feya-debug.apk"));
     }
 
     static String readChannel(File file) {
@@ -291,5 +298,40 @@ public class Channels {
         } finally {
             closeQuietly(in);
         }
+    }
+
+    public static String getManifestMD5(File apkFile) {
+        String md5 = null;
+        ZipFile apk = null;
+        try {
+            apk = new ZipFile(apkFile);
+            ZipEntry certEntry = apk.getEntry("META-INF/CERT.SF");
+
+            if (certEntry != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        apk.getInputStream(certEntry)));
+                String line;
+                String manifest_symbol = "SHA1-Digest-Manifest:";
+                do {
+                    line = reader.readLine();
+                    if (!TextUtils.isEmpty(line) && line.contains(manifest_symbol)) {
+                        md5 = line.substring(line.indexOf(manifest_symbol) + manifest_symbol.length()).trim();
+                        Log.d(TAG, "Manifest MD5 = " + md5);
+                        break;
+                    }
+                } while (line != null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (apk != null) {
+                try {
+                    apk.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return md5;
     }
 }
