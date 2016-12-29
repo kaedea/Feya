@@ -263,7 +263,7 @@ public class Channels {
     }
 
     private static String getSparseFileMD5(File file) throws IOException, NoSuchAlgorithmException {
-        return getSparseFileMD5(file, 1024, 1024 * 10);
+        return getSparseFileMD5(file, 1024, 1024 * 100);
     }
 
     private static String getSparseFileMD5(File file, int block, int offset) throws IOException,
@@ -280,11 +280,11 @@ public class Channels {
             byte[] buffer = new byte[block];
             int len = 0, read = 0;
             while (len < file.length() && read != -1) {
-                //noinspection ResultOfMethodCallIgnored
-                in.skip(len);
                 read = in.read(buffer);
                 digest.update(buffer);
                 len = len + block + offset;
+                //noinspection ResultOfMethodCallIgnored
+                in.skip(offset);
             }
             return DigestUtils.md5Hex(digest.digest());
 
