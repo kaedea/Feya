@@ -18,6 +18,12 @@ public class Entry {
         //new BsDiff().diff();
 
         // Channels
-        Channels.go();
+        // Channels.go();
+
+        // Archive Diff
+        String[] urls = new String[]{
+                "xxxx.apk",
+                "xxxx.apk"};
+        ArchiveDiff.go(urls);
     }
 }
