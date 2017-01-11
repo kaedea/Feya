@@ -19,6 +19,7 @@ android {
         versionName "1.0"
         // multiDexEnabled true
         // testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
     signingConfigs {
         test {
@@ -82,4 +83,8 @@ dependencies {
 
     // b-log
     compile 'moe.kaede:blog:0.1.9'
+
+    // retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'org.ligboy.retrofit2:converter-fastjson-android:2.1.0'
 }

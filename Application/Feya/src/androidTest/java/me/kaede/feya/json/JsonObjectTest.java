@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Created by Kaede on 16/8/3.
  */
-public class JsonObejctTest extends InstrumentationTestCase {
+public class JsonObjectTest extends InstrumentationTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
