@@ -16,12 +16,11 @@ import org.junit.runners.JUnit4;
 
 import java.io.IOException;
 
+import me.kaede.feya.retrofit.ex.AcCommentService;
 import me.kaede.feya.retrofit.ex.Comment;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.fastjson.FastJsonConverterFactory;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
 
 /**
  * @author kaede
@@ -52,9 +51,4 @@ public class RetrofitApiTest {
         Assert.assertNotNull(body);
     }
 
-    // http://www.acfun.cn/comment_list_json.aspx?contentId=3392462&currentPage=1
-    public interface AcCommentService {
-        @GET("comment_list_json.aspx")
-        Call<Comment> getComment(@Query("contentId") String contentId, @Query("currentPage") int page);
-    }
 }
