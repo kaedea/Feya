@@ -16,12 +16,13 @@ project(':applier').projectDir = file("Library/ArchiveDiff/applier")
 include ':generator'
 project(':generator').projectDir = file("Library/ArchiveDiff/generator")
 
+// Sub Module
 // Commons Library
 include ':debugin'
-project(':debugin').projectDir = file("commons/droids/debugin")
+project(':debugin').projectDir = file("Nipaa/droids/debugin")
 include ':dispatcher'
-project(':dispatcher').projectDir = file("commons/droids/dispatcher")
+project(':dispatcher').projectDir = file("Nipaa/droids/dispatcher")
 include ':droid-utils'
-project(':droid-utils').projectDir = file("commons/droids/droid-utils")
+project(':droid-utils').projectDir = file("Nipaa/droids/droid-utils")
 include ':downloader'
-project(':downloader').projectDir = file("commons/droids/downloader")
+project(':downloader').projectDir = file("Nipaa/droids/downloader")
