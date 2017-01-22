@@ -1,0 +1,3 @@
+[submodule "Nipaa"]
+	path = Nipaa
+	url = git@bitbucket.org:kaedea/nipaa.git
