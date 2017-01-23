@@ -30,15 +30,6 @@ android {
             keyPassword '123456'
         }
     }
-    signingConfigs {
-        test {
-            v2SigningEnabled false
-            storeFile rootProject.file('test.keystore.jks')
-            storePassword '123456'
-            keyAlias 'kaedea.com'
-            keyPassword '123456'
-        }
-    }
     buildTypes {
         debug {
             minifyEnabled false
