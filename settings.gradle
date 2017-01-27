@@ -19,6 +19,8 @@ project(':generator').projectDir = file("Library/ArchiveDiff/generator")
 
 // Sub Module
 // Commons Library
+include ':commons'
+project(':commons').projectDir = file("Nipaa/Java/commons")
 include ':debugin'
 project(':debugin').projectDir = file("Nipaa/Droids/debugin")
 include ':dispatcher'
