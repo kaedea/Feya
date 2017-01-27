@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * 林库死大多
  *
- * @author kaede
- * @version date 2016/10/31
+ * @author Kaede
+ * @since date 2016/10/31
  */
 
 class LinkStart {

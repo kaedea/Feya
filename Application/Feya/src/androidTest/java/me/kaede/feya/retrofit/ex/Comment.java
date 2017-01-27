@@ -8,8 +8,8 @@ package me.kaede.feya.retrofit.ex;
 import java.util.Map;
 
 /**
- * @author kaede
- * @version date 2017/1/11
+ * @author Kaede
+ * @since date 2017/1/11
  */
 public class Comment {
 

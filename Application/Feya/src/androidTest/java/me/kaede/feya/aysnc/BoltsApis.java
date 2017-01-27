@@ -24,8 +24,8 @@ import bolts.TaskCompletionSource;
  * see api test & example code in {@link BoltsApiTest}
  * see official api test in {@link BoltsApiTest}
  *
- * @author kaede
- * @version date 16/8/31 bolts 1.4.0
+ * @author Kaede
+ * @since date 16/8/31 bolts 1.4.0
  */
 public class BoltsApis {
     /**

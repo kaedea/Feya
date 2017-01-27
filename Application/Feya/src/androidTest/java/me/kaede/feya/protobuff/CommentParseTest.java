@@ -30,8 +30,8 @@ import me.kaede.feya.protobuff.danmaku.DanmakuDoc;
 import me.kaede.feya.protobuff.danmaku.DanmakuItem;
 
 /**
- * @author kaede
- * @version date 16/8/24
+ * @author Kaede
+ * @since date 16/8/24
  */
 public class CommentParseTest extends InstrumentationTestCase {
     public static final String TAG = "CommentParse";

@@ -16,8 +16,8 @@ import moe.kaede.log.LogSetting;
  * Copycat of  {@link
  * "https://github.com/kaedea/b-log/blob/master/library/src/androidTest/java/moe/kaede/log/BLogApiTest.java"}
  *
- * @author kaede
- * @version date 16/9/25
+ * @author Kaede
+ * @since date 16/9/25
  */
 public class BLogApiTest extends InstrumentationTestCase {
 

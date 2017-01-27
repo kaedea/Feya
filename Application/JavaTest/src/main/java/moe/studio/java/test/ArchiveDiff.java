@@ -28,8 +28,8 @@ import moe.studio.java.test.Utils.Log;
 import sun.security.action.GetPropertyAction;
 
 /**
- * @author kaede
- * @version date 2017/1/5
+ * @author Kaede
+ * @since date 2017/1/5
  */
 public class ArchiveDiff {
 

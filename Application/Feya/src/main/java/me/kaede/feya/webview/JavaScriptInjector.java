@@ -21,8 +21,8 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
 /**
- * @author kaede
- * @version date 16/8/23
+ * @author Kaede
+ * @since date 16/8/23
  */
 public class JavaScriptInjector {
 

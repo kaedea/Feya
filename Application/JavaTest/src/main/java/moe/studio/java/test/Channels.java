@@ -36,7 +36,7 @@ import static moe.studio.java.test.Utils.FileUtils.closeQuietly;
 
 /**
  * @author Kaede.
- * @version 2016/12/27.
+ * @since 2016/12/27.
  */
 public class Channels {
 

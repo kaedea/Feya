@@ -15,8 +15,8 @@ import com.squareup.geology.Period;
 import java.io.IOException;
 
 /**
- * @author kaede
- * @version date 16/8/24
+ * @author Kaede
+ * @since date 16/8/24
  */
 public class ProtobuffTest extends InstrumentationTestCase {
     public static final String TAG = "ProtobuffTest";

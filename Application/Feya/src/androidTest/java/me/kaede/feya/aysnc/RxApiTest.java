@@ -18,8 +18,8 @@ import rx.functions.Func0;
  * An API for asynchronous programming with observable streams.
  * {@link "https://github.com/ReactiveX/RxAndroid"}
  *
- * @author kaede
- * @version date 16/9/7
+ * @author Kaede
+ * @since date 16/9/7
  */
 public class RxApiTest extends TestCase {
 

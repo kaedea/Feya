@@ -23,8 +23,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.fastjson.FastJsonConverterFactory;
 
 /**
- * @author kaede
- * @version date 2017/1/11
+ * @author Kaede
+ * @since date 2017/1/11
  */
 @RunWith(JUnit4.class)
 public class RetrofitApiTest {

@@ -10,8 +10,8 @@ import android.os.SystemClock;
 import android.webkit.JavascriptInterface;
 
 /**
- * @author kaede
- * @version date 16/8/22
+ * @author Kaede
+ * @since date 16/8/22
  */
 public class JavaScriptBridge {
     Activity mActivity;

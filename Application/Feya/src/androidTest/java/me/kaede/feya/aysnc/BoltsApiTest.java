@@ -33,8 +33,8 @@ import bolts.TaskCompletionSource;
  * Bolts is a collection of low-level libraries designed to make developing mobile apps easier.
  * {@link "https://github.com/BoltsFramework/Bolts-Android"}
  *
- * @author kaede
- * @version date 16/8/26
+ * @author Kaede
+ * @since date 16/8/26
  */
 public class BoltsApiTest extends TestCase {
 

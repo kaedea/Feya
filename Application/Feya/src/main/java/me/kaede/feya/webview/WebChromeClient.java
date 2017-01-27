@@ -25,8 +25,8 @@ import java.io.File;
  * copycat
  * Export some methods for opening file-chooser which are hidden in {@link android.webkit.WebChromeClient}
  *
- * @author kaede
- * @version date 16/8/22
+ * @author Kaede
+ * @since date 16/8/22
  */
 public abstract class WebChromeClient extends android.webkit.WebChromeClient {
     private ValueCallback mFileUploadCallback = null;
