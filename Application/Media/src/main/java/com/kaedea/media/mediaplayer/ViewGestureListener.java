@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
+ * Copyright (c) 2016. Kaede <kidhaibra@gmail.com>
  */
 
 package com.kaedea.media.mediaplayer;

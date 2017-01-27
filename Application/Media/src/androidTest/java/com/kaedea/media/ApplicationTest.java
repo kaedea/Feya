@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
- */
-
 package com.kaedea.media;
 
 import android.app.Application;

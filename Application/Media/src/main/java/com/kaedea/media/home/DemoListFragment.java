@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
+ * Copyright (c) 2016. Kaede <kidhaibra@gmail.com>
  */
 
 package com.kaedea.media.home;
@@ -23,6 +22,9 @@ import android.widget.TextView;
 import com.kaedea.media.InternalUtils;
 import com.kaedea.media.R;
 
+/**
+ * Created by kaede on 2015/10/23.
+ */
 public class DemoListFragment extends Fragment {
     private static final String BUNDLE_INDEX = "BUNDLE_INDEX";
 
@@ -106,10 +108,10 @@ public class DemoListFragment extends Fragment {
     public static final int ID_TITLE = 100;
     public static final int ID_SUBTITLE = 200;
 
-    //  +-------------+
-    //  |  Title      |
-    //  |  Sub Title  |
-    //  +-------------+
+    ////////////////
+    //  Title     //
+    //  Sub Title //
+    ////////////////
     @SuppressWarnings("ResourceType")
     public static View getItemViewLayout(Context context) {
         LinearLayout linearLayout = new LinearLayout(context);

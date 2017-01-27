@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
+ * Copyright (c) 2016. Kaede <kidhaibra@gmail.com>
  */
 
 package com.kaedea.media.mediaplayer;
@@ -15,10 +14,17 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bilibili.boxing.Boxing;
+import com.bilibili.boxing.model.config.BoxingConfig;
+import com.bilibili.boxing.model.config.BoxingConfig.Mode;
+import com.bilibili.boxing.model.entity.BaseMedia;
+import com.bilibili.boxing_impl.ui.BoxingActivity;
 import com.kaedea.media.R;
 import com.kaedea.media.home.DividerItemDecoration;
 
@@ -29,6 +35,7 @@ import java.util.List;
 public class VideoListActivity extends AppCompatActivity {
 
     public static final String EXTRA_TARGET_ACTIVITY = "EXTRA_TARGET_ACTIVITY";
+    public static final int REQ_MEDIA_VIDEO = 2233;
     private RecyclerView mRecyclerView;
     private MyAdapter mAdapter;
     private List<VideoEntry> mDatas;
@@ -53,35 +60,70 @@ public class VideoListActivity extends AppCompatActivity {
             mSurfaceMode = extras.getInt(MediaPlayerActivity.EXTRA_SURFACE_MODE);
             className = extras.getString(EXTRA_TARGET_ACTIVITY);
         }
+
+        // Load datas.
         loadDatas();
+
     }
 
     private void loadDatas() {
         AsyncTaskCompat.executeParallel(new LoadTask());
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.option_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.option_pick:
+                Boxing.of(new BoxingConfig(Mode.VIDEO))
+                        .withIntent(this, BoxingActivity.class)
+                        .start(this, REQ_MEDIA_VIDEO);
+                return true;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQ_MEDIA_VIDEO) {
+            List<BaseMedia> medias = Boxing.getResult(data);
+            // avoid null
+            if (medias != null) {
+                for (BaseMedia item : medias) {
+                    VideoEntry videoEntry = new VideoEntry();
+                    videoEntry.name = new File(item.getPath()).getName();
+                    videoEntry.uri = item.getPath();
+                    this.mDatas.add(videoEntry);
+                }
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+
+    }
+
     class LoadTask extends AsyncTask<Void, Void, Void> {
+
         private List<VideoEntry> mDatas;
 
         @Override
         protected Void doInBackground(Void... voids) {
-            mDatas = new ArrayList<>();
+            this.mDatas = new ArrayList<>();
             VideoEntry videoEntry = new VideoEntry();
-            videoEntry.name = "Buck Bunny";
+            videoEntry.name = "Buck Bunny (YouTube)";
             videoEntry.uri = "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
-            mDatas.add(videoEntry);
-            File baseDir = getApplicationContext().getExternalFilesDir("Movies");
-            if (baseDir != null && baseDir.exists()) {
-                File[] files = baseDir.listFiles();
-                for (File item : files) {
-                    if (item.getAbsolutePath().endsWith("mp4")) {
-                        videoEntry = new VideoEntry();
-                        videoEntry.name = item.getName();
-                        videoEntry.uri = item.getAbsolutePath();
-                        this.mDatas.add(videoEntry);
-                    }
-                }
-            }
+            this.mDatas.add(videoEntry);
+            videoEntry = new VideoEntry();
+            videoEntry.name = "Yannc";
+            videoEntry.uri = "http://7u2jfl.com1.z0.glb.clouddn.com/705a394902d7d7acf67af917087e42bb_SD_0.mp4";
+            this.mDatas.add(videoEntry);
             return null;
         }
 
@@ -91,6 +133,7 @@ public class VideoListActivity extends AppCompatActivity {
             VideoListActivity.this.mDatas = this.mDatas;
             mAdapter.notifyDataSetChanged();
         }
+
     }
 
     public class VideoEntry {

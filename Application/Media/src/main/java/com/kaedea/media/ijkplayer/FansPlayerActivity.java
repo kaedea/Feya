@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
+ * Copyright (c) 2015-2016 BiliBili Inc.
  */
 
 package com.kaedea.media.ijkplayer;
@@ -36,7 +35,7 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 
 
-public class IjkPlayerActivity extends AppCompatActivity implements View.OnClickListener,
+public class FansPlayerActivity extends AppCompatActivity implements View.OnClickListener,
         MediaController.MediaPlayerControl,
         IMediaPlayer.OnPreparedListener,
         IMediaPlayer.OnVideoSizeChangedListener,
@@ -58,7 +57,7 @@ public class IjkPlayerActivity extends AppCompatActivity implements View.OnClick
     private int mVideoSarDen;
 
     public static Intent createIntent(Context context, int mode, String uri) {
-        Intent intent = new Intent(context, IjkPlayerActivity.class);
+        Intent intent = new Intent(context, FansPlayerActivity.class);
         Bundle bundle = new Bundle();
         bundle.putInt(EXTRA_SURFACE_MODE, mode);
         bundle.putString(EXTRA_VIDEO_URI, uri);
@@ -68,7 +67,7 @@ public class IjkPlayerActivity extends AppCompatActivity implements View.OnClick
     }
 
     public static Intent createIntent(Context context, String uri) {
-        Intent intent = new Intent(context, IjkPlayerActivity.class);
+        Intent intent = new Intent(context, FansPlayerActivity.class);
         Bundle bundle = new Bundle();
         bundle.putInt(EXTRA_SURFACE_MODE, SURFACE_SURFACEVIEW);
         bundle.putString(EXTRA_VIDEO_URI, uri);
