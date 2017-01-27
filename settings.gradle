@@ -1,4 +1,4 @@
-// Demo App
+// Demo Applications
 include ':Feya'
 project(':Feya').projectDir = file("Application/Feya")
 include ':Media'
@@ -6,6 +6,7 @@ project(':Media').projectDir = file("Application/Media")
 include ':JavaTest'
 project(':JavaTest').projectDir = file("Application/JavaTest")
 
+// Libraries
 // Archive Diff
 include ':shared'
 project(':shared').projectDir = file("Library/ArchiveDiff/shared")
@@ -19,10 +20,10 @@ project(':generator').projectDir = file("Library/ArchiveDiff/generator")
 // Sub Module
 // Commons Library
 include ':debugin'
-project(':debugin').projectDir = file("Nipaa/droids/debugin")
+project(':debugin').projectDir = file("Nipaa/Droids/debugin")
 include ':dispatcher'
-project(':dispatcher').projectDir = file("Nipaa/droids/dispatcher")
+project(':dispatcher').projectDir = file("Nipaa/Droids/dispatcher")
 include ':droid-utils'
-project(':droid-utils').projectDir = file("Nipaa/droids/droid-utils")
+project(':droid-utils').projectDir = file("Nipaa/Droids/droid-utils")
 include ':downloader'
-project(':downloader').projectDir = file("Nipaa/droids/downloader")
+project(':downloader').projectDir = file("Nipaa/Droids/downloader")
