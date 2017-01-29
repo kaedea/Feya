@@ -51,9 +51,10 @@ public class PackageManagerTest extends InstrumentationTestCase {
         List<PackageInfo> packages = pm.getInstalledPackages(0);
         assertNotNull(packages);
 
-        Log.d(TAG, "all package num = " + packages.size());
+        Log.i(TAG, "all package num = " + packages.size());
         for (PackageInfo packageInfo : packages) {
             Log.i(TAG, "-");
+
             // PackageInfo
             Log.v(TAG, "packageName = " + packageInfo.packageName);
             Log.v(TAG, "version name = " + packageInfo.versionName);
@@ -61,19 +62,36 @@ public class PackageManagerTest extends InstrumentationTestCase {
 
             Field field = findField(packageInfo, "coreApp");
             boolean coreApp = (boolean) field.get(packageInfo);
-            Log.v(TAG, "coreApp = " + coreApp);
+            if (coreApp) {
+                Log.d(TAG, "coreApp = " + true);
+            } else {
+                Log.v(TAG, "coreApp = " + false);
+            }
 
-            Log.i(TAG, "Package info = " + packageInfo.toString());
+            Log.d(TAG, "Package info = " + packageInfo.toString());
 
-            // Package's ApplicationInfo
+            // PackageInfo#ApplicationInfo
             ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-            Log.d(TAG, "publicSourceDir = " + applicationInfo.publicSourceDir);
+            Log.v(TAG, "App name = " + applicationInfo.loadLabel(pm));
+            Log.v(TAG, "App Icon = " + String.valueOf(applicationInfo.loadIcon(pm)));
+            Log.v(TAG, "sourceDir = " + applicationInfo.sourceDir);
+            Log.v(TAG, "publicSourceDir = " + applicationInfo.publicSourceDir);
+            Log.v(TAG, "dataDir = " + applicationInfo.dataDir);
+            Log.v(TAG, "nativeDir = " + applicationInfo.nativeLibraryDir);
+
             boolean isSystemApp = (applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-            Log.d(TAG, "Is system app = " + isSystemApp);
-            Log.d(TAG, "Is enabled = " + applicationInfo.enabled);
+            if (isSystemApp) {
+                Log.d(TAG, "Is system app = " + true);
+            } else {
+                Log.v(TAG, "Is system app = " + false);
+            }
+            if (applicationInfo.enabled) {
+                Log.d(TAG, "Is enabled = " + true);
+            } else {
+                Log.v(TAG, "Is enabled = " + false);
+            }
 
             Log.i(TAG, "application info = " + applicationInfo.toString());
-            Log.d(TAG, "package info =" + packageInfo.toString());
             Log.i(TAG, "-");
         }
     }
