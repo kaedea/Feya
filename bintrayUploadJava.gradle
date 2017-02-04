@@ -1,3 +1,5 @@
+apply plugin: 'maven'
+apply plugin: 'war'
 apply plugin: 'com.jfrog.bintray'
 
 /*
@@ -40,26 +42,6 @@ def javadocName = properties.getProperty("javadoc.name")
 group = projectGroupId
 version = projectVersionName
 
-allprojects {
-    repositories {
-        jcenter()
-    }
-    apply plugin: 'maven'
-    apply plugin: 'maven-publish'
-    apply plugin: 'java'
-}
-
-publishing {
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-            groupId projectGroupId
-            artifactId projectArtifactId
-            version projectVersionName
-        }
-    }
-}
-
 // bintray configuration
 bintray {
     user = bintrayUser?.trim() ? bintrayUser : System.getenv('BT_USER')
@@ -70,16 +52,23 @@ bintray {
         repo = "moe-studio"
         name = projectName
         userOrg = user
-        vcsUrl = projectGitUrl
         licenses = ["Apache-2.0"]
+        vcsUrl = projectGitUrl
+        labels = ['Java', 'Library', 'Commons', 'Utils']
+        publicDownloadNumbers = true
+        // Optional package-level attributes
+        attributes = ['Developer': developerName,
+                      'Site'     : 'www.kaedea.com',
+                      'Support'  : developerEmail]
         version {
             name = projectVersionName
             desc = projectDesc
-            released = new Date()
             vcsTag = projectVersionName
-            attributes = ['Developer': developerName,
-                          'Site'     : 'www.kaedea.com',
-                          'Support'  : developerEmail]
+            attributes = ['Type': jar]
         }
     }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
 }

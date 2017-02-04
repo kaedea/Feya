@@ -17,6 +17,8 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:${rootProject.ext.buildGradle}"
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
+
+        // Bintray.
         // classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
