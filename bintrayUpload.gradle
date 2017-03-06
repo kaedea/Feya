@@ -1,133 +1,101 @@
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-/*
- * Copyright (c) 2016. Kaede
- */
+// Load properties.
+Properties pros = new Properties()
 
-// load properties
-Properties properties = new Properties()
-
-File projectPropertiesFile = project.file("project.properties");
-if(projectPropertiesFile.exists()){
-    properties.load(projectPropertiesFile.newDataInputStream())
+// Add Project's properties.
+def iterator = properties.keySet().iterator()
+while (iterator.hasNext()) {
+    def key = iterator.next()
+    def value = properties.get(key)
+    if (value != null)
+        pros.put(key, value)
 }
 
-File localPropertiesFile = rootProject.file("local.properties");
-if(localPropertiesFile.exists()){
-    properties.load(localPropertiesFile.newDataInputStream())
+// Add properties from files.
+File[] files = [project.file("project.properties"), rootProject.file("local.properties")]
+for (File item : files) {
+    if (item.exists())
+        pros.load(item.newDataInputStream())
 }
 
-// read properties
-def projectName = properties.getProperty("project.name")
-def projectGroupId = properties.getProperty("project.groupId")
-def projectArtifactId = properties.getProperty("project.artifactId")
-def projectVersionName = properties.getProperty("project.version")
-def projectPackaging = properties.getProperty("project.packaging")
-def projectSiteUrl = properties.getProperty("project.siteUrl")
-def projectGitUrl = properties.getProperty("project.gitUrl")
-def projectIssueUrl = properties.getProperty("project.issueUrl")
-def projectDesc = properties.getProperty("project.description")
+// Define config.
+def projectGroupId = pros.getProperty("project.groupId")
+def projectVersion = pros.getProperty("project.version")
+def projectSiteUrl = pros.getProperty("project.siteUrl") ? pros.getProperty("project.siteUrl") : "No Website"
+def projectGitUrl = pros.getProperty("project.gitUrl") ? pros.getProperty("project.gitUrl") : "No Git Url"
+def projectIssueUrl = pros.getProperty("project.issueUrl") ? pros.getProperty("project.issueUrl") : "No Issue Url"
+def projectDesc = pros.getProperty("project.description") ? pros.getProperty("project.description") : "No Description"
+// def javadocName = pros.getProperty("javadoc.name")
 
-def developerId = properties.getProperty("developer.id")
-def developerName = properties.getProperty("developer.name")
-def developerEmail = properties.getProperty("developer.email")
-
-def bintrayUser = properties.getProperty("bintray.user")
-def bintrayApiKey = properties.getProperty("bintray.apikey")
-
-def javadocName = properties.getProperty("javadoc.name")
+def bintrayRepo = pros.getProperty("bintary.repo") ? pros.getProperty("bintary.repo") : "maven"
+def bintrayUser = pros.getProperty("bintray.user") ? pros.getProperty("bintray.user") : System.getenv('BT_USER')
+def bintrayApiKey = pros.getProperty("bintray.apikey") ? pros.getProperty("bintray.apikey") : System.getenv('BT_KEY')
+def developerName = pros.getProperty("developer.name") ? pros.getProperty("developer.name") : "No Developer"
+def developerSite = pros.getProperty("developer.siteUrl") ? pros.getProperty("developer.siteUrl") : "No Developer Site"
+def developerEmail = pros.getProperty("developer.email") ? pros.getProperty("developer.email") : "No Email"
 
 group = projectGroupId
-version = projectVersionName
+version = projectVersion
 
-// bintray configuration
-bintray {
-    user = bintrayUser?.trim() ? bintrayUser : System.getenv('BT_USER')
-    key = bintrayApiKey?.trim() ? bintrayApiKey : System.getenv('BT_KEY')
-
-    configurations = ['archives']
-    pkg {
-        repo = "moe-studio"
-        name = projectName
-        desc = projectDesc
-        websiteUrl = projectSiteUrl
-        vcsUrl = projectGitUrl
-        issueTrackerUrl = projectIssueUrl
-        licenses = ["Apache-2.0"]
-        publish = true
-        labels = ['android', 'library', 'example', 'aar', 'jar']
-        publicDownloadNumbers = true
+// BintrayUpload Task.
+def hasAndroidPlugin() {
+    return getPlugins().inject(false) { a, b ->
+        def classStr = b.getClass().name
+        def isAndroid = ("com.android.build.gradle.LibraryPlugin" == classStr) || ("com.android.build.gradle.AppPlugin" == classStr)
+        a || isAndroid
     }
 }
 
-// This generates POM.xml with proper parameters
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
-                name projectName
-                groupId projectGroupId
-                artifactId projectArtifactId
-                version projectVersionName
-                packaging projectPackaging
-                url projectSiteUrl
+task sourcesJar(type: Jar) {
+    if (hasAndroidPlugin()) {
+        from android.sourceSets.main.java.srcDirs
+        classifier = 'sources'
+    } else {
+        from sourceSets.main.allSource
+        classifier = 'sources'
+    }
+}
 
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
+artifacts {
+    archives sourcesJar
+    // archives javadocJar
+}
 
-                developers {
-                    developer {
-                        id developerId
-                        name developerName
-                        email developerEmail
-                    }
-                }
-
-                scm {
-                    connection projectGitUrl
-                    developerConnection projectGitUrl
-                    url projectSiteUrl
-                }
-            }
+bintray {
+    user = bintrayUser
+    key = bintrayApiKey
+    configurations = ['archives']
+    pkg {
+        repo = bintrayRepo
+        name = "${project.name}"
+        desc = projectDesc
+        licenses = ['Apache-2.0']
+        userOrg = user
+        vcsUrl = projectGitUrl
+        websiteUrl = projectSiteUrl
+        issueTrackerUrl = projectIssueUrl
+        publish = true
+        publicDownloadNumbers = true
+        // Optional package-level attributes
+        attributes = ['Developer': developerName,
+                      'Site'     : developerSite,
+                      'Support'  : developerEmail]
+        version {
+            name = projectVersion
+            desc = projectDesc
+            vcsTag = projectVersion
+            attributes = ['Version': "${project.version}"]
         }
     }
 }
 
-// This generates sources.jar
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+tasks.withType(Javadoc).all {
+    enabled = false
+    options.encoding = 'UTF-8'
 }
 
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-// This generates javadoc.jar
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
-}
-
-// javadoc configuration
-javadoc {
-    options{
-        encoding "UTF-8"
-        charSet 'UTF-8'
-        author true
-        version projectVersionName
-        links "http://docs.oracle.com/javase/7/docs/api"
-        title javadocName
-    }
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
