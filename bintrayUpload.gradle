@@ -99,3 +99,26 @@ tasks.withType(Javadoc).all {
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
+
+// JFrog SNAPSHOT.
+apply plugin: "com.jfrog.artifactory"
+
+artifactory {
+    contextUrl = 'http://oss.jfrog.org/artifactory'
+    resolve {
+        repository {
+            repoKey = 'libs-release'
+        }
+    }
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = bintray.user
+            password = bintray.key
+            maven = true
+        }
+        defaults {
+            publishConfigs('archives')
+        }
+    }
+}

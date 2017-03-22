@@ -7,12 +7,12 @@ package me.kaede.feya.log;
 
 import android.test.InstrumentationTestCase;
 
-import moe.kaede.log.BLog;
-import moe.kaede.log.LogSetting;
+import moe.studio.log.BLog;
+import moe.studio.log.LogSetting;
 
 /**
  * repo: https://github.com/kaedea/b-log
- *
+ * <p>
  * Copycat of  {@link
  * "https://github.com/kaedea/b-log/blob/master/library/src/androidTest/java/moe/kaede/log/BLogApiTest.java"}
  *
@@ -74,20 +74,20 @@ public class BLogApiTest extends InstrumentationTestCase {
     public void testLogThrowable() {
         Exception exception = new RuntimeException("一种钦定的感觉");
 
-        BLog.v(TAG, exception, "runtime exception");
-        BLog.v(exception, null);
+        BLog.v(TAG, "runtime exception", exception);
+        BLog.v(TAG, exception);
 
-        BLog.d(TAG, exception, "runtime exception");
-        BLog.d(exception, null);
+        BLog.d(TAG, "runtime exception", exception);
+        BLog.d(TAG, exception);
 
-        BLog.i(TAG, exception, "runtime exception");
-        BLog.i(exception, null);
+        BLog.i(TAG, "runtime exception", exception);
+        BLog.i(TAG, exception);
 
-        BLog.w(TAG, exception, "runtime exception");
-        BLog.w(exception, null);
+        BLog.w(TAG, "runtime exception", exception);
+        BLog.w(TAG, exception);
 
-        BLog.e(TAG, exception, "runtime exception");
-        BLog.e(exception, null);
+        BLog.e(TAG, "runtime exception", exception);
+        BLog.e(TAG, exception);
     }
 
     public void testEvent() {
