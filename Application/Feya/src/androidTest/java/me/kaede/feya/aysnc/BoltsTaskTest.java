@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
 package me.kaede.feya.aysnc;
 
 import junit.framework.TestCase;

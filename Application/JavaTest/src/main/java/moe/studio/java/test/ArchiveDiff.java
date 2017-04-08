@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
  */
 
 package moe.studio.java.test;

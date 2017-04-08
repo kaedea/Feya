@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
 package com.kaedea.media;
 
 import android.annotation.TargetApi;

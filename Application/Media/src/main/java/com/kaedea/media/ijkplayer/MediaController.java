@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 BiliBili Inc.
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
 package com.kaedea.media.ijkplayer;

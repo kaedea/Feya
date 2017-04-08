@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede (kidhaibara@gmail.com) All Rights Reserved.
- *
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 /* Apache Harmony HEADER because the code in this class comes mostly from ZipFile, ZipEntry and
  * ZipConstants from android libcore.

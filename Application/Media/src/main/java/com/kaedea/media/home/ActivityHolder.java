@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016. Kaede <kidhaibra@gmail.com>
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
 package com.kaedea.media.home;
