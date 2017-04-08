@@ -33,15 +33,18 @@ public class ApplicationTest {
 
     @Test
     public void testGetGlobalContextInBackground() throws InterruptedException {
+        final Application[] context = {null};
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Application context = Applications.context();
-                Assert.assertNotNull(context);
-                Log.i(TAG, String.valueOf(context));
-                Assert.assertTrue(context instanceof Feya);
+                context[0] = Applications.context();
             }
         }).start();
-        Thread.sleep(1000);
+
+        Thread.sleep(200);
+
+        Assert.assertNotNull(context[0]);
+        Log.i(TAG, String.valueOf(context[0]));
+        Assert.assertTrue(context[0] instanceof Feya);
     }
 }
