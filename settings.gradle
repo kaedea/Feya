@@ -18,14 +18,7 @@ include ':generator'
 project(':generator').projectDir = file("Library/ArchiveDiff/generator")
 
 // Sub Module
-// Commons Library
-include ':commons'
-project(':commons').projectDir = file("Nipaa/Java/commons")
-include ':debugin'
-project(':debugin').projectDir = file("Nipaa/Droids/debugin")
-include ':dispatcher'
-project(':dispatcher').projectDir = file("Nipaa/Droids/dispatcher")
-include ':droid-utils'
-project(':droid-utils').projectDir = file("Nipaa/Droids/droid-utils")
-include ':downloader'
-project(':downloader').projectDir = file("Nipaa/Droids/downloader")
+def nipaa = file('Nipaa/settings.gradle')
+if (nipaa.exists()) {
+    apply from: nipaa
+}
