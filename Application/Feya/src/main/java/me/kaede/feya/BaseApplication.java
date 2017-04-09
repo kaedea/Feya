@@ -6,15 +6,21 @@ package me.kaede.feya;
 
 import android.content.Context;
 
+import me.kaede.feya.multidex.MultiDexApplication;
+
 /**
  * @author Kaede
- * @since date 2016/11/10
+ * @since 17/4/8
  */
-
-public class Feya extends BaseApplication {
+public class BaseApplication extends MultiDexApplication {
 
     private static Context sContext;
-    public Feya() {
+
+    public BaseApplication() {
         sContext = this;
+    }
+
+    public static Context getContext() {
+        return sContext;
     }
 }

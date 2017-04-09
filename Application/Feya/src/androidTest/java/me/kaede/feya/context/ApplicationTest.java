@@ -5,6 +5,7 @@
 package me.kaede.feya.context;
 
 import android.app.Application;
+import android.content.Context;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
@@ -12,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import me.kaede.feya.BaseApplication;
 import me.kaede.feya.Feya;
 
 /**
@@ -22,6 +24,14 @@ import me.kaede.feya.Feya;
 public class ApplicationTest {
 
     public static final String TAG = "ApplicationTest";
+
+    @Test
+    public void testGetBaseApplication() {
+        Context context = BaseApplication.getContext();
+        Assert.assertNotNull(context);
+        Log.i(TAG, String.valueOf(context));
+        Assert.assertTrue(context instanceof Feya);
+    }
 
     @Test
     public void testGetGlobalContext() {
