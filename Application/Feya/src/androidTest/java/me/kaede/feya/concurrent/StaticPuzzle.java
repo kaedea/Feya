@@ -4,6 +4,8 @@
 
 package me.kaede.feya.concurrent;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
@@ -29,12 +31,47 @@ public class StaticPuzzle {
         Runnable runnable = new Runnable() {
             public void run() {
                 foo[0] = Foo.foo();
+                synchronized (StaticPuzzle.class) {
+                    StaticPuzzle.class.notify();
+                }
             }
         };
 
         new Thread(runnable).start();
 
-        Thread.sleep(3000);
+        synchronized (StaticPuzzle.class) {
+            StaticPuzzle.class.wait();
+        }
+        Assert.assertEquals("HELLO", foo[0]);
+    }
+
+    @Test
+    public void testStaticSynchronousWithHandler() {
+        // Get stuck here sometime and somehow. (╯>д<)╯⁽˙³˙⁾ SUCK!!!
+        // Work well with 7.1.1, but stuck with 4.1.1.
+        // Maybe due to the difference native implementation of MessageQueue.
+        String foo = FooWithHandler.foo();
+        Assert.assertEquals("HELLO", foo);
+    }
+
+    @Test
+    public void testStaticSynchronousWorkerThreadWithHandler() throws InterruptedException {
+        final String[] foo = new String[1];
+        Runnable runnable = new Runnable() {
+            public void run() {
+                // Get stuck here sometime and somehow. (╯>д<)╯⁽˙³˙⁾ SUCK!!!
+                foo[0] = FooWithHandler.foo();
+                synchronized (StaticPuzzle.class) {
+                    StaticPuzzle.class.notify();
+                }
+            }
+        };
+
+        new Thread(runnable).start();
+
+        synchronized (StaticPuzzle.class) {
+            StaticPuzzle.class.wait();
+        }
         Assert.assertEquals("HELLO", foo[0]);
     }
 
@@ -59,6 +96,38 @@ public class StaticPuzzle {
 
             synchronized (Foo.class) {
                 try {
+                    // Wait for worker-1 to get OBJECT;
+                    Foo.class.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            OBJECT = o[0];
+        }
+
+        static String foo() {
+            return OBJECT;
+        }
+    }
+
+    static class FooWithHandler {
+        private static final String OBJECT;
+        static {
+            final String[] o = {null};
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    o[0] = "HELLO";
+                    synchronized (Foo.class) {
+                        Foo.class.notify();
+                    }
+                }
+            });
+
+            synchronized (Foo.class) {
+                try {
+                    // Wait for handler to get OBJECT;
                     Foo.class.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
