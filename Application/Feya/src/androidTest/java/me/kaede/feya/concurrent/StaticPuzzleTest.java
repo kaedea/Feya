@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
  * @since 17/4/9
  */
 @RunWith(AndroidJUnit4.class)
-public class StaticPuzzle {
+public class StaticPuzzleTest {
 
     @Test
     public void testStaticSynchronous() {
@@ -31,20 +31,24 @@ public class StaticPuzzle {
         Runnable runnable = new Runnable() {
             public void run() {
                 foo[0] = Foo.foo();
-                synchronized (StaticPuzzle.class) {
-                    StaticPuzzle.class.notify();
+                synchronized (StaticPuzzleTest.class) {
+                    StaticPuzzleTest.class.notify();
                 }
             }
         };
 
         new Thread(runnable).start();
 
-        synchronized (StaticPuzzle.class) {
-            StaticPuzzle.class.wait();
+        synchronized (StaticPuzzleTest.class) {
+            StaticPuzzleTest.class.wait();
         }
         Assert.assertEquals("HELLO", foo[0]);
     }
 
+    /**
+     * This test goes wrong.
+     * @see StaticPuzzleTest#testStaticSynchronousWithHandlerProxy()
+     */
     @Test
     public void testStaticSynchronousWithHandler() {
         // Get stuck here sometime and somehow. (╯>д<)╯⁽˙³˙⁾ SUCK!!!
@@ -54,6 +58,10 @@ public class StaticPuzzle {
         Assert.assertEquals("HELLO", foo);
     }
 
+    /**
+     * This test goes wrong.
+     * @see StaticPuzzleTest#testStaticSynchronousWorkerThreadWithHandlerProxy()
+     */
     @Test
     public void testStaticSynchronousWorkerThreadWithHandler() throws InterruptedException {
         final String[] foo = new String[1];
@@ -61,19 +69,37 @@ public class StaticPuzzle {
             public void run() {
                 // Get stuck here sometime and somehow. (╯>д<)╯⁽˙³˙⁾ SUCK!!!
                 foo[0] = FooWithHandler.foo();
-                synchronized (StaticPuzzle.class) {
-                    StaticPuzzle.class.notify();
-                }
             }
         };
 
         new Thread(runnable).start();
 
-        synchronized (StaticPuzzle.class) {
-            StaticPuzzle.class.wait();
-        }
+        Thread.sleep(2000);
         Assert.assertEquals("HELLO", foo[0]);
     }
+    @Test
+    public void testStaticSynchronousWithHandlerProxy() {
+        // Work well in this case. (O_O)?
+        String foo = FooWithHandlerProxy.foo();
+        Assert.assertEquals("HELLO", foo);
+    }
+
+    @Test
+    public void testStaticSynchronousWorkerThreadWithHandlerProxy() throws InterruptedException {
+        final String[] foo = new String[1];
+        Runnable runnable = new Runnable() {
+            public void run() {
+                // Work well in this case. (O_O)?
+                foo[0] = FooWithHandlerProxy.foo();
+            }
+        };
+
+        new Thread(runnable).start();
+
+        Thread.sleep(2000);
+        Assert.assertEquals("HELLO", foo[0]);
+    }
+
 
     static class Foo {
         private static final String OBJECT;
@@ -140,4 +166,16 @@ public class StaticPuzzle {
             return OBJECT;
         }
     }
+
+    static class FooWithHandlerProxy {
+        static String foo() {
+            return OBJECT;
+        }
+
+        private static final String OBJECT;
+        static {
+            OBJECT = Stub.getFoo();
+        }
+    }
+
 }
