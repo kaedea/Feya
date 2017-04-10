@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-  ~ Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
-  -->
+<?xml version="1.0" encoding="utf-8"?>
+<!--   ~ Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="me.kaede.feya">
 
@@ -42,8 +41,10 @@
         <activity
             android:name=".webview.WebActivity"
             android:process=":web"
-            android:theme="@style/NoActionBar"></activity>
-        <activity android:name=".protobuff.ProtobuffActivity"></activity>
+            android:theme="@style/NoActionBar"/>
+        <activity android:name=".protobuff.ProtobuffActivity"/>
+        <activity android:name=".links.LinksActivity">
+        </activity>
     </application>
 
 </manifest>

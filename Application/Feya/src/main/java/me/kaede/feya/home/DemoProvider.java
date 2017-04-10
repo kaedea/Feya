@@ -6,6 +6,7 @@ package me.kaede.feya.home;
 
 import android.support.v4.util.ArrayMap;
 
+import me.kaede.feya.links.LinksActivity;
 import me.kaede.feya.protobuff.ProtobuffActivity;
 import me.kaede.feya.service.ServiceDemoActivity;
 import me.kaede.feya.webview.WebActivity;
@@ -18,12 +19,13 @@ public class DemoProvider {
 
     static {
         demos = new ArrayMap<>();
-        ActivityHolder camera = new ActivityHolder();
+        ActivityHolder tab1 = new ActivityHolder();
 
         // default demos
-        camera.addActivity("Service", "Service api usage example", ServiceDemoActivity.class);
-        camera.addActivity("WebView", "JS Bridge, performance monitor", WebActivity.class);
-        camera.addActivity("Protocol Buff", "Protobuff, using square wire", ProtobuffActivity.class);
-        demos.put("Default", camera);
+        tab1.addActivity("Service", "Service api usage example", ServiceDemoActivity.class);
+        tab1.addActivity("WebView", "JS Bridge, performance monitor", WebActivity.class);
+        tab1.addActivity("Protocol Buff", "ProtoBuff, using square wire", ProtobuffActivity.class);
+        tab1.addActivity("Links", "Interact with 3rd Apps.", LinksActivity.class);
+        demos.put("Default", tab1);
     }
 }
