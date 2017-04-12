@@ -25,30 +25,27 @@ public class AndroidHacks {
         if (sActivityThread == null) {
             synchronized (AndroidHacks.class) {
                 if (sActivityThread == null) {
-                    sActivityThread = getActivityThreadFromUIThread();
-                    if (sActivityThread != null) {
-                        return sActivityThread;
-                    }
-
                     if (Looper.getMainLooper() == Looper.myLooper()) {
                         sActivityThread = getActivityThreadFromUIThread();
-                    } else {
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        synchronized (AndroidHacks.class) {
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    sActivityThread = getActivityThreadFromUIThread();
-                                    synchronized (AndroidHacks.class) {
-                                        AndroidHacks.class.notify();
-                                    }
+                        if (sActivityThread != null) {
+                            return sActivityThread;
+                        }
+                    }
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    synchronized (AndroidHacks.class) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                sActivityThread = getActivityThreadFromUIThread();
+                                synchronized (AndroidHacks.class) {
+                                    AndroidHacks.class.notify();
                                 }
-                            });
-                            try {
-                                AndroidHacks.class.wait();
-                            } catch (InterruptedException e) {
-                                Log.w(TAG, "Waiting notification from UI thread error.", e);
                             }
+                        });
+                        try {
+                            AndroidHacks.class.wait();
+                        } catch (InterruptedException e) {
+                            Log.w(TAG, "Waiting notification from UI thread error.", e);
                         }
                     }
                 }

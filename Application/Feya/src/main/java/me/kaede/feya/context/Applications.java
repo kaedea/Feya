@@ -8,6 +8,9 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.support.annotation.NonNull;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
 /**
  * When the App is running, there must be an application context.
  *
@@ -36,7 +39,21 @@ public class Applications {
     static {
         try {
             Object activityThread = AndroidHacks.getActivityThread();
-            Object app = activityThread.getClass().getMethod("getApplication").invoke(activityThread);
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+            Method method = activityThreadClass.getMethod("getApplication");
+            method.setAccessible(true);
+            Object app = method.invoke(activityThread);
+
+            if (app == null) {
+                Field field = activityThreadClass.getField("mInitialApplication");
+                field.setAccessible(true);
+                app = field.get(activityThread);
+            }
+            if (app == null) {
+                throw new IllegalStateException("Can not get Application context, " +
+                        "pls make sure that you didn't call this method before or inner " +
+                        "Application#attachBaseContext(Context)");
+            }
             CURRENT = (Application) app;
         } catch (Throwable e) {
             throw new IllegalStateException("Can not access Application context by magic code, boom!", e);

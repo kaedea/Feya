@@ -4,17 +4,10 @@
 
 package me.kaede.feya;
 
-import android.content.Context;
-
 /**
  * @author Kaede
  * @since date 2016/11/10
  */
 
 public class Feya extends BaseApplication {
-
-    private static Context sContext;
-    public Feya() {
-        sContext = this;
-    }
 }
