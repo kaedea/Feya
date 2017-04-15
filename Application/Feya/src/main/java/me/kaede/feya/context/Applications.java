@@ -54,9 +54,11 @@ public class Applications {
 
     static {
         /*
-         * The following 'Magic Code' is going to access the Application context for Activity. For now,
-         * it works only after Applications#attach(Application). Note that if you call this method before
-         * or inside Applications#attach(Application), {@link Applications#CURRENT} will always be null.
+         * The following 'Magic Code' is going to access the Application context from ActivityThread.
+         * For now, it works only after Applications#attach(Application).
+         *
+         * Note that if you call this method before or inside Applications#attach(Application),
+         * {@link Applications#CURRENT} will always be null.
          */
         try {
             Object activityThread = AndroidHacks.getActivityThread();
