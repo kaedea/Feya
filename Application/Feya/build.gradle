@@ -75,10 +75,7 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.6'
 
     // BLog
-//    compile ("moe.studio:logger:1.0.1") {
-//        exclude group: 'moe.studio', module: 'dispatcher'
-//    }
-//    compile 'moe.studio:dispatcher:0.1.1'
+    compile ("moe.studio:logger:1.1.0")
 
     // Retrofit
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
