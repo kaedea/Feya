@@ -2,7 +2,9 @@
  * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
-// Demo Applications
+//--------------------------------------------------------------------------------------------------
+// Application
+//--------------------------------------------------------------------------------------------------
 include ':Feya'
 project(':Feya').projectDir = file("Application/Feya")
 include ':Media'
@@ -10,7 +12,10 @@ project(':Media').projectDir = file("Application/Media")
 include ':JavaTest'
 project(':JavaTest').projectDir = file("Application/JavaTest")
 
-// Libraries
+
+//--------------------------------------------------------------------------------------------------
+// Library
+//--------------------------------------------------------------------------------------------------
 // Archive Diff
 include ':shared'
 project(':shared').projectDir = file("Library/ArchiveDiff/shared")
@@ -21,7 +26,14 @@ project(':applier').projectDir = file("Library/ArchiveDiff/applier")
 include ':generator'
 project(':generator').projectDir = file("Library/ArchiveDiff/generator")
 
+// Gradle Plugin
+include ':greeting'
+project(':greeting').projectDir = file("Library/greeting")
+
+
+//--------------------------------------------------------------------------------------------------
 // Sub Module
+//--------------------------------------------------------------------------------------------------
 def nipaa = file('Nipaa/settings.gradle')
 if (nipaa.exists()) {
     apply from: nipaa

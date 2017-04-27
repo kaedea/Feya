@@ -18,6 +18,9 @@ buildscript {
         junit = '4.12'
         espressoCore = '2.2.2'
 
+        //------------------------------------------------------------------------------------------
+        // Bintray
+        //------------------------------------------------------------------------------------------
         File script = file('bintrayUpload.gradle')
         if (!script.exists()) {
             script = file('Nipaa/bintrayUpload.gradle')
@@ -25,6 +28,11 @@ buildscript {
                 throw new IllegalArgumentException("Bintary upload script is missing.")
         }
         bintrayUpload = script.absolutePath
+
+        //------------------------------------------------------------------------------------------
+        // Gradle Plugin
+        //------------------------------------------------------------------------------------------
+        localMaven = rootProject.file('maven') as File
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${androidGadlePlugin}"

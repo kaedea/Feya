@@ -85,3 +85,22 @@ dependencies {
     compile 'com.jakewharton:butterknife:8.2.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.2.1'
 }
+
+
+
+//--------------------------------------------------------------------------------------------------
+// Greeting
+//--------------------------------------------------------------------------------------------------
+buildscript {
+    repositories {
+        maven {
+            url uri(rootProject.ext.localMaven)
+        }
+    }
+    dependencies {
+        classpath group: 'moe.studio.feya.greeting', name: 'greeting', version: '0.0.1'
+    }
+}
+if (rootProject.ext.localMaven.exists()) {
+    apply plugin: 'moe.studio.feya.greeting'
+}
