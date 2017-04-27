@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+buildscript {
+    repositories {
+        maven {
+            url uri(rootProject.ext.localMaven)
+        }
+    }
+    dependencies {
+        classpath group: 'moe.studio.feya.greeting', name: 'greeting', version: '0.0.1'
+    }
+}
+
+apply plugin: 'moe.studio.feya.greeting'
+greeting {
+    from = "David"
+    message = "Hey, dude!"
+    to {
+        to = "Jager"
+    }
+}

@@ -33,6 +33,7 @@ buildscript {
         // Gradle Plugin
         //------------------------------------------------------------------------------------------
         localMaven = rootProject.file('maven') as File
+        greetPlugin = new File(localMaven, 'moe/studio/feya/greeting').exists() as boolean
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${androidGadlePlugin}"

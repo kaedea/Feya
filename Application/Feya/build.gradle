@@ -98,9 +98,19 @@ buildscript {
         }
     }
     dependencies {
-        classpath group: 'moe.studio.feya.greeting', name: 'greeting', version: '0.0.1'
+        if (rootProject.ext.greetPlugin) {
+            classpath group: 'moe.studio.feya.greeting', name: 'greeting', version: '0.0.1'
+        }
     }
 }
-if (rootProject.ext.localMaven.exists()) {
+
+if (rootProject.ext.greetPlugin) {
     apply plugin: 'moe.studio.feya.greeting'
+    greeting {
+        from = "David"
+        message = "Hey, dude!"
+        to {
+            to = "Jager"
+        }
+    }
 }

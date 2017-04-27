@@ -9,6 +9,7 @@ import org.junit.Before
 import org.junit.Test
 
 import static org.gradle.internal.impldep.junit.framework.TestCase.assertNotNull
+import static org.gradle.internal.impldep.junit.framework.TestCase.assertTrue
 
 class GreetingPluginTest {
 
@@ -23,6 +24,7 @@ class GreetingPluginTest {
     public void testApplyPlugin() {
         project.pluginManager.apply 'moe.studio.feya.greeting'
 
-        assertNotNull(this.project.tasks.hello)
+        assertNotNull(project.tasks.hello)
+        assertTrue(project.tasks.helloWithName instanceof GreetingTask)
     }
 }
