@@ -4,6 +4,9 @@ const fs = require('fs');
 const request = require('request');
 const md5File = require('md5-file');
 const lineReader = require('line-reader');
+// const parseApk = require('apk-parser');
+const parseApk = require('apk-parser');
+const util = require('util');
 
 const download = function(uri, filename, callback) {
     request.head(uri, function(err, res, body) {
@@ -48,17 +51,25 @@ app.get('/suck', function(req, res) {
                     apkId = line.substring(line.indexOf(symbol) + symbol.length);
                     console.log('manifest id = ' + apkId)
 
-                    // Output.
-                    res.writeHead(200, {
-                        "Content-Type": "application/json"
+                    // Parse apk manifest.
+                    parseApk(apkFile, 8 * 1024 * 1024, function (err, data) {
+                        // Handle error or do something with data.
+                        // console.log('parse apk = ', util.inspect(data.manifest[0], true, null))
+                        console.log('parse apk error = ' + err)
+                        // Output.
+                        res.writeHead(200, {
+                            "Content-Type": "application/json"
+                        });
+                        var json = JSON.stringify({
+                            apk_id: apkId.trim(),
+                            apk_md5: md5,
+                            apk_size: fileSize,
+                            apk_url: apkUrl,
+                            version_name: data.manifest[0]['@android:versionName'],
+                            version_code: data.manifest[0]['@android:versionCode']
+                        });
+                        res.end(json);
                     });
-                    var json = JSON.stringify({
-                        apk_id: apkId.trim(),
-                        apk_md5: md5,
-                        apk_size: fileSize,
-                        apk_url: apkUrl
-                    });
-                    res.end(json);
                     return false;
                 }
             });
