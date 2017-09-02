@@ -8,8 +8,12 @@ const lineReader = require('line-reader');
 const parseApk = require('apk-parser');
 const util = require('util');
 
-const download = function(uri, filename, callback) {
-    request.head(uri, function(err, res, body) {
+/*
+ * Simple service to read apk info with the given url. 
+ */
+
+const download = function (uri, filename, callback) {
+    request.head(uri, function (err, res, body) {
         // console.log('content-type:', res.headers['content-type']);
         // console.log('content-length:', res.headers['content-length']);
         request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
@@ -26,7 +30,7 @@ try {
 
 const app = express();
 const port = 3000;
-app.get('/suck', function(req, res) {
+app.get('/suck', function (req, res) {
     var apkUrl = req.query.apkUrl;
     console.log('apk url = ' + apkUrl);
 
@@ -34,7 +38,7 @@ app.get('/suck', function(req, res) {
         console.log('download file...');
         // Download apk.
         var apkFile = tempDir + '/temp.apk';
-        download(apkUrl, apkFile, function() {
+        download(apkUrl, apkFile, function () {
             console.log('done');
 
             var apkId = 'Unspecific';
@@ -46,7 +50,7 @@ app.get('/suck', function(req, res) {
             var zip = new AdmZip(apkFile);
             zip.extractEntryTo("META-INF/CERT.SF", tempDir, false, true);
             var symbol = 'SHA1-Digest-Manifest:'
-            lineReader.eachLine(tempDir + '/CERT.SF', function(line, last) {
+            lineReader.eachLine(tempDir + '/CERT.SF', function (line, last) {
                 if (line.indexOf(symbol) != -1) {
                     apkId = line.substring(line.indexOf(symbol) + symbol.length);
                     console.log('manifest id = ' + apkId)
