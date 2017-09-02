@@ -11,7 +11,8 @@ include ':Media'
 project(':Media').projectDir = file("Application/Media")
 include ':JavaTest'
 project(':JavaTest').projectDir = file("Application/JavaTest")
-
+include ':test.java8'
+project(':test.java8').projectDir = file("Application/test.java8")
 
 //--------------------------------------------------------------------------------------------------
 // Library
