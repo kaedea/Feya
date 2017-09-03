@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,8 @@ import java.util.stream.Stream;
  */
 @RunWith(JUnit4.class)
 public class StreamTest {
+    private static final List<Integer> INT_ARRAYS = Arrays.asList(1, 2, 3, 4);
+    private static final List<String> TEXT_ARRAYS = Arrays.asList("hello", "functional", "coding");
 
     @Test
     public void testReduce() {
@@ -76,9 +79,39 @@ public class StreamTest {
         List<Integer> list1 = Arrays.asList(1, 2);
         List<Integer> list2 = Arrays.asList(1, 2, 3);
         List<Integer> list3 = Arrays.asList(1, 2, 3, 4);
+        //noinspection Convert2MethodRef
         Stream<Integer> intStream = Stream.of(list1, list2, list3)
                 .flatMap(integers -> integers.stream());
         List<Integer> collect = intStream.sorted().collect(Collectors.toList());
         Assert.assertEquals(collect, Arrays.asList(1, 1, 1, 2, 2, 2, 3, 3, 4));
+    }
+
+    @Test
+    public void testParallel() {
+        List<Integer> integerList = Stream.of(1, 2, 3, 4)
+                .parallel()
+                .filter(integer -> integer % 2 == 1)
+                .collect(Collectors.toList());
+        Assert.assertEquals(integerList, Arrays.asList(1, 3));
+
+        integerList = INT_ARRAYS.parallelStream()
+                .filter(integer -> integer > 1)
+                .collect(Collectors.toList());
+        Assert.assertEquals(integerList, Arrays.asList(2, 3, 4));
+
+        int[] ints = new int[4];
+        Arrays.parallelSetAll(ints, operand -> operand);
+        Assert.assertEquals(
+                Arrays.stream(ints).boxed().collect(Collectors.toList()),
+                Arrays.asList(0, 1, 2, 3)
+        );
+
+        Integer[] integers = new Integer[4];
+        Arrays.parallelSetAll(integers, operand -> operand);
+        Arrays.parallelPrefix(integers, (integer1, integer2) -> integer1 + integer2);
+        Assert.assertEquals(
+                new ArrayList<>(Arrays.asList(integers)),
+                Arrays.asList(0, 1, 3, 6)
+        );
     }
 }
