@@ -11,7 +11,10 @@ import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -85,5 +88,31 @@ public class LangBasicTest {
         Function<ArrayList, String> listToString = ArrayList::toString;
         String text = listToString.apply(arrayList);
         Assert.assertEquals(text, Arrays.asList(1, 2, 3).toString());
+    }
+
+    @Test
+    @SuppressWarnings("UseSparseArrays")
+    public void testMapApi() {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(1, "1");
+        map.put(2, "2");
+        map.put(3, "3");
+
+        Assert.assertEquals(map.getOrDefault(1, "default"), "1");
+        Assert.assertEquals(map.getOrDefault(4, "default"), "default");
+        Assert.assertEquals(map.computeIfAbsent(4, Object::toString), "4");
+        Assert.assertEquals(map.getOrDefault(4, "default"), "4");
+
+        Assert.assertEquals(map.compute(1, (integer, s) -> {
+            Assert.assertEquals(s, "1");
+            return "new 1";
+        }), "new 1");
+        Assert.assertEquals(map.getOrDefault(1, "default"), "new 1");
+
+        Assert.assertEquals(map.compute(5, (integer, s) -> {
+            Assert.assertEquals(s, null);
+            return "5";
+        }), "5");
+        Assert.assertEquals(map.getOrDefault(5, "default"), "5");
     }
 }
