@@ -2,15 +2,15 @@
  * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
-// generator module
+// applier module
 
 apply plugin: 'java'
 
 dependencies {
-    compile project(':shared')
+    compile project(':diff.shared')
 
     testCompile 'junit:junit:4.12'
-    testCompile project(':sharedtest')
+    testCompile project(':diff.sharedtest')
 }
 
 task copyTestResources(type: Copy) {

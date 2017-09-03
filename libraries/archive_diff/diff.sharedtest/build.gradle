@@ -2,12 +2,12 @@
  * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
-// shared module
+// sharedtest module
 
 apply plugin: 'java'
 
 dependencies {
-    testCompile 'junit:junit:4.12'
-    testCompile project(':sharedtest')
+    compile 'junit:junit:4.12'
+    compile project(':diff.shared')
 }
 // EOF
