@@ -76,6 +76,58 @@ public class StreamTest {
     }
 
     @Test
+    public void testIntermediateOperators() {
+        List<Integer> filterList = INT_ARRAYS.stream()
+                .filter(integer -> integer % 2 == 1)
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList(1, 3), filterList);
+
+        List<String> mapList = INT_ARRAYS.stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList("1", "2", "3", "4"), mapList);
+
+        List<Integer> list1 = Arrays.asList(1, 2);
+        List<Integer> list2 = Arrays.asList(1, 2, 3);
+        List<Integer> list3 = Arrays.asList(1, 2, 3, 4);
+        //noinspection Convert2MethodRef
+        Stream<Integer> intStream = Stream.of(list1, list2, list3)
+                .flatMap(integers -> integers.stream());
+        List<Integer> collect = intStream.sorted().collect(Collectors.toList());
+        Assert.assertEquals(collect, Arrays.asList(1, 1, 1, 2, 2, 2, 3, 3, 4));
+
+        List<Integer> distinctList = Stream.of(1, 2, 2, 3, 3, 3)
+                .distinct()
+                .collect(Collectors.toList());
+        Assert.assertEquals(distinctList, Arrays.asList(1, 2, 3));
+
+        AtomicInteger acc = new AtomicInteger(0);
+        INT_ARRAYS.stream()
+                .peek(acc::addAndGet)
+                .count();
+        Assert.assertEquals(1 + 2 + 3 + 4, acc.get());
+
+        List<Integer> skipList = INT_ARRAYS.stream()
+                .skip(2)
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList(3, 4), skipList);
+
+        List<Integer> limitList = INT_ARRAYS.stream()
+                .limit(3)
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList(1, 2, 3), limitList);
+
+        List<Integer> sortedList = Stream.of(2, 4, 1, 3)
+                .sorted()
+                .collect(Collectors.toList());
+        List<Integer> reverseSortedList = Stream.of(2, 4, 1, 3)
+                .sorted((o1, o2) -> -o1.compareTo(o2))
+                .collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4), sortedList);
+        Assert.assertEquals(Arrays.asList(4, 3, 2, 1), reverseSortedList);
+    }
+
+    @Test
     public void testReduce() {
         Stream<Integer> intStream = INT_ARRAYS.stream();
         int acc = intStream.reduce(0, (i, j) -> i + j);
@@ -113,24 +165,6 @@ public class StreamTest {
         Assert.assertEquals(set.size(), 3);
     }
 
-    @Test
-    public void testMap() {
-        Stream<Integer> intStream = Stream.of(1, 2, 3, 4);
-        List<String> list = intStream.map(String::valueOf).collect(Collectors.toList());
-        Assert.assertEquals(list, Arrays.asList("1", "2", "3", "4"));
-    }
-
-    @Test
-    public void testFlatMap() {
-        List<Integer> list1 = Arrays.asList(1, 2);
-        List<Integer> list2 = Arrays.asList(1, 2, 3);
-        List<Integer> list3 = Arrays.asList(1, 2, 3, 4);
-        //noinspection Convert2MethodRef
-        Stream<Integer> intStream = Stream.of(list1, list2, list3)
-                .flatMap(integers -> integers.stream());
-        List<Integer> collect = intStream.sorted().collect(Collectors.toList());
-        Assert.assertEquals(collect, Arrays.asList(1, 1, 1, 2, 2, 2, 3, 3, 4));
-    }
 
     @Test
     public void testParallel() {
