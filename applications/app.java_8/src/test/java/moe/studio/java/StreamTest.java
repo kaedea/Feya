@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,8 +31,53 @@ public class StreamTest {
     private static final List<String> TEXT_ARRAYS = Arrays.asList("hello", "functional", "coding");
 
     @Test
+    public void testCreateStream() {
+        // 1. Stream#of
+        Stream<Integer> intStream1 = Stream.of(1, 2, 3, 4);
+        Assert.assertNotNull(intStream1);
+        List<Integer> list1 = intStream1.collect(Collectors.toList());
+        // 2. Arrays#stream
+        Stream<Integer> intStream2 = Arrays.stream(new Integer[]{1, 2, 3, 4});
+        Assert.assertNotNull(intStream2);
+        List<Integer> list2 = intStream2.collect(Collectors.toList());
+        // 3. Stream#generate, infinite sequential unordered stream
+        final AtomicInteger autoInt = new AtomicInteger(1);
+        Stream<Integer> intStream3 = Stream.generate(autoInt::getAndIncrement).limit(4);
+        Assert.assertNotNull(intStream3);
+        List<Integer> list3 = intStream3.collect(Collectors.toList());
+        // 4. Stream#iterate, infinite sequential ordered stream
+        Stream<Integer> intStream4 = Stream.iterate(1, integer -> integer + 1).limit(4);
+        Assert.assertNotNull(intStream4);
+        List<Integer> list4 = intStream4.collect(Collectors.toList());
+        // 5. Collection#stream (instance method)
+        Stream<Integer> intStream5 = INT_ARRAYS.stream();
+        Assert.assertNotNull(intStream5);
+        List<Integer> list5 = intStream5.collect(Collectors.toList());
+
+        Assert.assertEquals(list1, list2);
+        Assert.assertEquals(list2, list3);
+        Assert.assertEquals(list3, list4);
+        Assert.assertEquals(list4, list5);
+
+        // Stream#empty
+        Stream<Integer> emptyStream = Stream.empty();
+        Assert.assertNotNull(emptyStream);
+        List<Integer> emptyList = emptyStream.collect(Collectors.toList());
+        Assert.assertEquals(0, emptyList.size());
+        // Stream#concat
+        Stream<String> textStream1 = INT_ARRAYS.stream().map(Object::toString);
+        Stream<String> textStream2 = TEXT_ARRAYS.stream();
+        Stream<String> concatStream = Stream.concat(textStream1, textStream2);
+        Assert.assertNotNull(concatStream);
+        Assert.assertEquals(
+                Arrays.asList("1", "2", "3", "4", "hello", "functional", "coding"),
+                concatStream.collect(Collectors.toList())
+        );
+    }
+
+    @Test
     public void testReduce() {
-        Stream<Integer> intStream = Stream.of(1, 2, 3, 4);
+        Stream<Integer> intStream = INT_ARRAYS.stream();
         int acc = intStream.reduce(0, (i, j) -> i + j);
         Assert.assertEquals(acc, 1 + 2 + 3 + 4);
 
