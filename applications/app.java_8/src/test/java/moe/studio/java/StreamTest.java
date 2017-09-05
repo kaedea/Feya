@@ -77,16 +77,17 @@ public class StreamTest {
 
     @Test
     public void testIntermediateOperators() {
+        // Stream#filter
         List<Integer> filterList = INT_ARRAYS.stream()
                 .filter(integer -> integer % 2 == 1)
                 .collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList(1, 3), filterList);
-
+        // Stream#map
         List<String> mapList = INT_ARRAYS.stream()
                 .map(Object::toString)
                 .collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("1", "2", "3", "4"), mapList);
-
+        // Stream#flatMap
         List<Integer> list1 = Arrays.asList(1, 2);
         List<Integer> list2 = Arrays.asList(1, 2, 3);
         List<Integer> list3 = Arrays.asList(1, 2, 3, 4);
@@ -95,28 +96,28 @@ public class StreamTest {
                 .flatMap(integers -> integers.stream());
         List<Integer> collect = intStream.sorted().collect(Collectors.toList());
         Assert.assertEquals(collect, Arrays.asList(1, 1, 1, 2, 2, 2, 3, 3, 4));
-
+        // Stream#distinct
         List<Integer> distinctList = Stream.of(1, 2, 2, 3, 3, 3)
                 .distinct()
                 .collect(Collectors.toList());
         Assert.assertEquals(distinctList, Arrays.asList(1, 2, 3));
-
+        // Stream#peek
         AtomicInteger acc = new AtomicInteger(0);
         INT_ARRAYS.stream()
                 .peek(acc::addAndGet)
                 .count();
         Assert.assertEquals(1 + 2 + 3 + 4, acc.get());
-
+        // Stream#skip
         List<Integer> skipList = INT_ARRAYS.stream()
                 .skip(2)
                 .collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList(3, 4), skipList);
-
+        // Stream#limit
         List<Integer> limitList = INT_ARRAYS.stream()
                 .limit(3)
                 .collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList(1, 2, 3), limitList);
-
+        // Stream#sorted
         List<Integer> sortedList = Stream.of(2, 4, 1, 3)
                 .sorted()
                 .collect(Collectors.toList());
