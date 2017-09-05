@@ -11,9 +11,11 @@ import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
@@ -129,6 +131,55 @@ public class StreamTest {
     }
 
     @Test
+    public void testTerminalOperators() {
+        // Stream#collect
+        List<Integer> intList = INT_ARRAYS.stream().collect(Collectors.toList());
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4), intList);
+        Set<Integer> intSet = Stream.of(1, 2, 3, 3).collect(Collectors.toSet());
+        Assert.assertTrue(intSet.contains(1));
+        Assert.assertTrue(intSet.contains(2));
+        Assert.assertTrue(intSet.contains(3));
+        Assert.assertFalse(intSet.contains(4));
+        Assert.assertEquals(3, intSet.size());
+        // Stream#count
+        long count = TEXT_ARRAYS.stream().count();
+        Assert.assertEquals(count, 3);
+        // Stream#forEach, forEachSorted
+        List<String> finalTextList = new ArrayList<>();
+        //noinspection SimplifyStreamApiCallChains
+        TEXT_ARRAYS.stream().forEach(finalTextList::add);
+        Assert.assertEquals(Arrays.asList("hello", "functional", "coding"), finalTextList);
+        List<Integer> finalIntList = new ArrayList<>();
+        Stream.of(2, 1, 3).parallel().forEachOrdered(finalIntList::add);
+        Assert.assertEquals(Arrays.asList(2, 1, 3), finalIntList);
+        // Stream#max, min
+        Optional<Integer> max = INT_ARRAYS.stream().max(Integer::compareTo);
+        Assert.assertTrue(max.isPresent());
+        Assert.assertEquals(4, max.get().intValue());
+        Optional<Integer> min = INT_ARRAYS.stream().min(Integer::compareTo);
+        Assert.assertTrue(min.isPresent());
+        Assert.assertEquals(1, min.get().intValue());
+        // Stream#toArray
+        String[] textArray = TEXT_ARRAYS.stream().toArray(String[]::new);
+        Assert.assertEquals(new String[]{"hello", "functional", "coding"}, textArray);
+        Integer[] intArray = INT_ARRAYS.stream().toArray(Integer[]::new);
+        Assert.assertEquals(new Integer[]{1, 2, 3, 4}, intArray);
+        // Stream#iterator
+        Iterator<Integer> iterator = INT_ARRAYS.stream().iterator();
+        Assert.assertTrue(iterator.hasNext());
+        intList = new ArrayList<>();
+        iterator.forEachRemaining(intList::add);
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4), intList);
+        // Stream#spliterator
+        Spliterator<Integer> spliterator = INT_ARRAYS.stream().spliterator();
+        Assert.assertEquals(4, spliterator.estimateSize());
+        intList = new ArrayList<>();
+        Assert.assertTrue(spliterator.tryAdvance(intList::add));
+        spliterator.forEachRemaining(intList::add);
+        Assert.assertEquals(Arrays.asList(1, 2, 3, 4), intList);
+    }
+
+    @Test
     public void testReduce() {
         Stream<Integer> intStream = INT_ARRAYS.stream();
         int acc = intStream.reduce(0, (i, j) -> i + j);
@@ -151,21 +202,6 @@ public class StreamTest {
         Assert.assertTrue(min.isPresent());
         Assert.assertEquals(min.get(), "world");
     }
-
-    @Test
-    public void testCollect() {
-        Stream<Integer> intStream = Stream.of(1, 2, 3, 4);
-        List<Integer> list = intStream.collect(Collectors.toList());
-        Assert.assertEquals(list, Arrays.asList(1, 2, 3, 4));
-
-        Set<Integer> set = Stream.of(1, 2, 3, 3).collect(Collectors.toSet());
-        Assert.assertTrue(set.contains(1));
-        Assert.assertTrue(set.contains(2));
-        Assert.assertTrue(set.contains(3));
-        Assert.assertFalse(set.contains(4));
-        Assert.assertEquals(set.size(), 3);
-    }
-
 
     @Test
     public void testParallel() {
