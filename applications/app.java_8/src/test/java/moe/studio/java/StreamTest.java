@@ -78,7 +78,7 @@ public class StreamTest {
     }
 
     @Test
-    public void testIntermediateOperators() {
+    public void testIntermediateOperations() {
         // Stream#filter
         List<Integer> filterList = INT_ARRAYS.stream()
                 .filter(integer -> integer % 2 == 1)
@@ -131,7 +131,8 @@ public class StreamTest {
     }
 
     @Test
-    public void testTerminalOperators() {
+    @SuppressWarnings({"SimplifyStreamApiCallChains", "SpellCheckingInspection"})
+    public void testTerminalOperations() {
         // Stream#collect
         List<Integer> intList = INT_ARRAYS.stream().collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList(1, 2, 3, 4), intList);
@@ -144,14 +145,6 @@ public class StreamTest {
         // Stream#count
         long count = TEXT_ARRAYS.stream().count();
         Assert.assertEquals(count, 3);
-        // Stream#forEach, forEachSorted
-        List<String> finalTextList = new ArrayList<>();
-        //noinspection SimplifyStreamApiCallChains
-        TEXT_ARRAYS.stream().forEach(finalTextList::add);
-        Assert.assertEquals(Arrays.asList("hello", "functional", "coding"), finalTextList);
-        List<Integer> finalIntList = new ArrayList<>();
-        Stream.of(2, 1, 3).parallel().forEachOrdered(finalIntList::add);
-        Assert.assertEquals(Arrays.asList(2, 1, 3), finalIntList);
         // Stream#max, min
         Optional<Integer> max = INT_ARRAYS.stream().max(Integer::compareTo);
         Assert.assertTrue(max.isPresent());
@@ -159,6 +152,13 @@ public class StreamTest {
         Optional<Integer> min = INT_ARRAYS.stream().min(Integer::compareTo);
         Assert.assertTrue(min.isPresent());
         Assert.assertEquals(1, min.get().intValue());
+        // Stream#forEach, forEachSorted
+        List<String> finalTextList = new ArrayList<>();
+        TEXT_ARRAYS.stream().forEach(finalTextList::add);
+        Assert.assertEquals(Arrays.asList("hello", "functional", "coding"), finalTextList);
+        List<Integer> finalIntList = new ArrayList<>();
+        Stream.of(2, 1, 3).parallel().forEachOrdered(finalIntList::add);
+        Assert.assertEquals(Arrays.asList(2, 1, 3), finalIntList);
         // Stream#toArray
         String[] textArray = TEXT_ARRAYS.stream().toArray(String[]::new);
         Assert.assertEquals(new String[]{"hello", "functional", "coding"}, textArray);
@@ -177,6 +177,29 @@ public class StreamTest {
         Assert.assertTrue(spliterator.tryAdvance(intList::add));
         spliterator.forEachRemaining(intList::add);
         Assert.assertEquals(Arrays.asList(1, 2, 3, 4), intList);
+    }
+
+    @Test
+    public void testShortCircuitingTerminalOperations() {
+        // Stream#allMatch
+        boolean allMatch = INT_ARRAYS.stream().allMatch(it -> it < 4);
+        Assert.assertFalse(allMatch);
+        // Stream#anyMatch
+        boolean anyMatch = TEXT_ARRAYS.stream().anyMatch(it -> it.contains("h"));
+        Assert.assertTrue(anyMatch);
+        // Stream#noneMatch
+        boolean noneMatch = INT_ARRAYS.stream().noneMatch(it -> it <= 0);
+        Assert.assertTrue(noneMatch);
+        // Stream#findAny
+        Optional<Integer> any = INT_ARRAYS.stream().filter(it -> it > 3).findAny();
+        Assert.assertTrue(any.isPresent());
+        Assert.assertEquals(4, any.get().intValue());
+        Optional<Object> empty = Stream.empty().findAny();
+        Assert.assertFalse(empty.isPresent());
+        // Stream#findFirst
+        Optional<String> first = TEXT_ARRAYS.stream().filter(it -> it.contains("o")).findFirst();
+        Assert.assertTrue(first.isPresent());
+        Assert.assertEquals("hello", first.get());
     }
 
     @Test
