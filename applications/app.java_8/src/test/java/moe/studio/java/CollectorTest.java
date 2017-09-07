@@ -123,12 +123,26 @@ public class CollectorTest {
         Assert.assertEquals(oddMap.get(false), Arrays.asList("2", "4"));
     }
 
+
+    /**
+     * See {@link StreamTest#testReduceOperation()}
+     */
     @Test
-    public void testReducing() {
+    @SuppressWarnings("PointlessArithmeticExpression")
+    public void testReducingCollector() {
+        // Collectors#reducing(BinaryOperator)
+        Optional<Integer> min = INT_ARRAYS.stream().collect(Collectors.reducing((x, y) -> {
+            if (x > y) return y;
+            return x;
+        }));
+        Assert.assertTrue(min.isPresent());
+        Assert.assertEquals(1, min.get().intValue());
+
+        // Collectors#reducing(T, BinaryOperator<T>)
         Integer acc = INT_ARRAYS.stream().collect(Collectors.reducing(0, (x, y) -> x + y));
-        //noinspection PointlessArithmeticExpression
         Assert.assertEquals(acc.intValue(), 0 + 1 + 2 + 3 + 4);
 
+        // Collectors#reducing(U, Function<? super T, ? extends U>, BinaryOperator<U>)
         Integer max = INT_ARRAYS.stream().collect(Collectors.reducing(
                 0,
                 integer -> integer,

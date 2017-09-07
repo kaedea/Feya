@@ -254,8 +254,15 @@ public class StreamTest {
         Assert.assertEquals("hello", first.get());
     }
 
+    /**
+     * See {@link CollectorTest#testReducingCollector()}
+     */
     @Test
-    public void testReduce() {
+    public void testReduceOperation() {
+        // Stream#reduce
+        // 'Reduce' is the base operation of all terminal operations.
+        //
+        // Stream#reduce(T, BinaryOperator<T>)
         Stream<Integer> intStream = INT_ARRAYS.stream();
         int acc = intStream.reduce(0, (i, j) -> i + j);
         Assert.assertEquals(acc, 1 + 2 + 3 + 4);
@@ -264,10 +271,11 @@ public class StreamTest {
         String combine = textStream.reduce("echo", (i, j) -> i + j);
         Assert.assertEquals(combine, "echo" + "hello" + "world" + "!");
 
-        intStream = Stream.of(1, 2, 3, 4);
+        intStream = INT_ARRAYS.stream();
         int max = intStream.reduce(0, BinaryOperator.maxBy(Integer::compareTo));
         Assert.assertEquals(max, 4);
 
+        // Stream#reduce(BinaryOperator)
         textStream = Stream.of("hello", "world", "!");
         Optional<String> min = textStream.reduce(BinaryOperator.minBy((o1, o2) -> {
             if (o1.equals("world")) return -1;
@@ -276,10 +284,19 @@ public class StreamTest {
         }));
         Assert.assertTrue(min.isPresent());
         Assert.assertEquals(min.get(), "world");
+
+        // Stream#reduce(U, BiFunction<U, ? super T, U>, BinaryOperator<U>)
+        intStream = INT_ARRAYS.stream();
+        combine = intStream.reduce(
+                "",
+                (sum, i) -> sum + i.toString(),
+                (a, b) -> a + b
+        );
+        Assert.assertEquals("1" + "2" + "3" + "4", combine);
     }
 
     @Test
-    public void testParallel() {
+    public void testParallelOperations() {
         // Stream#parallel
         int oddSum = Stream.of(1, 2, 3, 4)
                 .parallel()
