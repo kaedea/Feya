@@ -17,8 +17,13 @@ import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -154,4 +159,66 @@ public class CollectorTest {
         ));
         Assert.assertEquals(max.intValue(), 4);
     }
+
+    @Test
+    public void testCustomCollector() {
+
+        String combine = INT_ARRAYS.stream().collect(new IntegerCombineCollector());
+        Assert.assertEquals("1234", combine);
+    }
+
+
+    //----------------------------------------------------------------------------------------------
+    // INNER CLASS
+    //----------------------------------------------------------------------------------------------
+
+    class IntegerCombiner {
+        private String mText;
+
+        public IntegerCombiner() {
+            mText = "";
+        }
+
+        IntegerCombiner doAccumulate(Integer item) {
+            mText += item.toString();
+            return this;
+        }
+
+        IntegerCombiner doCombine(IntegerCombiner it) {
+            mText += it.mText;
+            return this;
+        }
+
+        String toValue() {
+            return mText;
+        }
+    }
+
+    class IntegerCombineCollector implements Collector<Integer, IntegerCombiner, String> {
+        @Override
+        public Supplier<IntegerCombiner> supplier() {
+            return IntegerCombiner::new;
+        }
+
+        @Override
+        public BiConsumer<IntegerCombiner, Integer> accumulator() {
+            return IntegerCombiner::doAccumulate;
+        }
+
+        @Override
+        public BinaryOperator<IntegerCombiner> combiner() {
+            return IntegerCombiner::doCombine;
+        }
+
+        @Override
+        public Function<IntegerCombiner, String> finisher() {
+            return IntegerCombiner::toValue;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Collections.emptySet();
+        }
+    }
+
 }
