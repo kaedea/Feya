@@ -11,10 +11,10 @@ import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -22,6 +22,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -39,7 +40,8 @@ public class LangBasicTest {
 
     @Test
     public void testDefaultMethod() {
-        Assert.assertEquals(new IFunc() {}.foo(), 10086);
+        Assert.assertEquals(new IFunc() {
+        }.foo(), 10086);
         Assert.assertEquals(new IFunc() {
             @Override
             public int foo() {
@@ -114,5 +116,80 @@ public class LangBasicTest {
             return "5";
         }), "5");
         Assert.assertEquals(map.getOrDefault(5, "default"), "5");
+    }
+
+    @Test
+    public void testBitSet() {
+        BitSet bitSet = new BitSet();
+        Assert.assertTrue(bitSet.isEmpty());
+        Assert.assertEquals(0, bitSet.length());
+        Assert.assertEquals(64, bitSet.size());
+
+        bitSet.set(10);
+        Assert.assertFalse(bitSet.isEmpty());
+        Assert.assertEquals(10 + 1, bitSet.length());
+        Assert.assertEquals(64, bitSet.size());
+
+        bitSet.set(64);
+        Assert.assertEquals(64 + 1, bitSet.length());
+        Assert.assertEquals(64 * 2, bitSet.size());
+
+        bitSet.clear();
+        Assert.assertTrue(bitSet.isEmpty());
+        Assert.assertEquals(0, bitSet.length());
+        Assert.assertEquals(64 * 2, bitSet.size());
+
+        bitSet = new BitSet(8);
+        bitSet.set(0);
+        Assert.assertFalse(bitSet.isEmpty());
+        Assert.assertEquals(1, bitSet.length());
+        Assert.assertEquals(64, bitSet.size());
+        Assert.assertEquals(
+                "1000000000000000000000000000000000000000000000000000000000000000",
+                bitSetToString(bitSet)
+        );
+
+        BitSet bitSet1 = new BitSet();
+        bitSet1.set(62);
+        bitSet1.set(63);
+        // 1 :  "1000000000000000000000000000000000000000000000000000000000000000"
+        // 2 :  "0000000000000000000000000000000000000000000000000000000000000011"
+        bitSet.or(bitSet1);
+        Assert.assertEquals(
+                "1000000000000000000000000000000000000000000000000000000000000011",
+                bitSetToString(bitSet)
+        );
+        // 1 :  "1000000000000000000000000000000000000000000000000000000000000011"
+        // 2 :  "0000000000000000000000000000000000000000000000000000000000000011"
+        bitSet.and(bitSet1);
+        Assert.assertEquals(
+                "0000000000000000000000000000000000000000000000000000000000000011",
+                bitSetToString(bitSet)
+        );
+        bitSet1.set(0);
+        // 1 :  "0000000000000000000000000000000000000000000000000000000000000011"
+        // 2 :  "1000000000000000000000000000000000000000000000000000000000000011"
+        bitSet.xor(bitSet1);
+        Assert.assertEquals(
+                "1000000000000000000000000000000000000000000000000000000000000000",
+                bitSetToString(bitSet)
+        );
+        bitSet.set(63);
+        bitSet1.set(0, false);
+        // 1 :  "1000000000000000000000000000000000000000000000000000000000000001"
+        // 2 :  "0000000000000000000000000000000000000000000000000000000000000011"
+        bitSet.andNot(bitSet1);
+        Assert.assertEquals(
+                "1000000000000000000000000000000000000000000000000000000000000000",
+                bitSetToString(bitSet)
+        );
+    }
+
+    private String bitSetToString(BitSet bitSet) {
+        return IntStream
+                .range(0, bitSet.size())
+                .mapToObj(i -> bitSet.get(i) ? '1' : '0')
+                .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+                .toString();
     }
 }
