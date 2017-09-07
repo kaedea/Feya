@@ -15,6 +15,8 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -191,5 +193,66 @@ public class LangBasicTest {
                 .mapToObj(i -> bitSet.get(i) ? '1' : '0')
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                 .toString();
+    }
+
+    @Test
+    public void testCreateCompletableFuture() {
+        CompletableFuture<Integer> emptyFuture = new CompletableFuture<>();
+        CompletableFuture<Integer> completedFuture = CompletableFuture.completedFuture(10086);
+        Assert.assertFalse(emptyFuture.isDone());
+        Assert.assertTrue(completedFuture.isDone());
+
+        CompletableFuture anyFuture = CompletableFuture.anyOf(emptyFuture, completedFuture);
+        CompletableFuture allFuture = CompletableFuture.allOf(emptyFuture, completedFuture);
+        Assert.assertTrue(anyFuture.isDone());
+        Assert.assertFalse(allFuture.isDone());
+    }
+
+    @Test
+    public void testTerminateCompletableFuture() throws ExecutionException, InterruptedException {
+        CompletableFuture<Integer> emptyFuture = new CompletableFuture<>();
+        CompletableFuture<String> thenApplyFuture = emptyFuture.thenApply(Object::toString);
+        Assert.assertFalse(emptyFuture.isDone());
+        Assert.assertFalse(thenApplyFuture.isDone());
+        emptyFuture.complete(0);
+        Assert.assertTrue(emptyFuture.isDone());
+        Assert.assertTrue(thenApplyFuture.isDone());
+        Assert.assertEquals("0", thenApplyFuture.get());
+        emptyFuture.complete(1);
+        Assert.assertTrue(emptyFuture.isDone());
+        Assert.assertTrue(thenApplyFuture.isDone());
+        Assert.assertEquals("0", thenApplyFuture.get());
+
+        emptyFuture = new CompletableFuture<>();
+        CompletableFuture<Integer> exceptionFuture = emptyFuture.exceptionally(throwable -> 10086);
+        emptyFuture.completeExceptionally(new RuntimeException());
+        Assert.assertTrue(emptyFuture.isCompletedExceptionally());
+        Assert.assertEquals(10086, exceptionFuture.get().intValue());
+
+        emptyFuture = new CompletableFuture<>();
+        Assert.assertFalse(emptyFuture.isCancelled());
+        emptyFuture.cancel(false);
+        Assert.assertTrue(emptyFuture.isCancelled());
+
+        final int[] completeAcc = {0};
+        final int[] exceptionAcc = {0};
+        emptyFuture = new CompletableFuture<>();
+        emptyFuture.thenApply(integer -> completeAcc[0] += integer);
+        emptyFuture.exceptionally(integer -> exceptionAcc[0]++);
+        emptyFuture.obtrudeValue(10);
+        Assert.assertTrue(emptyFuture.isDone());
+        Assert.assertEquals(10, completeAcc[0]);
+        Assert.assertEquals(0, exceptionAcc[0]);
+
+        emptyFuture.obtrudeValue(20);
+        emptyFuture.obtrudeException(new RuntimeException());
+        Assert.assertTrue(emptyFuture.isDone());
+        Assert.assertEquals(10, completeAcc[0]);
+        Assert.assertEquals(0, exceptionAcc[0]);
+    }
+
+    @Test
+    public void testCombineCompletableFuture() {
+
     }
 }
