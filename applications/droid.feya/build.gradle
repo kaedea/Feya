@@ -46,7 +46,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-
     // Test
     testCompile debugin['junit']
     androidTestCompile(debugin['espresso.core'], {
