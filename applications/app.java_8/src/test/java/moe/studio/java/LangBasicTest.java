@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -196,20 +198,29 @@ public class LangBasicTest {
     }
 
     @Test
-    public void testCreateCompletableFuture() {
+    public void testCreateCompletableFuture() throws ExecutionException, InterruptedException {
+        // CompletableFuture::new, CompletableFuture#completedFuture
         CompletableFuture<Integer> emptyFuture = new CompletableFuture<>();
         CompletableFuture<Integer> completedFuture = CompletableFuture.completedFuture(10086);
         Assert.assertFalse(emptyFuture.isDone());
         Assert.assertTrue(completedFuture.isDone());
-
+        // CompletableFuture#anyOf, allOf
         CompletableFuture anyFuture = CompletableFuture.anyOf(emptyFuture, completedFuture);
         CompletableFuture allFuture = CompletableFuture.allOf(emptyFuture, completedFuture);
         Assert.assertTrue(anyFuture.isDone());
         Assert.assertFalse(allFuture.isDone());
+        // CompletableFuture#supplyAsync, runAsync
+        CompletableFuture<String> supplyAsync = CompletableFuture.supplyAsync(() -> "CompletableFuture");
+        Assert.assertEquals("CompletableFuture", supplyAsync.get());
+        AtomicReference<String> reference = new AtomicReference<>();
+        CompletableFuture<Void> runAsync = CompletableFuture.runAsync(() -> reference.set("CompletableFuture"));
+        runAsync.get();
+        Assert.assertEquals("CompletableFuture", reference.get());
     }
 
     @Test
     public void testTerminateCompletableFuture() throws ExecutionException, InterruptedException {
+        // CompletableFuture#complete
         CompletableFuture<Integer> emptyFuture = new CompletableFuture<>();
         CompletableFuture<String> thenApplyFuture = emptyFuture.thenApply(Object::toString);
         Assert.assertFalse(emptyFuture.isDone());
@@ -222,18 +233,18 @@ public class LangBasicTest {
         Assert.assertTrue(emptyFuture.isDone());
         Assert.assertTrue(thenApplyFuture.isDone());
         Assert.assertEquals("0", thenApplyFuture.get());
-
+        // CompletableFuture#completeExceptionally
         emptyFuture = new CompletableFuture<>();
         CompletableFuture<Integer> exceptionFuture = emptyFuture.exceptionally(throwable -> 10086);
         emptyFuture.completeExceptionally(new RuntimeException());
         Assert.assertTrue(emptyFuture.isCompletedExceptionally());
         Assert.assertEquals(10086, exceptionFuture.get().intValue());
-
+        // CompletableFuture#cancel
         emptyFuture = new CompletableFuture<>();
         Assert.assertFalse(emptyFuture.isCancelled());
         emptyFuture.cancel(false);
         Assert.assertTrue(emptyFuture.isCancelled());
-
+        // CompletableFuture#obtrudeValue, obtrudeException
         final int[] completeAcc = {0};
         final int[] exceptionAcc = {0};
         emptyFuture = new CompletableFuture<>();
@@ -243,7 +254,6 @@ public class LangBasicTest {
         Assert.assertTrue(emptyFuture.isDone());
         Assert.assertEquals(10, completeAcc[0]);
         Assert.assertEquals(0, exceptionAcc[0]);
-
         emptyFuture.obtrudeValue(20);
         emptyFuture.obtrudeException(new RuntimeException());
         Assert.assertTrue(emptyFuture.isDone());
@@ -252,7 +262,45 @@ public class LangBasicTest {
     }
 
     @Test
-    public void testCombineCompletableFuture() {
-
+    public void testCombineCompletableFuture() throws ExecutionException, InterruptedException {
+        // CompletableFuture#thenApply
+        // T -> U
+        CompletableFuture<Integer> emptyFuture = new CompletableFuture<>();
+        CompletableFuture<String> thenApplyFuture = emptyFuture.thenApply(Object::toString);
+        emptyFuture.complete(10086);
+        Assert.assertEquals("10086", thenApplyFuture.get());
+        // CompletableFuture#thenAccept
+        // T -> void
+        AtomicInteger accept = new AtomicInteger();
+        emptyFuture = new CompletableFuture<>();
+        CompletableFuture<Void> thenAccept = emptyFuture.thenAccept(accept::set);
+        emptyFuture.complete(10010);
+        Assert.assertEquals(10010, accept.get());
+        Assert.assertEquals(null, thenAccept.get()); // We can not get instance of Void.
+        // CompletableFuture#thenCompose
+        // T -> U
+        emptyFuture = new CompletableFuture<>();
+        CompletableFuture<Integer> finalEmptyFuture = emptyFuture;
+        CompletableFuture<String> thenCompose = emptyFuture.thenCompose(
+                integer -> finalEmptyFuture.thenApply(Object::toString)
+        );
+        emptyFuture.complete(10086);
+        Assert.assertEquals("10086", thenCompose.get());
+        // CompletableFuture#thenCombine
+        // T, U -> V
+        emptyFuture = new CompletableFuture<>();
+        CompletableFuture<String> thenCombine = emptyFuture.thenCombine(
+                emptyFuture.thenApply(Object::toString),
+                (a, b) -> a + b
+        );
+        emptyFuture.complete(65535);
+        Assert.assertEquals(65535 + "65535", thenCombine.get());
+        // CompletableFuture#handle
+        emptyFuture = new CompletableFuture<>();
+        CompletableFuture<String> handle = emptyFuture.handle(
+                (integer, throwable) -> throwable.getLocalizedMessage()
+        );
+        emptyFuture.completeExceptionally(new RuntimeException("10010"));
+        Assert.assertEquals("10010", handle.get());
     }
 }
