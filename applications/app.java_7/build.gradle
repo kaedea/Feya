@@ -6,16 +6,17 @@ apply plugin: 'java'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'commons-io:commons-io:2.5'
-    compile 'org.apache.httpcomponents:httpcore:4.4.1'
-    compile 'org.apache.httpcomponents:httpclient:4.5'
+    testCompile debugin['junit']
 
     compile project(':diff.shared')
     compile project(':diff.applier')
     compile project(':diff.generator')
-    testCompile 'junit:junit:4.12'
     testCompile project(':diff.sharedtest')
+
+    compile utils['commons_io']
+    compile utils['http_core']
+    compile utils['http_client']
 }
 
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
+sourceCompatibility = javaSourceCompat
+targetCompatibility = javaTargetCompat
