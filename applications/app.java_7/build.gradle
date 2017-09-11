@@ -8,10 +8,10 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile debugin['junit']
 
-    compile project(':diff.shared')
-    compile project(':diff.applier')
-    compile project(':diff.generator')
-    testCompile project(':diff.sharedtest')
+    acv_diff.each { k, v ->
+        if (k.contains('test')) testCompile v
+        else compile v
+    }
 
     compile utils['commons_io']
     compile utils['http_core']
