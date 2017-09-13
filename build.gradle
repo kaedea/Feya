@@ -10,7 +10,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath groovy['android.gradle']
+        classpath groovy['android_gradle']
     }
 }
 

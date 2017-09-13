@@ -21,10 +21,10 @@ android {
     signingConfigs {
         test {
             v2SigningEnabled false
-            storeFile key_test['store.file']
-            storePassword key_test['store.password']
-            keyAlias key_test['key.alias']
-            keyPassword key_test['key.password']
+            storeFile key_test['store_file']
+            storePassword key_test['store_password']
+            keyAlias key_test['key_alias']
+            keyPassword key_test['key_password']
         }
     }
     buildTypes {
@@ -48,7 +48,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     // Test
     testCompile debugin['junit']
-    androidTestCompile(debugin['espresso.core'], {
+    androidTestCompile(debugin['espresso_core'], {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 

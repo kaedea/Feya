@@ -36,6 +36,7 @@ project(':plugin.greeting').projectDir = file("plugins/plugin.greeting")
 //--------------------------------------------------------------------------------------------------
 // Sub Module
 //--------------------------------------------------------------------------------------------------
+// Nipaa Repository
 //noinspection SpellCheckingInspection
 def nipaa = file('Nipaa/settings.gradle')
 if (nipaa.exists()) {
