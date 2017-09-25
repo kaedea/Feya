@@ -38,12 +38,14 @@ public class AndroidHacks {
                             public void run() {
                                 sActivityThread = getActivityThreadFromUIThread();
                                 synchronized (AndroidHacks.class) {
-                                    AndroidHacks.class.notify();
+                                    AndroidHacks.class.notifyAll();
                                 }
                             }
                         });
                         try {
-                            AndroidHacks.class.wait();
+                            while (sActivityThread == null) {
+                                AndroidHacks.class.wait();
+                            }
                         } catch (InterruptedException e) {
                             Log.w(TAG, "Waiting notification from UI thread error.", e);
                         }

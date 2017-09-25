@@ -13,7 +13,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * When the App is running, there must be an application context.
+ * When the App is running, there must be an application context. {@link Applications#context()} offers
+ * an globally accessible method to get the current process application context.
  *
  * @author Kaede
  * @see "http://kaedea.com/2017/04/09/android/global-accessing-context/"
@@ -61,17 +62,7 @@ public class Applications {
          * {@link Applications#CURRENT} will always be null.
          */
         try {
-            Object activityThread = AndroidHacks.getActivityThread();
-            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
-            Method method = activityThreadClass.getMethod("getApplication");
-            method.setAccessible(true);
-            Object app = method.invoke(activityThread);
-
-            if (app == null) {
-                Field field = activityThreadClass.getField("mInitialApplication");
-                field.setAccessible(true);
-                app = field.get(activityThread);
-            }
+            Object app = autoAttach();
             if (app == null) {
                 throw new IllegalStateException("Can not get Application context, " +
                         "pls make sure that you didn't call this method before or inner " +
@@ -89,9 +80,26 @@ public class Applications {
         }
     }
 
+    private static Object autoAttach() throws ReflectiveOperationException {
+        Object activityThread = AndroidHacks.getActivityThread();
+        Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+        Method method = activityThreadClass.getMethod("getApplication");
+        method.setAccessible(true);
+        Object app = method.invoke(activityThread);
+
+        if (app == null) {
+            Field field = activityThreadClass.getField("mInitialApplication");
+            field.setAccessible(true);
+            app = field.get(activityThread);
+        }
+        return app;
+    }
+
     /**
-     * Attach an Application context for {@link Applications#sAttached}. If the above Magic Code works,
-     * this method is not necessary.
+     * Manually attach an Application context for {@link Applications#sAttached}. If the above
+     * Magic Code works, this method is not necessary.
+     *
+     * @see #autoAttach()
      */
     public void attach(@NonNull Application app) {
         if (sAttached == null) {
