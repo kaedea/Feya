@@ -1,0 +1,83 @@
+/*
+ * Copyright (c) 2017. Kaede <kidhaibara@gmail.com>.
+ *
+ */
+
+ext {
+    minSdkVersion = 9
+    targetSdkVersion = 25
+    compileSdkVersion = 24
+    buildToolsVersion = '25.0.1'
+    androidSupportLibraryVersion = '25.3.1'
+    androidGradleVersion = '2.3.3'
+    javaVersion = JavaVersion.VERSION_1_7
+
+    acv_diff = [
+            'shared'                  : project(':diff.shared'),
+            'generator'               : project(':diff.generator'),
+            'applier'                 : project(':diff.applier'),
+            'sharedtest'              : project(':diff.sharedtest'),
+    ]
+    supports = [
+            'v4'                      : "com.android.support:support-v4:$androidSupportLibraryVersion",
+            'appcompat'               : "com.android.support:appcompat-v7:$androidSupportLibraryVersion",
+            'recyclerview'            : "com.android.support:recyclerview-v7:$androidSupportLibraryVersion",
+            'design'                  : "com.android.support:design:$androidSupportLibraryVersion",
+            'cardview'                : "com.android.support:cardview-v7:$androidSupportLibraryVersion",
+            'annotations'             : "com.android.support:support-annotations:$androidSupportLibraryVersion",
+            'test_runner'             : 'com.android.support.test:runner:0.5',
+    ]
+    frameworks = [
+            'bolts_task'              : 'com.parse.bolts:bolts-tasks:1.4.0',
+            'bolts_link'              : 'com.parse.bolts:bolts-applinks:1.4.0',
+            'rx_java'                 : 'io.reactivex:rxjava:1.1.6',
+            'rx_android'              : 'io.reactivex:rxandroid:1.2.1',
+            'retrofit'                : 'com.squareup.retrofit2:retrofit:2.1.0',
+            'retrofit_fastjson'       : 'org.ligboy.retrofit2:converter-fastjson-android:2.1.0',
+            'wire_runtime'            : 'com.squareup.wire:wire-runtime:2.2.0',
+            'butterknife'             : 'com.jakewharton:butterknife:8.2.1',
+            'butterknife_apt'         : 'com.jakewharton:butterknife-compiler:8.2.1',
+            'ijk_java'                : 'tv.danmaku.ijk.media:ijkplayer-java:0.7.6',
+            'ijk_arm7a'               : 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.7.6',
+            'boxing_impl'             : 'com.bilibili:boxing-impl:0.1.0',
+            'fresco'                  : 'com.facebook.fresco:fresco:1.0.0',
+            'fresco_gif'              : 'com.facebook.fresco:animated-gif:1.0.0',
+    ]
+    utils = [
+            "b_log"                   : 'moe.studio:logger:1.1.0',
+            'commons_io'              : 'commons-io:commons-io:2.5',
+            'commons_lang'            : 'org.apache.commons:commons-lang3:3.4',
+            'http_core'               : 'org.apache.httpcomponents:httpcore:4.4.1',
+            'http_client'             : 'org.apache.httpcomponents:httpclient:4.5',
+    ]
+    groovy = [
+            'android_gradle'          : "com.android.tools.build:gradle:$androidGradleVersion",
+    ]
+    debugin = [
+            'junit'                   : 'junit:junit:4.12',
+            'espresso_core'           : 'com.android.support.test.espresso:espresso-core:2.2.2',
+    ]
+    key_test = [
+            'key_alias'               : 'kaedea.com',
+            'key_password'            : '123456',
+            'store_password'          : '123456',
+            'store_file'              : file('test.keystore.jks'),
+    ]
+
+    //----------------------------------------------------------------------------------------------
+    // Bintray
+    //----------------------------------------------------------------------------------------------
+    File script = file('bintrayUpload.gradle')
+    if (!script.exists())
+        script = file('Nipaa/bintrayUpload.gradle')
+
+    if (!script.exists())
+        throw new GradleException("Bintary upload script is missing.")
+    bintrayUpload = script.absolutePath
+
+    //----------------------------------------------------------------------------------------------
+    // Gradle Plugin
+    //----------------------------------------------------------------------------------------------
+    localMaven = rootProject.file('maven') as File
+    greetPlugin = new File(localMaven, 'moe/studio/feya/greeting').exists() as boolean
+}

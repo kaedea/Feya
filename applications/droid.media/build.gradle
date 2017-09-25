@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.kaedea.media"
+        minSdkVersion 14
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
+    }
+    signingConfigs {
+        test {
+            v2SigningEnabled false
+            storeFile key_test['store_file']
+            storePassword key_test['store_password']
+            keyAlias key_test['key_alias']
+            keyPassword key_test['key_password']
+        }
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.test
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.test
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile debugin['junit']
+    androidTestCompile(debugin['espresso_core'], {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    supports.each { k, v -> compile v }
+
+    compile frameworks['ijk_java']
+    compile frameworks['ijk_arm7a']
+    compile frameworks['boxing_impl']
+    compile frameworks['fresco']
+    compile frameworks['fresco_gif']
+
+    compile frameworks['butterknife']
+    annotationProcessor frameworks['butterknife_apt']
+}

@@ -3,31 +3,14 @@
  */
 
 buildscript {
+    // Global ext config
+    apply from: project.file('global.gradle')
+
     repositories {
         jcenter()
     }
-    ext {
-        androidGadlePlugin = '2.3.1';
-        buildToolsVersion = '25.0.1'
-        targetSdkVersion = 25
-        compileSdkVersion = 24
-        minSdkVersion = 9
-        androidSupportLibraryVersion = '25.0.1'
-
-        // 3rd
-        junit = '4.12'
-        espressoCore = '2.2.2'
-
-        File script = file('bintrayUpload.gradle')
-        if (!script.exists()) {
-            script = file('Nipaa/bintrayUpload.gradle')
-            if (!script.exists())
-                throw new IllegalArgumentException("Bintary upload script is missing.")
-        }
-        bintrayUpload = script.absolutePath
-    }
     dependencies {
-        classpath "com.android.tools.build:gradle:${androidGadlePlugin}"
+        classpath groovy['android_gradle']
     }
 }
 
