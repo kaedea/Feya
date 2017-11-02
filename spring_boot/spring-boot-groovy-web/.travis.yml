@@ -1,0 +1,5 @@
+language: groovy
+script: ./gradlew check
+branches:
+  only:
+  - master
