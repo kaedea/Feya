@@ -4,13 +4,13 @@
  */
 
 ext {
-    minSdkVersion = 9
-    targetSdkVersion = 25
-    compileSdkVersion = 24
-    buildToolsVersion = '25.0.1'
-    androidSupportLibraryVersion = '25.3.1'
-    androidGradleVersion = '2.3.3'
-    javaVersion = JavaVersion.VERSION_1_7
+    minSdkVersion = 14
+    targetSdkVersion = 27
+    compileSdkVersion = 27
+    buildToolsVersion = '27.0.3'
+    androidSupportLibraryVersion = '27.0.2'
+    androidGradleVersion = '3.0.1'
+    javaVersion = JavaVersion.VERSION_1_8
 
     acv_diff = [
             'shared'                  : project(':diff.shared'),

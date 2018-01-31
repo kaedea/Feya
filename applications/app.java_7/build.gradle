@@ -18,5 +18,5 @@ dependencies {
     compile utils['http_client']
 }
 
-sourceCompatibility = javaVersion
-targetCompatibility = javaVersion
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7

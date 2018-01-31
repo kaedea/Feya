@@ -7,7 +7,6 @@ package com.kaedea.media.mediaplayer;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.os.AsyncTaskCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -67,7 +66,7 @@ public class VideoListActivity extends AppCompatActivity {
     }
 
     private void loadDatas() {
-        AsyncTaskCompat.executeParallel(new LoadTask());
+        new LoadTask().execute();
     }
 
     @Override

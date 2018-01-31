@@ -8,6 +8,7 @@ buildscript {
 
     repositories {
         jcenter()
+        google()
     }
     dependencies {
         classpath groovy['android_gradle']
@@ -25,5 +26,6 @@ allprojects {
         jcenter()
         // JFrog SNAPSHOT.
         // maven { url "http://oss.jfrog.org/oss-snapshot-local/" }
+        google()
     }
 }
