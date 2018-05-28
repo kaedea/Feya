@@ -63,9 +63,6 @@ dependencies {
     compile frameworks['rx_java']
     compile frameworks['rx_android']
 
-    // BLog
-    compile utils['b_log']
-
     // Retrofit
     compile frameworks['retrofit']
     compile frameworks['retrofit_fastjson']
@@ -78,29 +75,50 @@ dependencies {
     annotationProcessor frameworks['butterknife_apt']
 }
 
-//--------------------------------------------------------------------------------------------------
-// Greeting
-//--------------------------------------------------------------------------------------------------
-buildscript {
-    repositories {
-        maven {
-            url uri(rootProject.ext.localMaven)
-        }
-    }
-    dependencies {
-        if (rootProject.ext.greetPlugin) {
-            classpath group: 'moe.studio.feya.greeting', name: 'greeting', version: '0.0.1'
+afterEvaluate {
+    logger.info "========================"
+    logger.info "Dump project configurations:"
+    logger.info project.configurations.dump()
+
+    project.configurations.compile.resolvedConfiguration.firstLevelModuleDependencies.each {
+        logger.info "Compile ${it.toString()}"
+        it.getChildren().each { child ->
+            logger.info "--> Compile ${child.toString()}"
         }
     }
 }
 
-if (rootProject.ext.greetPlugin) {
-    apply plugin: 'moe.studio.feya.greeting'
-    greeting {
-        from = "David"
-        message = "Hey, dude!"
-        to {
-            to = "Jager"
-        }
-    }
-}
+
+// -------------------------------------------------------------------------------------------------
+// Plugin
+// -------------------------------------------------------------------------------------------------
+
+// Build plugin to local repository before applying.
+
+//buildscript {
+//    repositories {
+//        maven {
+//            url uri(rootProject.ext.localMaven)
+//        }
+//    }
+//    dependencies {
+//        classpath group: 'com.kaedea.gradle.requires', name: 'plugin.requires', version: '0.0.1'
+//        classpath group: 'moe.studio.feya.greeting', name: 'plugin.greeting', version: '0.0.1'
+//    }
+//}
+//
+//apply plugin: 'moe.studio.feya.greeting'
+//greeting {
+//    from = "David"
+//    message = "Hey, dude!"
+//    to {
+//        to = "Jager"
+//    }
+//}
+//
+//apply plugin: 'com.kaedea.gradle.requires'
+//needs {
+//    // BLog
+//    compile utils['b_log']
+//}
+

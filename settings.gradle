@@ -31,6 +31,8 @@ project(':diff.generator').projectDir = file("libraries/archive_diff/diff.genera
 // Gradle Plugin
 include ':plugin.greeting'
 project(':plugin.greeting').projectDir = file("plugins/plugin.greeting")
+include ':plugin.requires'
+project(':plugin.requires').projectDir = file("plugins/plugin.requires")
 
 
 //--------------------------------------------------------------------------------------------------
