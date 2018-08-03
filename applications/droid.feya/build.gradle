@@ -44,6 +44,36 @@ android {
     }
 }
 
+def getAndroidJar = {
+    def androidSdkHome = System.env.ANDROID_HOME as String
+    if (!androidSdkHome) {
+        def file = rootProject.file('local.properties')
+        if (file.exists()) {
+            Properties properties = new Properties()
+            file.withInputStream { properties.load(it) }
+            androidSdkHome = properties['sdk.dir']
+        }
+    }
+    if (!androidSdkHome) {
+        throw new StopExecutionException("Please declares your 'sdk.dir' to file 'local.properties'")
+    }
+    return "$androidSdkHome/platforms/$android.compileSdkVersion/android.jar"
+}
+
+task providedActivityThread(type: JavaCompile) {
+    source = file('src/provided/java')
+    classpath = files(getAndroidJar())
+    destinationDir = file(project.buildDir.toString() + '/tmp/stubLibs')
+    options.verbose = true
+}
+
+task providedActivityThreadJar(type: Jar) {
+    baseName = 'provided-activity-thread'
+    version = '1.0'
+    from(providedActivityThread)
+    include('**/*.class')
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     // Test
@@ -73,6 +103,9 @@ dependencies {
     compile frameworks['wire_runtime']
     compile frameworks['butterknife']
     annotationProcessor frameworks['butterknife_apt']
+
+    // Provided android.jar for hidden apis
+    compileOnly providedActivityThreadJar.outputs.files
 }
 
 afterEvaluate {
@@ -121,4 +154,3 @@ afterEvaluate {
 //    // BLog
 //    compile utils['b_log']
 //}
-
