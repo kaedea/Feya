@@ -2,27 +2,7 @@
  * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
  */
 
-ext.opt = { key ->
-    // Find property in the following order:
-    // 1. gradle.properties
-    // 2. local.properties
-    // 3. System environment
-    (properties.get(key) ?: file('local.properties').with {
-        if (it.exists()) {
-            def pros = new Properties()
-            pros.load(it.newDataInputStream())
-            if (pros.getProperty(key)) return pros.getProperty(key)
-        }
-    } ?: System.getenv(key)).with {
-        if (it == 'true' || it == 'false') return it.toBoolean()
-    }
-}
-
-def imports = { String path ->
-    String name = path.substring(path.lastIndexOf('/') + 1)
-    include(":$name")
-    project(":$name").projectDir = file(path)
-}
+apply from: file('globals.gradle')
 
 // ----------
 // Application
@@ -34,7 +14,7 @@ imports("applications/app.java_8")
 imports("applications/app.kotlin")
 
 // Android
-if (opt('import.android')) {
+if (opts('import.android')) {
     imports("applications/droid.feya")
     imports("applications/droid.media")
 }
@@ -50,7 +30,7 @@ imports("libraries/archive_diff/diff.applier")
 imports("libraries/archive_diff/diff.generator")
 
 // Gradle Plugin
-if (opt('import.plugin')) {
+if (opts('import.plugin')) {
     imports("plugins/plugin.greeting")
     imports("plugins/plugin.requires")
 }

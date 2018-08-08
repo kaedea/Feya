@@ -4,7 +4,7 @@
 
 buildscript {
     // Global ext config
-    apply from: project.file('global.gradle')
+    apply from: project.file('dependencies.gradle')
 
     repositories {
         jcenter()
