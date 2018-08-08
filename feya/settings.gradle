@@ -13,6 +13,8 @@ include ':app.java_7'
 project(':app.java_7').projectDir = file("applications/app.java_7")
 include ':app.java_8'
 project(':app.java_8').projectDir = file("applications/app.java_8")
+include ':app.kotlin'
+project(':app.kotlin').projectDir = file("applications/app.kotlin")
 
 
 //--------------------------------------------------------------------------------------------------
