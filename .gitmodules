@@ -1,3 +1,3 @@
-[submodule "Nipaa"]
-	path = Nipaa
+[submodule "feya/submodules/nipaa"]
+	path = feya/submodules/nipaa
 	url = git@bitbucket.org:kaedea/nipaa.git

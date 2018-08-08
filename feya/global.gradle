@@ -69,7 +69,7 @@ ext {
     //----------------------------------------------------------------------------------------------
     File script = file('bintrayUpload.gradle')
     if (!script.exists())
-        script = file('Nipaa/bintrayUpload.gradle')
+        script = file('submodules/nipaa/bintrayUpload.gradle')
 
     if (!script.exists())
         throw new GradleException("Bintary upload script is missing.")

@@ -40,7 +40,7 @@ project(':plugin.requires').projectDir = file("plugins/plugin.requires")
 //--------------------------------------------------------------------------------------------------
 // Nipaa Repository
 //noinspection SpellCheckingInspection
-def nipaa = file('Nipaa/settings.gradle')
+def nipaa = file('submodules/nipaa/settings.gradle')
 if (nipaa.exists()) {
     apply from: nipaa
 }
