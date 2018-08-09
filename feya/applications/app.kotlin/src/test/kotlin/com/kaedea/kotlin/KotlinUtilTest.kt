@@ -24,46 +24,66 @@ var zzz = [instance.]xxx[(receiver)] { [it -> ]
 }
 ```
 
-| Function   | Function type |
-|------------|---------------|
-|   `also`   |   Extension   |
-|   `apply`  |   Extension   |
-|   `let`    |   Extension   |
-|   `run`    |   Extension   |
-|------------|---------------|
-|   `run`    |   Top Level   |
-|   `with`   |   Top Level   |
+| Function   | Function type | Parameter type |    Usage    | Access Self |
+|------------|---------------|----------------|-------------|-------------|
+|   T.also   |   Extension   |    Function    | self.also{} |      it     |
+|   T.apply  |   Extension   | Extension Func | self.apply{}|     this    |
+|   T.let    |   Extension   |    Function    | self.let{}  |      it     |
+|   T.run    |   Extension   | Extension Func | self.run{}  |     this    |
+|------------|---------------|----------------|-------------|-------------|
+|    run     |   Top Level   |    Function    |    run{}    |      -      |
+| with(self) |   Top Level   | Extension Func | with(self){}|     this    |
 
-| function | "this" |  "it"  |  return      | signature                                     |
-|----------|--------|--------|--------------|-----------------------------------------------|
-|  T.also  |    -   |  self  |     self     | <T>    T.also(block: (T) -> Unit): T          |
-|  T.apply |  self  |    -   |     self     | <T>    T.apply(block: T.() -> Unit): T        |
-|  T.let   |    -   |  self  | block return | <T, R> T.let(block: (T) -> R): R              |
-|  T.run   |  self  |    -   | block return | <T, R> T.run(block: T.() -> R): R             |
-|----------|--------|--------|--------------|-----------------------------------------------|
-|   run    |    -   |    -   | block return | <R> run(block: () -> R): R                    |
-|   with   |  self  |    -   | block return | <T, R> with(receiver: T, block: T.() -> R): R |
+|  function  | "this" |  "it"  |  return      | signature                                     |
+|------------|--------|--------|--------------|-----------------------------------------------|
+|   T.also   |    -   |  self  |     self     | <T>    T.also(block: (T) -> Unit): T          |
+|   T.apply  |  self  |    -   |     self     | <T>    T.apply(block: T.() -> Unit): T        |
+|   T.let    |    -   |  self  | block return | <T, R> T.let(block: (T) -> R): R              |
+|   T.run    |  self  |    -   | block return | <T, R> T.run(block: T.() -> R): R             |
+|------------|--------|--------|--------------|-----------------------------------------------|
+|    run     |    -   |    -   | block return | <R> run(block: () -> R): R                    |
+| with(self) |  self  |    -   | block return | <T, R> with(receiver: T, block: T.() -> R): R |
 
 1. run() has both of top-level & extension function: run(), T.run()
 2. with() is a top-level function (static)
 3. with() is the same as T.run() but not as an extension function, `x.run() {}`is the same as `with(x) {}`
 4. T.xxx extension function can take context as implicit receiver, which make the codes work like top-level function
+
+                               +---------------+
+                               | return self ? |
+                               +---------------+
+                                       |
+                            +----- N --+-- Y --------------+
+                            |                              |
+                    +---------------+              +---------------+
+                    |   ext fun ?   |              | access self ? |
+                    +---------------+              +---------------+
+                            |                              |
+             +----- N ------+-- Y --+              + this -+-- it -+
+             |                      |              |               |
+     +---------------+      +---------------+  "T.apply()"     "T.also()"
+     | access self ? |      | access self ? |
+     +---------------+      +---------------+
+             |                          |
+     + this -+- n/a -+          + this -+-- it -+
+     |               |          |               |
+ "with(self)"     "run()"   "T.run()"       "T.let()"
  */
 
 @RunWith(JUnit4::class)
-class KotlinUtilExtensionTest {
+class KtUtilExtFuncTest {
 
     @Test
     fun also() {
         // Access
         also {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
-            assertTrue(it.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
+            assertTrue(it.javaClass === KtUtilExtFuncTest::class.java)
         }
 
         var text = "hey"
         text.also {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
             assertEquals("hey", it)
         }
         var result = text.also {
@@ -95,7 +115,7 @@ class KotlinUtilExtensionTest {
     fun apply() {
         // Access
         apply {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
         }
 
         var text = "hey"
@@ -132,13 +152,13 @@ class KotlinUtilExtensionTest {
     fun let() {
         // Access
         let {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
-            assertTrue(it.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
+            assertTrue(it.javaClass === KtUtilExtFuncTest::class.java)
         }
 
         var text = "hey"
         text.let {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
             assertEquals("hey", it)
         }
         var result = text.let {
@@ -174,7 +194,7 @@ class KotlinUtilExtensionTest {
     fun run() {
         // Access
         run {
-            assertTrue(this.javaClass === KotlinUtilExtensionTest::class.java)
+            assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
         }
 
         var text = "hey"
@@ -235,13 +255,13 @@ class KotlinUtilExtensionTest {
 }
 
 @RunWith(JUnit4::class)
-class KotlinUtilTest {
+class KtUtilTopLevelFuncTest {
 
     @Test
     fun run() {
         // Access
         kotlin.run {
-            assertTrue(this.javaClass === KotlinUtilTest::class.java)
+            assertTrue(this.javaClass === KtUtilTopLevelFuncTest::class.java)
             // assertTrue(it == null), "it" is not support
         }
 
@@ -284,6 +304,36 @@ class KotlinUtilTest {
             println("type: ${javaClass.name}")
         }
     }
+
+    @Test
+    fun customWith() {
+        // Access
+        var text = "hey"
+        customWith(text) {
+            assertTrue(this.javaClass === KtUtilTopLevelFuncTest::class.java)
+            assertEquals("hey", it)
+        }
+        var result = customWith(text) {
+            "dude"
+        }
+        assertEquals("dude", result)
+
+        // Example
+        // 1. customWith(self) { this: context, it: self  -> any }
+        customWith(text) {
+            println("content: $it")
+            println("length: ${it.length}")
+            println("type: ${it.javaClass.name}")
+        }
+    }
+}
+
+/**
+ * Custom with function that take receiver as parameter, so that you can access receiver via `it`
+ * in the closure block.
+ */
+inline fun <T, R> customWith(receiver: T, block: (T) -> R): R {
+    return block(receiver)
 }
 
 sealed class Droid {
