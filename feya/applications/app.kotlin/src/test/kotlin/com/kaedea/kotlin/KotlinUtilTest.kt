@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
 /**
- * Check [TODO] (location "kotlin.util.Standard.kt")
+ * Check [kotlin.util.Standard.kt][TODO]
  *
  * @author Kaede
  * @since  2018/8/9
