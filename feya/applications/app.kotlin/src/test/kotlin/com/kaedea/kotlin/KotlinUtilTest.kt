@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import kotlin.test.todo
 
 /**
  * Check [kotlin.util.Standard.kt][TODO]
@@ -250,6 +251,7 @@ class KtUtilExtFuncTest {
             else Droid.Musume33()
         }
 
+        TODO("Practice")
     }
 }
 
@@ -349,6 +351,19 @@ class KtUtilMaybeUnpopularFuncTest {
             assertNotNull(v)
             assertEquals(i.toString(), v)
         }
+    }
+
+    @Test
+    fun takeIf() {
+        todo {
+            // impl
+        }
+    }
+
+    @Test
+    @Ignore
+    fun takeUnless() {
+        throw NotImplementedError()
     }
 }
 
