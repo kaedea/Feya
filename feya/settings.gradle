@@ -4,35 +4,46 @@
 
 apply from: file('globals.gradle')
 
+// Include local module
+def imports = { String path ->
+    String name = path.substring(path.lastIndexOf('/') + 1)
+    try {
+        include(":$name")
+        project(":$name").projectDir = file(path)
+    } catch (ignored) {
+        throw new UnsupportedOperationException('Invoked only in setting.gradle')
+    }
+}
+
 // ----------
 // Application
 // ----------
+def prefix = 'applications/'
+def javaApps = ['app.java_7', 'app.java_8', 'app.kotlin']
+def droidApps = ['droid.feya', 'droid.media']
 
-// Java
-imports("applications/app.java_7")
-imports("applications/app.java_8")
-imports("applications/app.kotlin")
-
-// Android
-if (opts('import.android')) {
-    imports("applications/droid.feya")
-    imports("applications/droid.media")
+javaApps.forEach {
+    imports("$prefix$it")
+}
+!opts('import.android') ?: droidApps.forEach {
+    imports("$prefix$it")
 }
 
 // ----------
 // Library
 // ----------
+prefix = 'libraries/archive_diff/'
+def archiveDiffs = ['diff.shared', 'diff.sharedtest', 'diff.applier', 'diff.generator']
 
-// Archive Diff
-imports("libraries/archive_diff/diff.shared")
-imports("libraries/archive_diff/diff.sharedtest")
-imports("libraries/archive_diff/diff.applier")
-imports("libraries/archive_diff/diff.generator")
+archiveDiffs.forEach {
+    imports("$prefix$it")
+}
 
 // Gradle Plugin
-if (opts('import.plugin')) {
-    imports("plugins/plugin.greeting")
-    imports("plugins/plugin.requires")
+prefix = 'plugins/'
+def plugins = ['plugin.greeting', 'plugin.requires']
+!opts('import.plugin') ?: plugins.forEach {
+    imports("$prefix$it")
 }
 
 // ----------
@@ -40,7 +51,6 @@ if (opts('import.plugin')) {
 // ----------
 
 // "Nipaa" Repository
-def nipaa = file('submodules/nipaa/settings.gradle')
-if (nipaa.exists()) {
-    apply from: nipaa
+file('submodules/nipaa/settings.gradle').with {
+    if (it.exists()) apply from: it
 }
