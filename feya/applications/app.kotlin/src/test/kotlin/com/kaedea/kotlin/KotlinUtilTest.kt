@@ -2,8 +2,7 @@
 
 package com.kaedea.kotlin
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -324,6 +323,31 @@ class KtUtilTopLevelFuncTest {
             println("content: $it")
             println("length: ${it.length}")
             println("type: ${it.javaClass.name}")
+        }
+    }
+}
+
+@RunWith(JUnit4::class)
+class KtUtilMaybeUnpopularFuncTest {
+
+    @Test
+    fun repeat() {
+        var sum = 0
+        repeat(6) { index ->
+            sum += index * index
+        }
+        assertEquals(0 + 1 + 4 + 9 + 16 + 25, sum)
+
+        val arrays = Array<String?>(5) { null }
+        arrays.forEach {
+            assertNull(it)
+        }
+        repeat(5) {
+            arrays[it] = it.toString()
+        }
+        for ((i, v) in arrays.withIndex()) {
+            assertNotNull(v)
+            assertEquals(i.toString(), v)
         }
     }
 }
