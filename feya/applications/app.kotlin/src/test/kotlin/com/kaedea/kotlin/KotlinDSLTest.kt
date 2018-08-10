@@ -23,7 +23,6 @@ class KtDslFuncTest {
             return instance
         }
 
-
         val uri = uri {
             sch = "scheme"
             hst = "host"
@@ -76,9 +75,18 @@ class KtDslFuncTest {
         1.days
         1.days.ago
 
+        assertEquals(1.days(), 1.days)
+
         val now = LocalDate.now()
         val yesterday = 1.days.ago
+
         assertEquals(yesterday, now - 1.days)
+        assertEquals(yesterday, 1.days.ago)
+
+        1 days ago
+        val date = 1 days ago
+
+        assertEquals(yesterday, date)
     }
 
     fun Int.days() = Period.ofDays(this)
@@ -88,3 +96,6 @@ class KtDslFuncTest {
         get() = LocalDate.now() - this
 }
 
+object ago
+
+internal inline infix fun Int.days(x: ago) = LocalDate.now() - Period.ofDays(this)

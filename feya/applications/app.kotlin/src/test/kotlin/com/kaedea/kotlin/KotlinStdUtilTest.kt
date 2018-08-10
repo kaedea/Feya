@@ -412,7 +412,6 @@ class KtUtilMaybeUnpopularFuncTest {
 class KtUtilCompositionTest {
 
     @Test
-    @Ignore
     fun composition() {
         // 1. Closure scoping variable
         var musume = "22"
