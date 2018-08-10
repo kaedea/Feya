@@ -17,6 +17,12 @@ import kotlin.test.todo
  */
 
 /*
+Kotlin standard util apis contain:
+1. Scoping functions: also, apply, let, run, with, (takeIf, takeUnless)
+2. Utility functions: repeat, TODO
+3. Utility class: NotImplementedError
+
+Scoping function works like:
 ```
 var zzz = [instance.]xxx[(receiver)] { [it -> ]
     this.foo
