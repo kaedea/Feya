@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import java.io.File
 
 /**
  * Check [kotlin.util.Standard.kt][TODO]
@@ -55,6 +56,17 @@ var result = [caller.]xxx[(receiver)] { [it -> ]
 4. T.xxx extension function can take context as implicit receiver, which make the codes work like top-level function
 
 Which scoping function to choose?
+1. What do we want to return?
+   Do we need return the caller itself for chaining coding
+
+2. Do we need a ext function?
+   What codes do we want to coding: xxx(), caller.xxx(), or xxx(receiver)
+   Ext function does avoid null check in closure
+
+3. How to access caller?
+   when `this` can be omitted, `this` is better
+   `this` maybe references wrong context, `it` is clearer
+   `it` can be renamed in need
 
                                +---------------+
                                | return self ? |
@@ -63,13 +75,13 @@ Which scoping function to choose?
                             +----- N --+-- Y --------------+
                             |                              |
                     +---------------+              +---------------+
-                    |   ext fun ?   |              | access self ? |
+                    |   ext fun ?   |              |  it or this?  |
                     +---------------+              +---------------+
                             |                              |
              +----- N ------+-- Y --+              + this -+-- it -+
              |                      |              |               |
      +---------------+      +---------------+  "T.apply()"     "T.also()"
-     | access self ? |      | access self ? |
+     |  it or this?  |      |  it or this?  |
      +---------------+      +---------------+
              |                          |
      + this -+- n/a -+          + this -+-- it -+
@@ -237,29 +249,6 @@ class KtUtilExtFuncTest {
             println("type: $name")
         }
     }
-
-    @Test
-    @Ignore
-    fun composition() {
-        var musume = "22"
-
-        run {
-            if (musume.endsWith("2")) Musume.Musume22()
-            else Musume.Musume33()
-        }.greet()
-
-        kotlin.run {
-            if (musume.endsWith("2")) Musume.Musume22()
-            else Musume.Musume33()
-        }.greet()
-
-        musume.run {
-            if (endsWith("2")) Musume.Musume22()
-            else Musume.Musume33()
-        }
-
-        TODO("Practice")
-    }
 }
 
 @RunWith(JUnit4::class)
@@ -419,6 +408,76 @@ class KtUtilMaybeUnpopularFuncTest {
     }
 }
 
+@RunWith(JUnit4::class)
+class KtUtilCompositionTest {
+
+    @Test
+    @Ignore
+    fun composition() {
+        // 1. Closure scoping variable
+        var musume = "22"
+        kotlin.run {
+            var musume = "33"
+            assertEquals("33", musume)
+        }
+        assertEquals("22", musume)
+
+        // 2. Condition return
+        // With traditional imperative codes, with need to call #greet for both 22 & 33
+        // Now with scoping function, we just call it once in closure return
+        kotlin.run {
+            if (musume.endsWith("2")) Musume.Musume22()
+            else Musume.Musume33()
+        }.greet()
+
+        musume.run {
+            if (endsWith("2")) Musume.Musume22()
+            else Musume.Musume33()
+        }.greet()
+
+        // 3. Avoid null check
+        // This is the benefit of extension function
+        var droid: Musume? = null
+        droid?.run {
+            println(id)
+            greet()
+        }
+        // Non-ext function does not work
+        kotlin.run {
+            println(droid?.id)
+            droid?.greet()
+        }
+        with(droid) {
+            println(this?.id)
+            this?.greet()
+        }
+
+        // 4. Chain coding
+        // This is the benefit of self-return
+        fun makeDir(path: String) = path.let { File(it) }.also { it.mkdirs() }.takeIf { it.exists() }
+
+        // Normal approach
+        fun makeDirNormal(path: String): File? {
+            val result = File(path)
+            result.mkdirs()
+            if (result.exists()) return result
+            return null
+        }
+
+        // More chaining
+        fun getUri(scheme: String?, host: String?, path: String?) = {
+            Uri().apply {
+                if (scheme!! in arrayOf("http", "https")) throw IllegalArgumentException()
+                sch = scheme
+            }.apply {
+                hst = host ?: "unknown"
+            }.apply {
+                pat = path
+            }
+        }
+    }
+}
+
 /**
  * Custom with function that take receiver as parameter, so that you can access receiver via `it`
  * in the closure block.
@@ -441,4 +500,10 @@ sealed class Musume {
             println("Hello")
         }
     }
+}
+
+private class Uri {
+    var sch: String? = null
+    var hst: String? = null
+    var pat: String? = null
 }
