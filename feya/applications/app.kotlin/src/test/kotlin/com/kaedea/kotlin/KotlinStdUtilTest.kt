@@ -502,7 +502,7 @@ sealed class Musume {
     }
 }
 
-private class Uri {
+internal class Uri {
     var sch: String? = null
     var hst: String? = null
     var pat: String? = null

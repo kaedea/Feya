@@ -7,7 +7,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import kotlin.test.todo
 
 @RunWith(JUnit4::class)
 class KtExtFuncTest {
@@ -29,6 +28,9 @@ class KtExtFuncTest {
         text.startsWith("#").then {
             fail()
         }
+
+        fun ifText(text: String) = text
+        ifText("#aec2cc").startsWith("#").then { }
     }
 
     @Test
