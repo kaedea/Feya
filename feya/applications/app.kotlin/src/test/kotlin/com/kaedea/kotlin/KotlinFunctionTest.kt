@@ -14,6 +14,7 @@ class KtExtFuncTest {
 
     @Test
     fun ifTrueThen() {
+        // if true then ..
         fun Boolean.then(block: () -> Unit) {
             println("receiver: $this")
             if (this) block()
@@ -32,11 +33,12 @@ class KtExtFuncTest {
 
     @Test
     fun ifNotNullAndTrueThen() {
+        // if true or Notnull
         fun <T> T.then(block: () -> Unit) {
             println("receiver: $this")
-            if (this == null) return
-            if (this is Boolean && !this) return
-            if (this is String && this.equals("false", true)) return
+            if (this == null) return // null
+            if (this is Boolean && !this) return // false
+            if (this is String && this.equals("false", true)) return // string "false"
             block()
         }
 
@@ -49,6 +51,7 @@ class KtExtFuncTest {
         text.startsWith("#").then {
             fail()
         }
+
         "false".then { fail() }
         "FALSE".then { fail() }
         null.then { fail() }

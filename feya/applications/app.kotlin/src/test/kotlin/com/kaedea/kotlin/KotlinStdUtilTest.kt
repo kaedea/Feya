@@ -24,9 +24,9 @@ Kotlin standard util apis contain:
 
 Scoping function works like:
 ```
-var zzz = [instance.]xxx[(receiver)] { [it -> ]
+var result = [caller.]xxx[(receiver)] { [it -> ]
     this.foo
-    [return yyy]
+    [return any]
 }
 ```
 
@@ -54,6 +54,8 @@ var zzz = [instance.]xxx[(receiver)] { [it -> ]
 2. with() is a top-level function (static)
 3. with() is the same as T.run() but not as an extension function, `x.run() {}`is the same as `with(x) {}`
 4. T.xxx extension function can take context as implicit receiver, which make the codes work like top-level function
+
+Which scoping function to choose?
 
                                +---------------+
                                | return self ? |
