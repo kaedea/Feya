@@ -7,7 +7,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import kotlin.test.todo
 
 /**
  * Check [kotlin.util.Standard.kt][TODO]
@@ -22,7 +21,7 @@ Kotlin standard util apis contain:
 2. Utility functions: repeat, TODO
 3. Utility class: NotImplementedError
 
-Scoping function works like:
+_Scoping function_ works like:
 ```
 var result = [caller.]xxx[(receiver)] { [it -> ]
     this.foo
@@ -245,18 +244,18 @@ class KtUtilExtFuncTest {
         var musume = "22"
 
         run {
-            if (musume.endsWith("2")) Droid.Musume22()
-            else Droid.Musume33()
+            if (musume.endsWith("2")) Musume.Musume22()
+            else Musume.Musume33()
         }.greet()
 
         kotlin.run {
-            if (musume.endsWith("2")) Droid.Musume22()
-            else Droid.Musume33()
+            if (musume.endsWith("2")) Musume.Musume22()
+            else Musume.Musume33()
         }.greet()
 
         musume.run {
-            if (endsWith("2")) Droid.Musume22()
-            else Droid.Musume33()
+            if (endsWith("2")) Musume.Musume22()
+            else Musume.Musume33()
         }
 
         TODO("Practice")
@@ -363,15 +362,60 @@ class KtUtilMaybeUnpopularFuncTest {
 
     @Test
     fun takeIf() {
-        todo {
-            // impl
+        var droid: Musume?
+        droid = Musume.Musume22().takeIf {
+            when {
+                it.id != 33 -> false
+                it.javaClass != Musume.Musume33::class.java -> false
+                else -> true
+            }
         }
+        assertNull(droid)
+
+        droid = Musume.Musume33().takeIf {
+            when {
+                it.id != 33 -> false
+                it.javaClass != Musume.Musume33::class.java -> false
+                else -> true
+            }
+        }
+        assertNotNull(droid)
     }
 
     @Test
-    @Ignore
     fun takeUnless() {
-        throw NotImplementedError()
+        var human: Musume?
+        human = Musume.Musume22().takeUnless {
+            when {
+                it.id != 33 -> false
+                it.javaClass != Musume.Musume33::class.java -> false
+                else -> true
+            }
+        }
+        assertNotNull(human)
+
+        human = Musume.Musume33().takeUnless {
+            when {
+                it.id != 33 -> false
+                it.javaClass != Musume.Musume33::class.java -> false
+                else -> true
+            }
+        }
+        assertNull(human)
+    }
+
+    @Test
+    fun todo() {
+        var error: Throwable?
+        try {
+            TODO("Tomorrow is always well!")
+            fail()
+        } catch (e: Error) {
+            error = e
+        }
+
+        assertNotNull(error)
+        assertTrue(error is NotImplementedError)
     }
 }
 
@@ -383,15 +427,16 @@ inline fun <T, R> customWith(receiver: T, block: (T) -> R): R {
     return block(receiver)
 }
 
-sealed class Droid {
+sealed class Musume {
+    abstract val id: Int
     abstract fun greet()
-    class Musume22 : Droid() {
+    class Musume22(override val id: Int = 22) : Musume() {
         override fun greet() {
             println("Ciao")
         }
     }
 
-    class Musume33 : Droid() {
+    class Musume33(override val id: Int = 33) : Musume() {
         override fun greet() {
             println("Hello")
         }
