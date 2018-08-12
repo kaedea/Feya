@@ -36,8 +36,72 @@ class KtDslFuncTest {
     }
 
     @Test
+    fun dslWithInvoke() {
+        class DependencyHandler {
+            infix fun compile(dep: String) = this
+            operator fun invoke(body: DependencyHandler.() -> Unit) = body()
+        }
+
+        val dependencies = DependencyHandler()
+
+        dependencies.compile("com.kaedea.kotlin:dsl:0.1.0")
+        dependencies compile "com.kaedea.kotlin:dsl:0.1.0"
+
+        dependencies {
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        }
+
+        assertEquals("com.kaedea.kotlin:dsl:0.1.0", dependencies {
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        })
+    }
+
+    @Test
+    fun dslWithInvoke2() {
+        dependencies.compile("com.kaedea.kotlin:dsl:0.1.0")
+        dependencies compile "com.kaedea.kotlin:dsl:0.1.0"
+
+        dependencies {
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        }
+
+        assertEquals("com.kaedea.kotlin:dsl:0.1.0", dependencies {
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        })
+    }
+
+    object dependencies {
+        infix fun compile(dep: String) = this
+        operator fun invoke(body: dependencies.() -> Unit) = this.body()
+    }
+
+    @Test
+    fun dslWithInvoke3() {
+        class DependencyHandler {
+            infix fun compile(dep: String) = this
+        }
+
+        fun dependencies(body: DependencyHandler.() -> Unit) {
+            val dependencies = DependencyHandler()
+            dependencies.body()
+        }
+
+        dependencies {
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        }
+        dependencies {
+            this compile "com.kaedea.kotlin:dsl:0.1.0" // Damn, 'this' can not be omitted in infix function
+        }
+
+        assertEquals("com.kaedea.kotlin:dsl:0.1.0", KtDslFuncTest.dependencies {
+            this compile "com.kaedea.kotlin:dsl:0.1.0"
+        })
+    }
+
+    @Test
     fun dslWithInfix() {
         "kotlin".should().with("kot")
+
         "kotlin".should(start).with("kot")
         "kotlin" should (start) with ("kot")
         "kotlin" should start with ("kot")
@@ -83,8 +147,8 @@ class KtDslFuncTest {
         assertEquals(yesterday, now - 1.days)
         assertEquals(yesterday, 1.days.ago)
 
-        1 days ago
-        val date = 1 days ago
+        1 days agos
+        val date = 1 days agos
 
         assertEquals(yesterday, date)
     }
@@ -94,6 +158,10 @@ class KtDslFuncTest {
         get() = Period.ofDays(this)
     val Period.ago
         get() = LocalDate.now() - this
+
+    object agos
+
+    private inline infix fun Int.days(x: agos) = LocalDate.now() - Period.ofDays(this)
 
     @Test
     fun dslWithMemberExt() {
@@ -113,8 +181,38 @@ class KtDslFuncTest {
         open val name = email.computeName() // access member ext fun within class
         public fun String.computeName() = this.substringBefore("@")
     }
+
+    @Test
+    fun dslWithHtml() {
+        table {
+            tr {
+                td {
+
+                }
+            }
+        }
+
+    }
+
+    open class Tag(val name: String) {
+        private val items = arrayListOf<Tag>()
+        protected fun <T : Tag> addItem(item: T, init: T.() -> Unit) {
+            item.init()
+            items.add(item)
+        }
+
+        override fun toString() = "<$name>${items.joinToString("")}</$name>"
+    }
+
+    class TD : Tag("td")
+
+    class TR : Tag("tr") {
+        fun td(init: TD.() -> Unit) = addItem(TD(), init)
+    }
+
+    class TABLE : Tag("table") {
+        fun tr(init: TR.() -> Unit)  = addItem(TR(), init)
+    }
+
+    private inline fun table(init: TABLE.() -> Unit) = TABLE().apply(init)
 }
-
-object ago
-
-internal inline infix fun Int.days(x: ago) = LocalDate.now() - Period.ofDays(this)
