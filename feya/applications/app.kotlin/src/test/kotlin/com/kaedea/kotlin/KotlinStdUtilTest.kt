@@ -128,6 +128,12 @@ class KtUtilExtFuncTest {
         }.also {
             println("type: ${it.javaClass.name}")
         }
+
+        // Signature
+        fun foo(block: (Any) -> Unit) = text.also(block)
+        foo {
+            println("content: $it")
+        }
     }
 
     @Test
@@ -164,6 +170,12 @@ class KtUtilExtFuncTest {
             println("length: $length")
         }.apply {
             println("type: ${javaClass.name}")
+        }
+
+        // Signature
+        fun foo(block: Any.() -> Unit) = text.apply(block)
+        foo {
+            println("content: ${toString()}")
         }
     }
 
