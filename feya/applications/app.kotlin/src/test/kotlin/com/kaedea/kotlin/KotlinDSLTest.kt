@@ -38,8 +38,8 @@ class KtDslFuncTest {
     @Test
     fun dslWithInvoke() {
         class DependencyHandler {
-            infix fun compile(dep: String) = this
-            operator fun invoke(body: DependencyHandler.() -> Unit) = body()
+            infix fun compile(dep: String) = dep
+            operator fun invoke(body: DependencyHandler.() -> String) = body()
         }
 
         val dependencies = DependencyHandler()
@@ -71,14 +71,14 @@ class KtDslFuncTest {
     }
 
     object dependencies {
-        infix fun compile(dep: String) = this
-        operator fun invoke(body: dependencies.() -> Unit) = this.body()
+        infix fun compile(dep: String) = dep
+        operator fun invoke(body: dependencies.() -> String) = this.body()
     }
 
     @Test
     fun dslWithInvoke3() {
         class DependencyHandler {
-            infix fun compile(dep: String) = this
+            infix fun compile(dep: String) = dep
         }
 
         fun dependencies(body: DependencyHandler.() -> Unit) {
@@ -191,6 +191,15 @@ class KtDslFuncTest {
                 }
             }
         }
+        assertEquals("<table><tr><td></td></tr></table>",
+                table {
+                    tr {
+                        td {
+
+                        }
+                    }
+                }.toString()
+        )
 
     }
 
@@ -211,7 +220,7 @@ class KtDslFuncTest {
     }
 
     class TABLE : Tag("table") {
-        fun tr(init: TR.() -> Unit)  = addItem(TR(), init)
+        fun tr(init: TR.() -> Unit) = addItem(TR(), init)
     }
 
     private inline fun table(init: TABLE.() -> Unit) = TABLE().apply(init)
