@@ -94,6 +94,25 @@ class KtDslFuncTest {
         get() = Period.ofDays(this)
     val Period.ago
         get() = LocalDate.now() - this
+
+    @Test
+    fun dslWithMemberExt() {
+        val user = User("kidhaibara@gmail.com")
+        // user.computeName()   // can not access member ext out of class
+        // "text".computeName() // can not access member ext in ext target
+        assertEquals("kidhaibara", user.name)
+
+        class Guest : User(email = "empty") {
+            // access member ext fun within inheritor class
+            override val name = "guest@xxx.com".computeName()
+        }
+        assertEquals("guest", Guest().name)
+    }
+
+    open class User(val email: String) {
+        open val name = email.computeName() // access member ext fun within class
+        public fun String.computeName() = this.substringBefore("@")
+    }
 }
 
 object ago
