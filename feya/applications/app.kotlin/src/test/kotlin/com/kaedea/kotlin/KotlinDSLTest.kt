@@ -12,11 +12,26 @@ import java.time.Period
  * @since  2018/8/10
  */
 
+/*
+Kotlin's DSL-like apis are supported by the following features:
+1. __Extension function type__ as function parameter
+2. __Extension function__ of basic type
+3. __Extension property__
+4. __Member extension__: extension function/property within class
+
+5. Invoke operator
+6. Infix function
+7. Empty class/object as trick parameter
+*/
+
 @RunWith(JUnit4::class)
 class KtDslFuncTest {
 
+    /**
+     * FEATURE[1]
+     */
     @Test
-    fun createWithDsl() {
+    fun dslWithExtFuncAsParam() {
         fun uri(block: Uri.() -> Unit): Uri {
             val instance = Uri()
             instance.block()
@@ -35,6 +50,65 @@ class KtDslFuncTest {
         assertEquals("path", uri.pat)
     }
 
+    /**
+     * FEATURE[2]
+     * FEATURE[3]
+     */
+    @Test
+    fun dslWithExtProperty() {
+        1.days()
+        1.days
+        1.days.ago
+
+        assertEquals(1.days(), 1.days)
+
+        val now = LocalDate.now()
+        val yesterday = 1.days.ago
+
+        assertEquals(yesterday, now - 1.days)
+        assertEquals(yesterday, 1.days.ago)
+
+        1 days agos
+        val date = 1 days agos
+
+        assertEquals(yesterday, date)
+    }
+
+    fun Int.days() = Period.ofDays(this)
+    val Int.days
+        get() = Period.ofDays(this)
+    val Period.ago
+        get() = LocalDate.now() - this
+
+    object agos
+
+    private inline infix fun Int.days(x: agos) = LocalDate.now() - Period.ofDays(this)
+
+    /**
+     * FEATURE[4]
+     */
+    @Test
+    fun dslWithMemberExt() {
+        val user = User("kidhaibara@gmail.com")
+        // user.computeName()   // can not access member ext out of class
+        // "text".computeName() // can not access member ext in ext target
+        assertEquals("kidhaibara", user.name)
+
+        class Guest : User(email = "empty") {
+            // access member ext fun within inheritor class
+            override val name = "guest@xxx.com".computeName()
+        }
+        assertEquals("guest", Guest().name)
+    }
+
+    open class User(val email: String) {
+        open val name = email.computeName() // access member ext fun within class
+        public fun String.computeName() = this.substringBefore("@")
+    }
+
+    /**
+     * FEATURE[5]
+     */
     @Test
     fun dslWithInvoke() {
         class DependencyHandler {
@@ -47,8 +121,14 @@ class KtDslFuncTest {
         dependencies.compile("com.kaedea.kotlin:dsl:0.1.0")
         dependencies compile "com.kaedea.kotlin:dsl:0.1.0"
 
+        dependencies({
+            compile("com.kaedea.kotlin:dsl:0.1.0")
+        })
         dependencies {
             compile("com.kaedea.kotlin:dsl:0.1.0")
+        }
+        dependencies {
+            this compile "com.kaedea.kotlin:dsl:0.1.0" // Damn, 'this' can not be omitted in infix function
         }
 
         assertEquals("com.kaedea.kotlin:dsl:0.1.0", dependencies {
@@ -72,7 +152,7 @@ class KtDslFuncTest {
 
     object dependencies {
         infix fun compile(dep: String) = dep
-        operator fun invoke(body: dependencies.() -> String) = this.body()
+        operator fun invoke(body: dependencies.() -> String) = this.body() // ext object type?
     }
 
     @Test
@@ -90,7 +170,7 @@ class KtDslFuncTest {
             compile("com.kaedea.kotlin:dsl:0.1.0")
         }
         dependencies {
-            this compile "com.kaedea.kotlin:dsl:0.1.0" // Damn, 'this' can not be omitted in infix function
+            this compile "com.kaedea.kotlin:dsl:0.1.0"
         }
 
         assertEquals("com.kaedea.kotlin:dsl:0.1.0", KtDslFuncTest.dependencies {
@@ -98,6 +178,10 @@ class KtDslFuncTest {
         })
     }
 
+    /**
+     * FEATURE[6]
+     * FEATURE[7]
+     */
     @Test
     fun dslWithInfix() {
         "kotlin".should().with("kot")
@@ -132,55 +216,6 @@ class KtDslFuncTest {
     object start
 
     infix fun String.should(x: start) = StartWrapper(this)
-
-    @Test
-    fun dslWithExtProperty() {
-        1.days()
-        1.days
-        1.days.ago
-
-        assertEquals(1.days(), 1.days)
-
-        val now = LocalDate.now()
-        val yesterday = 1.days.ago
-
-        assertEquals(yesterday, now - 1.days)
-        assertEquals(yesterday, 1.days.ago)
-
-        1 days agos
-        val date = 1 days agos
-
-        assertEquals(yesterday, date)
-    }
-
-    fun Int.days() = Period.ofDays(this)
-    val Int.days
-        get() = Period.ofDays(this)
-    val Period.ago
-        get() = LocalDate.now() - this
-
-    object agos
-
-    private inline infix fun Int.days(x: agos) = LocalDate.now() - Period.ofDays(this)
-
-    @Test
-    fun dslWithMemberExt() {
-        val user = User("kidhaibara@gmail.com")
-        // user.computeName()   // can not access member ext out of class
-        // "text".computeName() // can not access member ext in ext target
-        assertEquals("kidhaibara", user.name)
-
-        class Guest : User(email = "empty") {
-            // access member ext fun within inheritor class
-            override val name = "guest@xxx.com".computeName()
-        }
-        assertEquals("guest", Guest().name)
-    }
-
-    open class User(val email: String) {
-        open val name = email.computeName() // access member ext fun within class
-        public fun String.computeName() = this.substringBefore("@")
-    }
 
     @Test
     fun dslWithHtml() {
