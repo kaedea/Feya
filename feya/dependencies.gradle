@@ -11,7 +11,7 @@ ext {
     androidSupportLibraryVersion = '27.0.2'
     androidGradleVersion = '3.0.1'
     javaVersion = JavaVersion.VERSION_1_8
-    kotlin_version = '1.2.60'
+    kotlin_version = '1.2.30'
 
     acv_diff = [
             'shared'                  : project(':diff.shared'),
