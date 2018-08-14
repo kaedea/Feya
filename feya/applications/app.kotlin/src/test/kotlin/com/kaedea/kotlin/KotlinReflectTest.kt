@@ -102,7 +102,7 @@ class KtReflectTest {
 
         // KClass
         assertEquals("User", userClass.simpleName)
-        assertEquals("com.kaedea.kotlin.KtReflectTest.User", userClass.qualifiedName)
+        assertEquals("com.kaedea.kotlin.User", userClass.qualifiedName)
         assertEquals(KVisibility.PUBLIC, userClass.visibility)
         assertTrue(!userClass.isFinal)
         assertTrue(userClass.isOpen)
@@ -442,7 +442,34 @@ class KtReflectJvmTest {
         assertEquals("n/a", constructor.newInstance().name)
 
         val func = ::info
-        val infoMethod = func.javaMethod
+        val infoMethod = func.javaMethod!!
+        assertEquals("guest(0)", infoMethod.invoke(Guest, Guest))
+
+        assertNull(User::name.javaField)
+        val nameProp = User::class.declaredMembers.first {
+            it.name == "_name"
+        } as KProperty
+        val nameFiled = nameProp.javaField!!
+        nameFiled.isAccessible = true
+        assertEquals("guest", nameFiled.get(Guest))
+
+        // java -> kotlin
+        kotlin.run {
+            val construct = User::class.java.getConstructor()
+            val constructor = construct.kotlinFunction!!
+            assertEquals("n/a", constructor.call().name)
+
+            val method = User::class.java.getDeclaredMethod("changeName", String::class.java)
+            val func = method.kotlinFunction!!
+            val user = User()
+            func.call(user, "user")
+            assertEquals("user", user.name)
+
+            val field = User::class.java.getDeclaredField("_age")!!
+            val property = field.kotlinProperty!!
+            property.isAccessible = true
+            assertEquals(0, property.getter.call(Guest))
+        }
     }
 
     /**
