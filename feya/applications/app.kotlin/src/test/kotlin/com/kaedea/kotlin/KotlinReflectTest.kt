@@ -58,45 +58,10 @@ class KtReflectTest {
         assertEquals(JUnit4::class, runWith.value)
 
         // ext utils
-        // kotlin.reflect.full.KClasses.kt
+        // kotlin.reflect.full.KAnnotatedElements.kt
         val findAnnotation = KtReflectTest::class.findAnnotation<RunWith>()!!
         assertEquals(JUnit4::class, findAnnotation.value)
     }
-
-    open class User {
-        val name
-            get() = _name ?: "n/a"
-        var age
-            get() = _age ?: 0
-            set(value) {
-                _age = value
-            }
-        public var sex: String by Delegates.observable("male", { pro, old, new ->
-            if (new != "male" && new != "female") throw IllegalArgumentException("Unknown sex")
-        })
-
-        private var _name: String? = null
-        private var _age: Int? = null
-
-        constructor()
-        constructor(name: String, age: Int) {
-            _name = name
-            _age = age
-        }
-
-        fun changeName(name: String) {
-            _name = name
-        }
-
-        override fun toString() = "$name($age)"
-
-        val User.email get() = "$name@gmail.com"
-        val User.id by Delegates.notNull<Int>()
-    }
-
-    object Guest : User("guest", 0)
-
-    fun info(user: User) = user.toString()
 
     /**
      * @see [kotlin.reflect.KClass]
@@ -143,7 +108,8 @@ class KtReflectTest {
         assertTrue(!guestClass.isCompanion)
 
         assertEquals(2, userClass.constructors.size)
-        arrayOf("_name", "_age", "name", "age", "changeName", "toString").asSequence().forEach { name ->
+        arrayOf("_name", "_age", "name", "age", "changeName",
+                "toString", "equals", "hashCode").asSequence().forEach { name ->
             userClass.members.find { it.name == name }!!
         }
         assertEquals(emptyList(), userClass.nestedClasses)
@@ -152,6 +118,62 @@ class KtReflectTest {
 
         // ext utils
         // kotlin.reflect.full.KClasses.kt
+        val user = userClass.createInstance()
+        assertEquals("n/a", user.name)
+        assertNull(userClass.primaryConstructor)
+        assertNull(userClass.companionObject)
+        assertNull(userClass.companionObjectInstance)
+        arrayOf("_name", "_age", "name", "age", "changeName", "toString").asSequence().forEach { name ->
+            userClass.declaredMembers.find { it.name == name }!!
+        }
+
+        // member/static/ext functions
+        arrayOf("changeName", "toString", "equals", "hashCode").asSequence().forEach { name ->
+            userClass.functions.find { it.name == name }!!
+        }
+        arrayOf("changeName", "toString", "equals", "hashCode").asSequence().forEach { name ->
+            userClass.memberFunctions.find { it.name == name }!!
+        }
+        arrayOf("changeName", "toString").asSequence().forEach { name ->
+            userClass.declaredFunctions.find { it.name == name }!!
+        }
+        arrayOf("changeName", "toString").asSequence().forEach { name ->
+            userClass.declaredMemberFunctions.find { it.name == name }!!
+        }
+        assertEquals(emptyList(), userClass.staticFunctions)
+        assertEquals(emptyList(), userClass.memberExtensionFunctions)
+        assertEquals(emptyList(), userClass.declaredMemberExtensionFunctions)
+
+        // member/static/ext properties
+        arrayOf("_age", "_name", "age", "name", "sex").asSequence().forEach { name ->
+            userClass.memberProperties.find { it.name == name }!!
+        }
+        arrayOf("email", "id").asSequence().forEach { name ->
+            userClass.memberExtensionProperties.find { it.name == name }!!
+        }
+        arrayOf("_age", "_name", "age", "name", "sex").asSequence().forEach { name ->
+            userClass.declaredMemberProperties.find { it.name == name }!!
+        }
+        arrayOf("email", "id").asSequence().forEach { name ->
+            userClass.declaredMemberExtensionProperties.find { it.name == name }!!
+        }
+        assertEquals(emptyList(), userClass.staticProperties)
+
+        // casting
+        assertEquals(listOf(User::class), guestClass.superclasses)
+        assertEquals(
+                listOf(User::class, Any::class),
+                guestClass.allSuperclasses
+        )
+        assertEquals(
+                listOf(User::class.createType(), Any::class.createType()),
+                guestClass.allSupertypes
+        )
+        assertTrue(guestClass.isSubclassOf(userClass))
+        assertTrue(userClass.isSuperclassOf(guestClass))
+        val any = user as Any
+        assertEquals("n/a", userClass.cast(any).name)
+        assertNull(guestClass.safeCast(any))
     }
 
     /**
@@ -218,7 +240,7 @@ class KtReflectTest {
         assertNull(func.extensionReceiverParameter)
         assertEquals(listOf(param), func.valueParameters)
         assertTrue {
-            func.valueParameters.all { it.kind == KParameter.Kind.VALUE}
+            func.valueParameters.all { it.kind == KParameter.Kind.VALUE }
         }
 
         val extFunc = User::copy
@@ -321,6 +343,8 @@ class KtReflectTest {
         // kotlin.reflect.full.KClassifier.kt
         val guestType = Guest::class.createType()
         assertEquals(Guest::class, guestType.classifier)
+        val starProjectedType = Guest::class.starProjectedType
+        assertEquals(Guest::class, starProjectedType.classifier)
 
         // kotlin.reflect.full.KTypes.kt
         assertTrue(guestType.isSubtypeOf(User::class.createType()))
@@ -331,4 +355,42 @@ class KtReflectTest {
     }
 }
 
-fun KtReflectTest.User.copy() = KtReflectTest.User(name, age)
+// ----------
+// Materials for test
+// ----------
+open class User {
+    val name
+        get() = _name ?: "n/a"
+    var age
+        get() = _age ?: 0
+        set(value) {
+            _age = value
+        }
+    public var sex: String by Delegates.observable("male", { pro, old, new ->
+        if (new != "male" && new != "female") throw IllegalArgumentException("Unknown sex")
+    })
+
+    private var _name: String? = null
+    private var _age: Int? = null
+
+    constructor()
+    constructor(name: String, age: Int) {
+        _name = name
+        _age = age
+    }
+
+    fun changeName(name: String) {
+        _name = name
+    }
+
+    override fun toString() = "$name($age)"
+
+    val User.email get() = "$name@gmail.com"
+    val User.id by Delegates.notNull<Int>()
+}
+
+object Guest : User("guest", 0)
+
+fun info(user: User) = user.toString()
+
+fun User.copy() = User(name, age)
