@@ -4,12 +4,13 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import kotlin.properties.Delegates
+import kotlin.properties.ObservableProperty
+import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.*
 import kotlin.reflect.full.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.reflect.jvm.isAccessible
+import kotlin.test.*
 
 /**
  * Kotlin reflect tweak with:
@@ -67,6 +68,9 @@ class KtReflectTest {
             set(value) {
                 _age = value
             }
+        public var sex: String by Delegates.observable("male", { pro, old, new ->
+            if (new != "male" && new != "female") throw IllegalArgumentException("Unknown sex")
+        })
 
         private var _name: String? = null
         private var _age: Int? = null
@@ -82,9 +86,12 @@ class KtReflectTest {
         }
 
         override fun toString() = "$name($age)"
+
+        val User.email get() = "$name@gmail.com"
+        val User.id by Delegates.notNull<Int>()
     }
 
-    object Guest : User()
+    object Guest : User("guest", 0)
 
     public final fun info(user: User) = user.toString()
 
@@ -209,8 +216,8 @@ class KtReflectTest {
      */
     @Test
     fun ktProp() {
+        // KProperty
         val prop = User::name
-
         assertEquals(Guest.name, prop.get(Guest))
         assertEquals(prop.call(Guest), prop.get(Guest))
         assertTrue(!prop.isLateinit)
@@ -221,6 +228,7 @@ class KtReflectTest {
         assertEquals(Guest.name, getter.invoke(Guest))
         assertEquals(prop, getter.property)
 
+        // KMutableProperty
         val mutProp = User::age
         val user = User()
         mutProp.set(user, 17)
@@ -230,10 +238,41 @@ class KtReflectTest {
         setter.call(user, 20)
         assertEquals(20, user.age)
 
+        // Ext Property
+        val extProperty = User::class.memberExtensionProperties.find {
+            it.name == "email"
+        } as KProperty2<User, User, String>
+        assertEquals("guest@gmail.com", extProperty.get(Guest, Guest))
+
+        // Delegated Property
         assertNull(prop.getDelegate(user))
+        val propProxy = User::sex
+        propProxy.isAccessible = true
+        val propDelegate = propProxy.getDelegate(Guest) as ObservableProperty<String>
+        assertNotNull(propDelegate)
+        assertEquals("male", propDelegate.getValue(user, propProxy))
+        propDelegate.setValue(user, propProxy, "female")
+        assertEquals("female", propDelegate.getValue(user, propProxy))
+        try {
+            propDelegate.setValue(user, propProxy, "otoko no ko")
+            fail()
+        } catch (e: Exception) {
+        }
 
         // ext utils
         // kotlin.reflect.full.KProperties.kt
+        val extPropProxy = User::class.memberExtensionProperties.find {
+            it.name == "id"
+        }!!
+        extPropProxy.isAccessible = true
+        val extPropDelegate = extPropProxy.getExtensionDelegate(user) as ReadWriteProperty<User, Int>
+        try {
+            extPropDelegate.getValue(user, extPropProxy)
+            fail("NotNullVar delegated")
+        } catch (e: Exception) {
+        }
+        extPropDelegate.setValue(user, extPropProxy, 2233)
+        assertEquals(2233, extPropDelegate.getValue(user, extPropProxy))
     }
 
     /**
@@ -244,6 +283,7 @@ class KtReflectTest {
      */
     @Test
     fun ktType() {
+        // KClass, KClassifier & KType
         val userClass = User::class
         assertTrue(userClass is KClassifier)
 
