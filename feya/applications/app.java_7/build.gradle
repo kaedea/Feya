@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+apply plugin: 'java'
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile debugin['junit']
+
+    acv_diff.each { k, v ->
+        if (k.contains('test')) testCompile v
+        else compile v
+    }
+
+    compile utils['commons_io']
+    compile utils['http_core']
+    compile utils['http_client']
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7

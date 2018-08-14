@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2017. Kaede <kidhaibara@gmail.com>.
+ *
+ */
+ext {
+    // Find property in the following order:
+    // 1. gradle.properties
+    // 2. local.properties of root project
+    // 3. System environment
+    opts = { key ->
+        (properties.get(key) ?:
+                (rootProject instanceof Project ? rootProject : this).file('local.properties').with {
+                    if (it.exists()) {
+                        def pros = new Properties()
+                        pros.load(it.newDataInputStream())
+                        if (pros.getProperty(key)) return pros.getProperty(key)
+                    }
+                } ?: System.getenv(key)).with {
+            if (it == 'true' || it == 'false') return it.toBoolean()
+        }
+    }
+}

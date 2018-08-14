@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+apply from: file('globals.gradle')
+
+// Include local module
+def imports = { String path ->
+    String name = path.substring(path.lastIndexOf('/') + 1)
+    try {
+        include(":$name")
+        project(":$name").projectDir = file(path)
+    } catch (ignored) {
+        throw new UnsupportedOperationException('Invoked only in setting.gradle')
+    }
+}
+
+// ----------
+// Application
+// ----------
+def prefix = 'applications/'
+def javaApps = ['app.java_7', 'app.java_8', 'app.kotlin']
+def droidApps = ['droid.feya', 'droid.media']
+
+javaApps.forEach {
+    imports("$prefix$it")
+}
+!opts('import.android') ?: droidApps.forEach {
+    imports("$prefix$it")
+}
+
+// ----------
+// Library
+// ----------
+prefix = 'libraries/archive_diff/'
+def archiveDiffs = ['diff.shared', 'diff.sharedtest', 'diff.applier', 'diff.generator']
+
+archiveDiffs.forEach {
+    imports("$prefix$it")
+}
+
+// Gradle Plugin
+prefix = 'plugins/'
+def plugins = ['plugin.greeting', 'plugin.requires']
+!opts('import.plugin') ?: plugins.forEach {
+    imports("$prefix$it")
+}
+
+// ----------
+// Sub Module
+// ----------
+
+// "Nipaa" Repository
+file('submodules/nipaa/settings.gradle').with {
+    if (it.exists()) apply from: it
+}

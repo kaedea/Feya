@@ -1,0 +1,156 @@
+/*
+ * Copyright (c) 2017. Kaede (kidhaibara@gmail.com) All Rights Reserved.
+ */
+
+apply plugin: 'com.android.application'
+android {
+    useLibrary 'org.apache.http.legacy'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId "me.kaede.feya"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        // multiDexEnabled true
+        // testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+    }
+    signingConfigs {
+        test {
+            v2SigningEnabled false
+            storeFile key_test['store_file']
+            storePassword key_test['store_password']
+            keyAlias key_test['key_alias']
+            keyPassword key_test['key_password']
+        }
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.test
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            signingConfig signingConfigs.test
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    aaptOptions {
+        noCompress "xml"
+    }
+}
+
+def getAndroidJar = {
+    def androidSdkHome = System.env.ANDROID_HOME as String
+    if (!androidSdkHome) {
+        def file = rootProject.file('local.properties')
+        if (file.exists()) {
+            Properties properties = new Properties()
+            file.withInputStream { properties.load(it) }
+            androidSdkHome = properties['sdk.dir']
+        }
+    }
+    if (!androidSdkHome) {
+        throw new StopExecutionException("Please declares your 'sdk.dir' to file 'local.properties'")
+    }
+    return "$androidSdkHome/platforms/$android.compileSdkVersion/android.jar"
+}
+
+task providedActivityThread(type: JavaCompile) {
+    source = file('src/provided/java')
+    classpath = files(getAndroidJar())
+    destinationDir = file(project.buildDir.toString() + '/tmp/stubLibs')
+    options.verbose = true
+}
+
+task providedActivityThreadJar(type: Jar) {
+    baseName = 'provided-activity-thread'
+    version = '1.0'
+    from(providedActivityThread)
+    include('**/*.class')
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    // Test
+    testCompile debugin['junit']
+    androidTestCompile(debugin['espresso_core'], {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    // Android supports
+    supports.each { k, v -> compile v }
+
+    // Bolts
+    compile frameworks['bolts_task']
+    compile frameworks['bolts_link']
+
+    // RX
+    compile frameworks['rx_java']
+    compile frameworks['rx_android']
+
+    // Retrofit
+    compile frameworks['retrofit']
+    compile frameworks['retrofit_fastjson']
+
+    // Others
+    compile utils['commons_lang']
+    compile utils['commons_io']
+    compile frameworks['wire_runtime']
+    compile frameworks['butterknife']
+    annotationProcessor frameworks['butterknife_apt']
+
+    // Provided android.jar for hidden apis
+    compileOnly providedActivityThreadJar.outputs.files
+}
+
+afterEvaluate {
+    logger.info "========================"
+    logger.info "Dump project configurations:"
+    logger.info project.configurations.dump()
+
+    project.configurations.compile.resolvedConfiguration.firstLevelModuleDependencies.each {
+        logger.info "Compile ${it.toString()}"
+        it.getChildren().each { child ->
+            logger.info "--> Compile ${child.toString()}"
+        }
+    }
+}
+
+
+// -------------------------------------------------------------------------------------------------
+// Plugin
+// -------------------------------------------------------------------------------------------------
+
+// Build plugin to local repository before applying.
+
+//buildscript {
+//    repositories {
+//        maven {
+//            url uri(rootProject.ext.localMaven)
+//        }
+//    }
+//    dependencies {
+//        classpath group: 'com.kaedea.gradle.requires', name: 'plugin.requires', version: '0.0.1'
+//        classpath group: 'moe.studio.feya.greeting', name: 'plugin.greeting', version: '0.0.1'
+//    }
+//}
+//
+//apply plugin: 'moe.studio.feya.greeting'
+//greeting {
+//    from = "David"
+//    message = "Hey, dude!"
+//    to {
+//        to = "Jager"
+//    }
+//}
+//
+//apply plugin: 'com.kaedea.gradle.requires'
+//needs {
+//    // BLog
+//    compile utils['b_log']
+//}
