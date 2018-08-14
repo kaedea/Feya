@@ -10,7 +10,10 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Kotlin reflect tweak with:
@@ -93,7 +96,7 @@ class KtReflectTest {
 
     object Guest : User("guest", 0)
 
-    public final fun info(user: User) = user.toString()
+    fun info(user: User) = user.toString()
 
     /**
      * @see [kotlin.reflect.KClass]
@@ -208,6 +211,26 @@ class KtReflectTest {
         // ext utils
         // kotlin.reflect.full.KCallables.kt
         val param = func.findParameterByName("user")!!
+        assertTrue(param.type == User::class.createType())
+        assertTrue(param.kind == KParameter.Kind.VALUE)
+
+        assertNull(func.instanceParameter)
+        assertNull(func.extensionReceiverParameter)
+        assertEquals(listOf(param), func.valueParameters)
+        assertTrue {
+            func.valueParameters.all { it.kind == KParameter.Kind.VALUE}
+        }
+
+        val extFunc = User::copy
+        assertEquals(emptyList(), extFunc.valueParameters)
+        assertNull(extFunc.instanceParameter)
+        assertTrue(extFunc.extensionReceiverParameter!!.type == User::class.createType())
+        assertTrue(extFunc.extensionReceiverParameter!!.kind == KParameter.Kind.EXTENSION_RECEIVER)
+
+        val insFunc = User::changeName
+        assertTrue(insFunc.instanceParameter!!.type == User::class.createType())
+        assertTrue(insFunc.instanceParameter!!.kind == KParameter.Kind.INSTANCE)
+        assertNull(insFunc.extensionReceiverParameter)
     }
 
     /**
@@ -307,3 +330,5 @@ class KtReflectTest {
         assertTrue(nullableType.isMarkedNullable)
     }
 }
+
+fun KtReflectTest.User.copy() = KtReflectTest.User(name, age)
