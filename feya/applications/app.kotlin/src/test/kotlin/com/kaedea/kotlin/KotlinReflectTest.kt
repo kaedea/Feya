@@ -1,6 +1,7 @@
 package com.kaedea.kotlin
 
 import org.junit.Assert.fail
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -9,14 +10,14 @@ import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.*
 import kotlin.reflect.full.*
-import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Kotlin reflect tweak with:
+ * Kotlin reflect tweak with apis:
  * - [kotlin.reflect.KAnnotatedElement]
  * - [kotlin.reflect.KClass]
  * - [kotlin.reflect.KParameter]
@@ -37,6 +38,13 @@ import kotlin.test.assertTrue
  * - [kotlin.reflect.full.KProperties.kt][kotlin.reflect.full.getExtensionDelegate]
  * - [kotlin.reflect.full.KClassifier.kt][createType]
  * - [kotlin.reflect.full.KTypes.kt][kotlin.reflect.full.isSubtypeOf]
+ *
+ * JVM Utils
+ * - [kotlin.reflect.jvm.KCallablesJVM.kt][isAccessible]
+ * - [kotlin.reflect.jvm.KClassesJvm.kt][kotlin.reflect.jvm.jvmName]
+ * - [kotlin.reflect.jvm.KTypesJvm.kt][kotlin.reflect.jvm.jvmErasure]
+ * - [kotlin.reflect.jvm.ReflectJvmMapping.kt][kotlin.reflect.jvm.javaType]
+ * - [kotlin.reflect.jvm.ReflectLambdaKt.kt][kotlin.reflect.jvm.reflect]
  *
  * @author Kaede
  * @since  2018/8/13
@@ -321,17 +329,11 @@ class KtReflectTest {
     }
 
     /**
-     * @see [kotlin.reflect.KClassifier]
      * @see [kotlin.reflect.KType]
-     * @see [kotlin.reflect.full.KClassifier.kt]
      * @see [kotlin.reflect.full.KTypes.kt]
      */
     @Test
     fun ktType() {
-        // KClass, KClassifier & KType
-        val userClass = User::class
-        assertTrue(userClass is KClassifier)
-
         val type = ::info.returnType
         assertTrue {
             !type.isMarkedNullable &&
@@ -339,19 +341,117 @@ class KtReflectTest {
                     type.classifier == String::class
         }
 
+        // kotlin.reflect.full.KTypes.kt
+        val guestType = Guest::class.createType()
+        assertTrue(guestType.isSubtypeOf(User::class.createType()))
+        assertTrue(!guestType.isSupertypeOf(User::class.createType()))
+        assertTrue(!guestType.isMarkedNullable)
+        val nullableType = guestType.withNullability(true)
+        assertTrue(nullableType.isMarkedNullable)
+    }
+
+    /**
+     * Note that [KClass] & [KTypeParameter] are both [KClassifier],
+     * [KTypeParameter] is not [KParameter], but a special builtin parameter of generic class/callable.
+     *
+     * @see [kotlin.reflect.KClassifier]
+     * @see [kotlin.reflect.KTypeParameter]
+     * @see [kotlin.reflect.full.KClassifier.kt]
+     */
+    @Test
+    fun ktTypeParameter() {
+        // KClassifier
+        val userClass = User::class
+        assertTrue(userClass is KClassifier)
+
+        // KTypeParameter
+        val listClass = List::class
+        val typedParam = listClass.typeParameters.single()
+        assertEquals("E", typedParam.name)
+        assertEquals(KVariance.OUT, typedParam.variance)
+        assertEquals(
+                Any::class.createType().withNullability(true),
+                typedParam.upperBounds.single()
+        )
+        assertTrue(!typedParam.isReified)
+
         // ext utils
         // kotlin.reflect.full.KClassifier.kt
         val guestType = Guest::class.createType()
         assertEquals(Guest::class, guestType.classifier)
         val starProjectedType = Guest::class.starProjectedType
         assertEquals(Guest::class, starProjectedType.classifier)
+    }
+}
 
-        // kotlin.reflect.full.KTypes.kt
-        assertTrue(guestType.isSubtypeOf(User::class.createType()))
-        assertTrue(!guestType.isSupertypeOf(User::class.createType()))
-        assertTrue(!guestType.isMarkedNullable)
-        val nullableType = guestType.withNullability(true)
-        assertTrue(nullableType.isMarkedNullable)
+class KtReflectJvmTest {
+
+    /**
+     * @see [kotlin.reflect.jvm.KCallablesJVM.kt]
+     */
+    @Test
+    fun ktCallable() {
+        val prop = User::class.memberProperties.find {
+            it.name == "_name"
+        }!!
+        assertTrue(!prop.isAccessible)
+        try {
+            prop.get(Guest)
+            fail()
+        } catch (e: Exception) {
+        }
+        prop.isAccessible = true
+        assertEquals("guest", prop.get(Guest))
+    }
+
+    /**
+     * @see [kotlin.reflect.jvm.KClassesJvm.kt]
+     */
+    @Test
+    fun ktClass() {
+        assertEquals("com.kaedea.kotlin.User", User::class.jvmName)
+        assertEquals("int", Int::class.jvmName)
+        assertEquals("java.lang.String", String::class.jvmName)
+    }
+
+    /**
+     * @see [kotlin.reflect.jvm.KTypesJvm.kt]
+     */
+    @Test
+    fun ktType() {
+        val listClass = List::class
+        assertTrue(listClass.typeParameters.isNotEmpty())
+
+        val typedParam = listClass.typeParameters.single()
+        val listClassErased = typedParam.createType().jvmErasure
+        assertEquals(emptyList(), listClassErased.typeParameters)
+    }
+
+
+    /**
+     * @see [kotlin.reflect.jvm.ReflectJvmMapping.kt]
+     */
+    @Test
+    fun ktJvmMapping() {
+        // kotlin -> java
+        assertEquals("int", Int::class.defaultType.javaType.typeName)
+        assertEquals(String::class.java, String::class.defaultType.javaType)
+
+        val construct = User::class.constructors.first()
+        val constructor = construct.javaConstructor!!
+        assertEquals("n/a", constructor.newInstance().name)
+
+        val func = ::info
+        val infoMethod = func.javaMethod
+    }
+
+    /**
+     * @see [kotlin.reflect.jvm.ReflectLambdaKt.kt]
+     */
+    @Test
+    @Ignore("experimental api")
+    fun ktLambda() {
+
     }
 }
 
