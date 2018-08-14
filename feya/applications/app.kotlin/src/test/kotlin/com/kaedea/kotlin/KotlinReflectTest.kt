@@ -30,6 +30,7 @@ import kotlin.test.assertTrue
  * - [kotlin.reflect.KVisibility]
  * - [kotlin.reflect.KVariance]
  * - [kotlin.reflect.KTypeParameter]
+ * - [kotlin.reflect.KTypeProjection]
  *
  * Extension utils:
  * - [kotlin.reflect.full.KClasses.kt][createInstance]
