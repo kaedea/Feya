@@ -11,6 +11,12 @@ import kotlin.test.assertEquals
 import kotlin.test.todo
 
 /**
+ * Kotlin annotation apis tweaking:
+ * - [Target]
+ * - [Retention]
+ * - [Repeatable]
+ * - [MustBeDocumented]
+ *
  * @author Kaede
  * @since  2018/8/14
  */
