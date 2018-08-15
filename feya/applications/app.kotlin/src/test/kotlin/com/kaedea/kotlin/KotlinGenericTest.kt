@@ -9,9 +9,9 @@ import kotlin.test.assertTrue
 
 /**
  * Tweaking of Kotlin generic features:
- * - restrict of type parameter
  * - is-check & casting
  * - reified
+ * - restrict of type parameter
  * - invariance & variance
  * - type projecting
  *
@@ -157,23 +157,65 @@ class KtGenericTest {
         assertEquals("[guest,guest]", allUsers(castToUsers))
     }
 
+    /**
+     * `User<T>` & `Guest<T> : User<T>`
+     * Subtyping:
+     * 1. Subtyping of T within User
+     * 2. Subtyping of T within Guest (Subtyping of inheritant)
+     * 3. Subtyping of projection (how does User effect Guest is projection)
+     *
+     * Usecases:
+     * 1. As parameter
+     * 2. As return type
+     * 3. As variable
+     */
     @Test
     fun covariant() {
         open class User(val name: String)
         class Guest : User("guest")
 
-        // List<out E> : Collection<E>
+        // Out/Extend/Covariant Projection
+        // List<out E>
         // List<Guest> is subtype of List<User>
-        fun allUsers(users: List<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
+        fun dumpUsers(users: List<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
 
+        // Subtyping of TYPE PARAMETER
+        // 1. current type
         val users: List<User> = listOf(User("a"), User("b"))
-        assertEquals("[a,b]", allUsers(users))
+        assertEquals("[a,b]", dumpUsers(users))
 
+        // 2. subtype
         val guests: List<Guest> = listOf(Guest(), Guest())
-        assertEquals("[guest,guest]", allUsers(guests))
+        assertEquals("[guest,guest]", dumpUsers(guests))
 
-        val anys = guests as List<Any>
-        // assertEquals("[guest, guest]", allUsers(anys)) // compile error, type mismatch
+        // 3. supertype
+        val anys = users as List<Any>
+        // compile error, type mismatch
+        // assertEquals("[a,b]", allUsers(anys))
+
+        // 4. star projection
+        val stars = users as List<*>
+        // compile error, type mismatch
+        // assertEquals("[a,b]", allUsers(stars))
+
+        // Subtyping of TYPE PARAMETER, combined with SubType of GENERIC CLASS
+        // 1. current type
+        val arrayListUser: ArrayList<User> = arrayListOf(User("a"), User("b"))
+        assertEquals("[a,b]", dumpUsers(arrayListUser))
+
+        // 2. subtype
+        val arrayListGuest: ArrayList<Guest> = arrayListOf(Guest(), Guest())
+        assertEquals("[guest,guest]", dumpUsers(arrayListGuest))
+
+        // 3. supertype
+        val arrayListAny = arrayListUser as ArrayList<Any>
+        // compile error, type mismatch
+        // assertEquals("[a,b]", allUsers(arrayListAny))
+
+        // 4. star projection
+        val arrayListStar = arrayListUser as ArrayList<*>
+        // compile error, type mismatch
+        // assertEquals("[guest,guest]", allUsers(arrayListStar))
     }
 
     @Test
@@ -231,7 +273,7 @@ class KtGenericTest {
         val copy3: ArrayList<*> = copy(listOf<User>(), arrayListOf<User>())
         val copy4: ArrayList<*> = copy(listOf<User>(), arrayListOf<Any>())
 
-        // val copy5: List<in User> = copy(listOf<User>(), arrayListOf<User>()) // in project with variance is conflicting
+        // val copy: List<in User> = copy(listOf<User>(), arrayListOf<User>()) // in project with variance is conflicting
         val copy5: List<*> = copy(listOf<User>(), arrayListOf<User>())
         val copy6: List<*> = copy(listOf<User>(), arrayListOf<Any>())
     }
