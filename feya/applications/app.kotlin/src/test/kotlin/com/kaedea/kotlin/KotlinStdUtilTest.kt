@@ -3,17 +3,26 @@
 package com.kaedea.kotlin
 
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.io.File
 
 /**
- * Check [kotlin.util.Standard.kt][TODO]
+ * Kotlin standard util apis tweaking:
+ * - [also]
+ * - [apply]
+ * - [let]
+ * - [run]
+ * - [T.run][run]
+ * - [with]
+ * - [repeat]
+ * - [takeIf]
+ * - [takeUnless]
  *
  * @author Kaede
  * @since  2018/8/9
+ * @see [kotlin.util.Standard.kt][TODO]
  */
 
 /*
@@ -93,7 +102,7 @@ Which scoping function to choose?
 class KtUtilExtFuncTest {
 
     @Test
-    fun also() {
+    fun alsoUtil() {
         // Access
         also {
             assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
@@ -137,7 +146,7 @@ class KtUtilExtFuncTest {
     }
 
     @Test
-    fun apply() {
+    fun applyUtil() {
         // Access
         apply {
             assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
@@ -180,7 +189,7 @@ class KtUtilExtFuncTest {
     }
 
     @Test
-    fun let() {
+    fun letUtil() {
         // Access
         let {
             assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
@@ -222,7 +231,7 @@ class KtUtilExtFuncTest {
     }
 
     @Test
-    fun run() {
+    fun runUtil() {
         // Access
         run {
             assertTrue(this.javaClass === KtUtilExtFuncTest::class.java)
@@ -267,7 +276,7 @@ class KtUtilExtFuncTest {
 class KtUtilTopLevelFuncTest {
 
     @Test
-    fun run() {
+    fun runUtil() {
         // Access
         kotlin.run {
             assertTrue(this.javaClass === KtUtilTopLevelFuncTest::class.java)
@@ -293,7 +302,7 @@ class KtUtilTopLevelFuncTest {
     }
 
     @Test
-    fun with() {
+    fun withUtil() {
         // Access
         var text = "hey"
         with(text) {
@@ -341,7 +350,7 @@ class KtUtilTopLevelFuncTest {
 class KtUtilMaybeUnpopularFuncTest {
 
     @Test
-    fun repeat() {
+    fun repeatUtil() {
         var sum = 0
         repeat(6) { index ->
             sum += index * index
@@ -362,7 +371,7 @@ class KtUtilMaybeUnpopularFuncTest {
     }
 
     @Test
-    fun takeIf() {
+    fun takeIfUtil() {
         var droid: Musume?
         droid = Musume.Musume22().takeIf {
             when {
@@ -384,7 +393,7 @@ class KtUtilMaybeUnpopularFuncTest {
     }
 
     @Test
-    fun takeUnless() {
+    fun takeUnlessUtil() {
         var human: Musume?
         human = Musume.Musume22().takeUnless {
             when {
@@ -406,7 +415,7 @@ class KtUtilMaybeUnpopularFuncTest {
     }
 
     @Test
-    fun todo() {
+    fun todoUtil() {
         var error: Throwable?
         try {
             TODO("Tomorrow is always well!")

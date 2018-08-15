@@ -11,7 +11,10 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.*
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Kotlin reflect tweak with apis:
@@ -204,6 +207,8 @@ class KtReflectTest {
     }
 
     /**
+     * KFunction is KCallable
+     *
      * @see [kotlin.reflect.KCallable]
      * @see [kotlin.reflect.KFunction]
      * @see [kotlin.reflect.full.KCallables.kt]
@@ -262,6 +267,9 @@ class KtReflectTest {
     }
 
     /**
+     * KProperty is KCallable
+     *
+     * @see [kotlin.reflect.KCallable]
      * @see [kotlin.reflect.KProperty]
      * @see [kotlin.reflect.full.KProperties.kt]
      */
@@ -277,6 +285,7 @@ class KtReflectTest {
         val getter = prop.getter
         assertTrue(getter is KFunction<*>)
         assertEquals(Guest.name, getter.invoke(Guest))
+        assertEquals(getter(Guest), getter.invoke(Guest))
         assertEquals(prop, getter.property)
 
         // KMutableProperty
@@ -383,7 +392,10 @@ class KtReflectTest {
 
     /**
      * JavaClass is instance of [Class],
-     * while KotlinClass is instance of [kotlin.reflect.jvm.internal.KClassImpl]
+     * while KotlinClass is instance of [kotlin.reflect.jvm.internal.KClassImpl].
+     * <p>
+     * [Class] is a __final class__, and all java class literal is instance of Class,
+     * while [KClass] is an __interface__, and all kotlin class literal is instance of KClassImpl.
      */
     @Test
     fun ktClassLiteral() {
@@ -401,16 +413,20 @@ class KtReflectTest {
         assertEquals("int", Int::class.javaPrimitiveType.toString())
         assertEquals(java.lang.Integer::class.java, Int::class.javaObjectType as Class<Integer>)
 
-        // Class of KClass : Class<KClassImpl>
+        // Class of KClass<*> : Class<KClassImpl>
         val kClass = User::class
         val kClassInstance = kClass as KClassifier
         val javaClassOfKClass = kClassInstance.javaClass
         val classKClassImpl = Class.forName("kotlin.reflect.jvm.internal.KClassImpl")!!
         assertEquals(classKClassImpl, javaClassOfKClass)
 
-        // KClass of Class<KClassImpl>
+        // KClass of Class<*> : KClassImpl instance
         // assertEquals(KClassImpl::class, javaClassOfKClass.kotlin)
         assertEquals("KClassImpl", javaClassOfKClass.kotlin.simpleName)
+        assertTrue(javaClassOfKClass.isInstance(javaClassOfKClass.kotlin))
+        assertTrue(javaClassOfKClass.isAssignableFrom(javaClassOfKClass))
+        assertEquals(String::class, "text".javaClass.kotlin)
+        assertEquals(Int::class, 2233.javaClass.kotlin)
     }
 }
 
