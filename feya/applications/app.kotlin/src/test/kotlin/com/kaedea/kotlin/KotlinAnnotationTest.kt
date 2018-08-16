@@ -16,6 +16,7 @@ import kotlin.test.todo
  * - [Retention]
  * - [Repeatable]
  * - [MustBeDocumented]
+ * - [MustBeDocumented]
  *
  * @author Kaede
  * @since  2018/8/14

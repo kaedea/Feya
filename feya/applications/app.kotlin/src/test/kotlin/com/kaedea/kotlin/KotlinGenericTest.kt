@@ -1,7 +1,10 @@
 package com.kaedea.kotlin
 
 import com.kaedea.kotlin.utils.Values
+import org.junit.Ignore
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -24,6 +27,7 @@ import kotlin.test.assertTrue
  * @since  2018/8/14
  */
 
+@RunWith(JUnit4::class)
 class KtGenericTest {
 
     @Test
@@ -169,6 +173,7 @@ class KtGenericTest {
      * 2. As return type
      * 3. As variable
      */
+
     @Test
     fun covariant() {
         open class User(val name: String)
@@ -216,6 +221,11 @@ class KtGenericTest {
         val arrayListStar = arrayListUser as ArrayList<*>
         // compile error, type mismatch
         // assertEquals("[guest,guest]", allUsers(arrayListStar))
+
+
+        fun <T> get(t: T) = t
+        val get = get<User>(User("a"))
+
     }
 
     @Test
@@ -277,14 +287,549 @@ class KtGenericTest {
         val copy5: List<*> = copy(listOf<User>(), arrayListOf<User>())
         val copy6: List<*> = copy(listOf<User>(), arrayListOf<Any>())
     }
+
+    inline fun <reified T : Any> isGivenTypeReified(instance: Any): Boolean {
+        return instance is T &&                       // 'is T' is ok when reified
+                instance.javaClass.kotlin == T::class // 'T::class' is ok when reified
+    }
+
+    inline fun <reified T> reifiedInsteadOfClassLiteral(): String? {
+        println("Loading class : ${T::class.simpleName}")
+        return T::class.simpleName
+    }
 }
 
-inline fun <reified T : Any> isGivenTypeReified(instance: Any): Boolean {
-    return instance is T &&                       // 'is T' is ok when reified
-            instance.javaClass.kotlin == T::class // 'T::class' is ok when reified
+@RunWith(JUnit4::class)
+class KtGenericClassTest {
+
+    @Test
+    fun invariant() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<T>(var value: Any? = null) {
+            fun get(): T = value as T
+            fun set(t: T) {
+                value = t
+            }
+        }
+
+        /* 1. Constructor : invariant */
+        val userContainer1: Container<User> = Container<User>(User("Kaede"))
+        val guestContainer1: Container<Guest> = Container<Guest>(Guest())
+        val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
+        // error
+        // val userContainer2: Container<User> = Container<Guest>(User("Kaede"))
+        // val guestContainer2: Container<Guest> = Container<User>(User("Kaede"))
+        // val anyContainer: Container<Any?> = Container<Int>(Integer.valueOf(2233))
+
+
+        /* 2.1 Member param : covariant */
+        Container<User>().set(User("Kaedea"))
+        Container<User>().set(Guest())
+        Container<Guest>().set(Guest())
+        Container<Any?>().set(Integer.valueOf(2233))
+        // error
+        // Container<Guest>().set(User("Kaede"))
+
+        /* 2.2 Member return : covariant  */
+        val user1: User = Container<User>(User("Kaede")).get()
+        val user2: User = Container<Guest>(Guest()).get()
+        val guest1: Guest = Container<Guest>(Guest()).get()
+        val any: Any? = Container<Int>(Integer.valueOf(2233)).get()
+        // error
+        // val guest2: Guest = Container<User>(User("Kaede")).get()
+
+
+        fun <T> call(container: Container<T>) {
+            println("I'm ${container.get()} from ${container}")
+        }
+
+        /* 3.1 Func param : invariant */
+        call<User>(Container<User>(User("Kaede")))
+        call<Guest>(Container<Guest>(Guest()))
+        // error
+        // call<User>(Container<Guest>(Guest()))
+        // call<Guest>(Container<User>(User("Kaede")))
+        // call<Any>(Container<User>(User("Kaede")))
+
+
+        fun <T> fetch(any: Any): Container<T> = with(any) {
+            println("Create container for ${any.javaClass.simpleName}")
+            return Container<T>(any)
+        }
+
+        /* 3.2 Func return : invariant */
+        val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
+        val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
+        val anyFetch: Any = fetch<User>(User("Kaede"))
+        // error
+        // val userContainerFetch2: Container<User> = fetch<Guest>(Guest())
+        // val guestContainerFetch2: Container<Guest> = fetch<User>(User("Kaede"))
+        // val anyContainerFetch: Container<Any> = fetch<User>(User("Kaede"))
+
+
+        class ExContainer<T>(value: Any?) : Container<T>(value)
+
+        /* 4.1 Ext constructor : invariant */
+        val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
+        val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
+        val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
+        val guestContainerCast2: Container<Guest> = ExContainer<Guest>(Guest())
+        // error
+        // val userExContainer2: ExContainer<User> = ExContainer<Guest>(Guest())
+        // val userContainerCast2: Container<User> = ExContainer<Guest>(Guest())
+
+        /* 4.2 Ext func param : invariant */
+        call<User>(ExContainer<User>(User("Kaede")))
+        call<Guest>(ExContainer<Guest>(Guest()))
+        // error
+        // call<Guest>(ExContainer<User>(User("Kaede")))
+        // call<User>(ExContainer<Guest>(Guest()))
+
+        /* 4.2 Ext func param : invariant */
+        // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
+        // val guestExContainerFetch1: ExContainer<Guest> = fetch<Guest>(Guest())
+    }
+
+    @Test
+    fun covariant() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<out T>(var value: Any? = null) {
+            fun get(): T = value as T
+            // error, out projection can not occur in 'in' position
+            // fun set(t: T) { value = t }
+        }
+
+        /* 1. Constructor : covariant */
+        val userContainer1: Container<User> = Container<User>(User("Kaede"))
+        val guestContainer1: Container<Guest> = Container<Guest>(Guest())
+        val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
+        val userContainer2: Container<User> = Container<Guest>(User("Kaede"))
+        val anyContainer: Container<Any?> = Container<Int>(Integer.valueOf(2233))
+        // error
+        // val guestContainer2: Container<Guest> = Container<User>(User("Kaede"))
+
+        /* 2.1 Member param : not support */
+        /* 2.2 Member return : covariant  */
+        val user1: User = Container<User>(User("Kaede")).get()
+        val user2: User = Container<Guest>(Guest()).get()
+        val guest1: Guest = Container<Guest>(Guest()).get()
+        val any: Any? = Container<Int>(Integer.valueOf(2233)).get()
+        // error
+        // val guest2: Guest = Container<User>(User("Kaede")).get()
+
+
+        fun <T> call(container: Container<out T>) {
+            println("I'm ${container.get()} from ${container}")
+        }
+
+        /* 3.1 Func param : covariant */
+        call<User>(Container<User>(User("Kaede")))
+        call<Guest>(Container<Guest>(Guest()))
+        call<User>(Container<Guest>(Guest()))
+        call<Any>(Container<User>(User("Kaede")))
+        // error
+        // call<Guest>(Container<User>(User("Kaede")))
+
+
+        fun <T> fetch(any: Any): Container<T> = with(any) {
+            println("Create container for ${any.javaClass.simpleName}")
+            return Container<T>(any)
+        }
+
+        /* 3.2 Func return : covariant */
+        val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
+        val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
+        val userContainerFetch2: Container<User> = fetch<Guest>(Guest())
+        val anyContainerFetch: Container<Any> = fetch<User>(User("Kaede"))
+        // error
+        // val guestContainerFetch2: Container<Guest> = fetch<User>(User("Kaede"))
+        val anyFetch: Any = fetch<User>(User("Kaede"))
+
+
+        class ExContainer<out T>(value: Any?) : Container<T>(value)
+
+        /* 4.1 Ext constructor : covariant */
+        val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
+        val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
+        val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
+        val guestContainerCast1: Container<Guest> = ExContainer<Guest>(Guest())
+        val userExContainer2: ExContainer<User> = ExContainer<Guest>(Guest())
+        val userContainerCast2: Container<User> = ExContainer<Guest>(Guest())
+        val anyExContainer: ExContainer<Any?> = ExContainer<User>(User("Kaede"))
+        val anyExContainerCast: Container<Any?> = ExContainer<User>(User("Kaede"))
+        // error
+        // val guestContainerCast2: Container<Guest> = ExContainer<User>(User("Kaede"))
+        // casting error
+        // val userExContainerCast1: ExContainer<User> = Container<User>(User("Kaede"))
+        // val userExContainerCast2: ExContainer<User> = Container<Guest>(Guest)
+        // val guestExContainerCast3: ExContainer<Guest> = Container<User>(User("Kaede"))
+        // val guestExContainerCast4: ExContainer<Guest> = Container<Guest>(Guest)
+
+        /* 4.2 Ext func param : covariant */
+        call<User>(ExContainer<User>(User("Kaede")))
+        call<Guest>(ExContainer<Guest>(Guest()))
+        call<User>(ExContainer<Guest>(Guest()))
+        // error
+        // call<Guest>(ExContainer<User>(User("Kaede")))
+
+        /* 4.2 Ext func return : n/a */
+        // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
+        // val userExContainerFetch2: ExContainer<User> = fetch<Guest>(Guest())
+        // val guestExContainerFetch1: ExContainer<Guest> = fetch<Guest>(Guest())
+        // val guestExContainerFetch2: ExContainer<Guest> = fetch<User>(User("Kaede"))
+    }
+
+    @Test
+    fun contravariant() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<in T>(var value: Any? = null) {
+            // error, in projection can not occur in 'out' position
+            // fun get(): T = value as T
+            fun set(t: T) {
+                value = t
+            }
+        }
+
+        /* 1. Constructor : contravariant */
+        val userContainer1: Container<User> = Container<User>(User("Kaede"))
+        val guestContainer1: Container<Guest> = Container<Guest>(Guest())
+        val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
+        val guestContainer2: Container<Guest> = Container<User>(User("Kaede"))
+        val guestContainer3: Container<Guest> = Container<Any?>()
+        // error
+        // val userContainer2: Container<User> = Container<Guest>(User("Kaede"))
+        // val anyContainer: Container<Any?> = Container<Int>(Integer.valueOf(2233))
+
+        /* 2.1 Member param : covariant */
+        /* 2.2 Member return : not support */
+        Container<User>().set(User("Kaedea"))
+        Container<User>().set(Guest())
+        Container<Guest>().set(Guest())
+        Container<Any?>().set(Integer.valueOf(2233))
+        // error
+        // Container<Guest>().set(User("Kaede"))
+
+
+        fun <T> call(container: Container<in T>) {
+            println("I'm ${container}")
+        }
+
+        /* 3.1 Func param : contravariant */
+        call<User>(Container<User>(User("Kaede")))
+        call<Guest>(Container<Guest>(Guest()))
+        call<Guest>(Container<User>(User("Kaede")))
+        call<Guest>(Container<Any>())
+        // error
+        // call<User>(Container<Guest>(Guest()))
+        // call<Any>(Container<User>(User("Kaede")))
+
+
+        fun <T> fetch(any: Any): Container<T> = with(any) {
+            println("Create container for ${any.javaClass.simpleName}")
+            return Container<T>(any)
+        }
+
+        /* 3.2 Func return : contravariant */
+        val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
+        val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
+        val guestContainerFetch2: Container<Guest> = fetch<User>(User("Kaede"))
+        // error
+        // val userContainerFetch2: Container<User> = fetch<Guest>(Guest())
+        // val anyContainerFetch: Container<Any> = fetch<User>(User("Kaede"))
+        val anyFetch: Any = fetch<User>(User("Kaede"))
+
+
+        class ExContainer<in T>(value: Any? = null) : Container<T>(value)
+
+        /* 4.1 Ext constructor : contravariant */
+        val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
+        val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
+        val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
+        val guestContainerCast1: Container<Guest> = ExContainer<Guest>(Guest())
+        val guestContainerCast2: Container<Guest> = ExContainer<User>(User("Kaede"))
+        // error
+        // val userExContainer2: ExContainer<User> = ExContainer<Guest>(Guest())
+        // val anyExContainer: ExContainer<Any?> = ExContainer<User>(User("Kaede"))
+        // val userContainerCast2: Container<User> = ExContainer<Guest>(Guest())
+        // val anyExContainerCast: Container<Any?> = ExContainer<User>(User("Kaede"))
+        // casting error
+        // val userExContainerCast1: ExContainer<User> = Container<User>(User("Kaede"))
+        // val userExContainerCast2: ExContainer<User> = Container<Guest>(Guest)
+        // val guestExContainerCast3: ExContainer<Guest> = Container<User>(User("Kaede"))
+        // val guestExContainerCast4: ExContainer<Guest> = Container<Guest>(Guest)
+
+        /* 4.2 Ext func param : contravariant */
+        call<User>(ExContainer<User>(User("Kaede")))
+        call<Guest>(ExContainer<Guest>(Guest()))
+        call<Guest>(ExContainer<User>(User("Kaede")))
+        call<Guest>(ExContainer<Any?>())
+        // error
+        // call<User>(ExContainer<Guest>(Guest()))
+
+        /* 4.2 Ext func return : n/a */
+        // casting error
+        // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
+        // val userExContainerFetch2: ExContainer<User> = fetch<Guest>(Guest())
+        // val guestExContainerFetch1: ExContainer<Guest> = fetch<Guest>(Guest())
+        // val guestExContainerFetch2: ExContainer<Guest> = fetch<User>(User("Kaede"))
+    }
+
+    @Test
+    fun projections() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<T>(var value: Any? = null) {
+            open fun get(): T = value as T
+            open fun set(t: T) {
+                value = t
+            }
+        }
+
+        /**
+         * Container is invariant by default
+         * @see [invariant]
+         */
+        fun <T> call(container: Container<T>) {
+            println("I'm ${container.get()} from ${container}")
+        }
+
+        call<User>(Container<User>(User("Kaede")))
+        call<Guest>(Container<Guest>(Guest()))
+        // error
+        // call<User>(Container<Guest>(Guest()))
+        // call<Guest>(Container<User>(User("Kaede")))
+        // call<Any>(Container<User>(User("Kaede")))
+
+        /**
+         * The following function use __type projection__ to make it become covariant
+         * @see [covariant]
+         */
+        fun <T> callOutProject(container: Container<out T>) {
+            println("I'm ${container.get()} from ${container}")
+        }
+
+        callOutProject<User>(Container<User>(User("Kaede")))
+        callOutProject<Guest>(Container<Guest>(Guest()))
+        callOutProject<User>(Container<Guest>(Guest()))
+        callOutProject<Any>(Container<User>(User("Kaede")))
+        callOutProject<Any?>(Container<Any?>())
+        // error
+        // callOutProject<Guest>(Container<User>(User("Kaede")))
+
+        // out projection with upper bound of Container<T>
+        fun callOutProjectBound(container: Container<out User>) {
+            println("I'm ${container.get()} from ${container}")
+        }
+
+        callOutProjectBound(Container<User>())
+        callOutProjectBound(Container<Guest>())
+        // error
+        // callOutProjectBound(Container<Any>())
+
+
+        /**
+         * The following function use __type projection__ to make it become covariant
+         * @see [covariant]
+         */
+        fun <T> callInProject(container: Container<in T>) {
+            println("I'm ${container}")
+        }
+
+        callInProject<User>(Container<User>(User("Kaede")))
+        callInProject<Guest>(Container<Guest>(Guest()))
+        callInProject<Guest>(Container<User>(User("Kaede")))
+        callInProject<Guest>(Container<Any>())
+        // error
+        // callInProject<User>(Container<Guest>(Guest()))
+        // callInProject<Any>(Container<User>(User("Kaede")))
+
+        // in projection with upper bound of Container<T>
+        fun callInProjectBound(container: Container<in User>) {
+            println("I'm ${container}")
+        }
+
+        callInProjectBound(Container<User>(User("Kaede")))
+        callInProjectBound(Container<Any>())
+        // error
+        // callInProjectBound(Container<Guest>(Guest()))
+
+        // Can not use type projections in inheritances
+        // Error
+        // class OutContainer<out T>(value: Any?) : Container<T>(value)
+        // class InContainer<in T>(value: Any?) : Container<T>(value)
+    }
+
+    fun projections2() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<T>(var value: Any? = null) {
+            open fun get(): T = value as T
+            open fun set(t: T) {
+                value = t
+            }
+        }
+
+        open class Foo {
+            open fun <T> call(container: Container<T>) {}
+            open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
+        }
+
+        /**
+         * Type projections not work in inheritances
+         *
+         * ERROR 1:
+         * 1. For compiler, Foo#call has different function signature with ExFoo#call, thus 'override' can not be added
+         * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
+         *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
+         *
+         * ERROR 2:
+         * Type projections can only apply/occur in 'out/in' positions
+         */
+        class ExFoo : Foo() {
+            // error 1, accidental override
+            // override fun <T> call(container: Container<out T>) {}
+            // override fun <T> call(container: Container<in T>) {}
+            // fun <T> call(container: Container<out T>) {}
+            // fun <T> call(container: Container<in T>) {}
+
+            // error 2, return type does not support projections
+            // override fun <T> fetch(any: Any): Container<in T> = super.fetch(any)
+            // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
+        }
+
+        open class FooGeneric<T> {
+            open fun call(container: Container<T>) {}
+            open fun fetch(any: Any): Container<T> = Container<T>(any)
+        }
+
+        open class ExFooGeneric<T> : FooGeneric<T>() {
+            // error 1, accidental override
+            // override fun call(container: Container<out T>) {}
+            // override fun call(container: Container<in T>) {}
+            // fun call(container: Container<in T>) {}
+            // fun call(container: Container<out T>) {}
+
+            // error 2, return type does not support projections
+            // override fun fetch(any: Any): Container<out T> =  super.fetch(any)
+            // override fun fetch(any: Any): Container<in T> =  super.fetch(any)
+        }
+
+
+        open class GenricFunc {
+            open fun <T> call(t: T) {
+                println("I'm ${t.toString()}")
+            }
+            open fun <T> fetch(any: Any): T = with(any) {
+                println("Cast from ${any.javaClass.simpleName}")
+                return any as T
+            }
+        }
+
+        class ExGenricFunc : GenricFunc() {
+            // error 3, syntax
+            // override fun <T> call(t: out T) {}
+            // override fun <T> call(t: in T) {}
+            // override fun <T> fetch(any: Any): in T = super.fetch(any)
+            // override fun <T> fetch(any: Any): out T = super.fetch(any)
+
+            // override fun <out T> call(t: T) {}
+            // override fun <in T> call(t: T) {}
+            // override fun <T> fetch(any: Any): in T = super.fetch(any)
+        }
+    }
 }
 
-inline fun <reified T> reifiedInsteadOfClassLiteral(): String? {
-    println("Loading class : ${T::class.simpleName}")
-    return T::class.simpleName
+@RunWith(JUnit4::class)
+class KtGenericFuncParamTest {
+
+    @Test
+    @Ignore("TP as func param is not invariant")
+    fun invariant() {
+    }
+
+    @Test
+    fun covariant() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+
+        fun <T> call(t: T) {
+            println("I'm ${t.toString()}")
+        }
+
+        call<User>(User("Kaede"))
+        call<User>(Guest())
+        call<Guest>(Guest())
+        call<Int>(Integer.valueOf(2233))
+        call<Any?>(null)
+        // error
+        // call<Guest>(User("Kaede"))
+        // call<Int>(null)
+
+        fun <T : User> callWithUpperBound(t: T) {
+            println("I'm ${t.toString()}, upper bound = User")
+        }
+
+        callWithUpperBound<User>(User("Kaede"))
+        callWithUpperBound<Guest>(Guest())
+        callWithUpperBound<User>(Guest())
+        // error
+        // callWithUpperBound<Int>(Integer.valueOf(2233))
+    }
+
+    @Test
+    @Ignore("TP as func param is not contravariant")
+    fun contravariant() {
+    }
+}
+
+@RunWith(JUnit4::class)
+class KtGenericFuncReturnTest {
+
+    @Test
+    @Ignore("TP as func return is not invariant")
+    fun invariant() {
+    }
+
+    @Test
+    fun covariant() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+
+        fun <T> fetch(any: Any): T = with(any) {
+            println("Cast from ${any.javaClass.simpleName}")
+            return any as T
+        }
+
+        val user1: User = fetch<User>(User("Kaede"))
+        val user2: User = fetch<Guest>(Guest())
+        val guest1: Guest = fetch<Guest>(Guest())
+        val any: Any? = fetch<Int>(Integer.valueOf(2233))
+        // error
+        // val guest2: Guest = get<User>(Guest())
+        // val int: Int = get<Any?>(Integer.valueOf(2233))
+
+
+        fun <T : User> getWithUpperBound(any: Any): T = any as T
+
+        val userBound1: User = getWithUpperBound<User>(User("Kaede"))
+        val userBound2: User = getWithUpperBound<Guest>(Guest())
+        val guestBound1: Guest = getWithUpperBound<Guest>(Guest())
+        // error
+        // val intBound: Int = getWithUpperBound<Int>(Integer.valueOf(2233))
+    }
+
+    @Test
+    @Ignore("TP as func return is not contravariant")
+    fun contravariant() {
+    }
 }
