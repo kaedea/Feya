@@ -662,7 +662,7 @@ class KtGenericClassTest {
 
         // Can not use type projections in inheritances
         // Error
-        // class OutContainer<out T>(value: Any?) : Container<T>(value)
+        class OutContainer<out T>(value: Any?) : Container<T>(value)
         // class InContainer<in T>(value: Any?) : Container<T>(value)
     }
 
@@ -677,9 +677,10 @@ class KtGenericClassTest {
             }
         }
 
-        open class Foo {
+        open class GenericClass {
             open fun <T> call(container: Container<T>) {}
             open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
+            open fun call(container: Container<T2>) {}
         }
 
         /**
@@ -690,10 +691,13 @@ class KtGenericClassTest {
          * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
          *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
          *
-         * ERROR 2:
-         * Type projections can only apply/occur in 'out/in' positions
+         * ERROR 2: Type projections can only apply/occur in 'out/in' positions
+         * ERROR 3: Syntax error
+         *
+         * ERROR 4: Declaration-site variance error
+         * 1. Declaration-site variance annotations are only allowed for type parameters of classes and interfaces
          */
-        class ExFoo : Foo() {
+        class ExGenericClass : GenericClass() {
             // error 1, accidental override
             // override fun <T> call(container: Container<out T>) {}
             // override fun <T> call(container: Container<in T>) {}
@@ -705,12 +709,27 @@ class KtGenericClassTest {
             // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
         }
 
-        open class FooGeneric<T> {
+        class ExGenericClass2<T2> : GenericClass() {
+            override fun call(container: Container<T2>) {
+                super.call(container)
+            }
+            // error 1, accidental override
+            // override fun <T> call(container: Container<out T>) {}
+            // override fun <T> call(container: Container<in T>) {}
+            // fun <T> call(container: Container<out T>) {}
+            // fun <T> call(container: Container<in T>) {}
+
+            // error 2, return type does not support projections
+            // override fun <T> fetch(any: Any): Container<in T> = super.fetch(any)
+            // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
+        }
+
+        open class NestedGenericClass<T> {
             open fun call(container: Container<T>) {}
             open fun fetch(any: Any): Container<T> = Container<T>(any)
         }
 
-        open class ExFooGeneric<T> : FooGeneric<T>() {
+        open class ExNestedGenericClass<T> : NestedGenericClass<T>() {
             // error 1, accidental override
             // override fun call(container: Container<out T>) {}
             // override fun call(container: Container<in T>) {}
@@ -723,7 +742,7 @@ class KtGenericClassTest {
         }
 
 
-        open class GenricFunc {
+        open class GenericFunc {
             open fun <T> call(t: T) {
                 println("I'm ${t.toString()}")
             }
@@ -733,16 +752,18 @@ class KtGenericClassTest {
             }
         }
 
-        class ExGenricFunc : GenricFunc() {
+        class ExGenericFunc : GenericFunc() {
             // error 3, syntax
             // override fun <T> call(t: out T) {}
             // override fun <T> call(t: in T) {}
             // override fun <T> fetch(any: Any): in T = super.fetch(any)
             // override fun <T> fetch(any: Any): out T = super.fetch(any)
 
+            // error 4, variance annotations are only allowed for type parameters of classes and interfaces
             // override fun <out T> call(t: T) {}
             // override fun <in T> call(t: T) {}
-            // override fun <T> fetch(any: Any): in T = super.fetch(any)
+            // override fun <in T> fetch(any: Any): T = super.fetch(any)
+            // override fun <out T> fetch(any: Any): T = super.fetch(any)
         }
     }
 }
