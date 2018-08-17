@@ -902,6 +902,72 @@ class KtGenericClassTest {
 }
 
 @RunWith(JUnit4::class)
+class KtGenericInheritingTest {
+
+    @Test
+    @Ignore
+    fun classInheriting() {
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        open class Container<T>(var value: Any? = null) {
+            open fun get(): T = value as T
+            open fun set(t: T) {
+                value = t
+            }
+        }
+
+        open class GenericClass {
+            open fun <T> call(container: Container<T>) {}
+            open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
+        }
+
+        class ExGenericClass : GenericClass()
+
+        class ExGenericClassWithTp<T> : GenericClass() {
+            override fun <T> call(container: Container<T>) {}
+            override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
+        }
+
+        class ExGenericClassWithTpOfOutProj<out T> : GenericClass()
+        class ExGenericClassWithTpOfInProj<in T> : GenericClass()
+        // class ExGenericClassWithTpOfStarProj<*> : GenericClass()
+
+
+        // ----------
+        //
+        // ----------
+
+        open class GenericClassTp<T> {
+            open fun call(container: Container<T>) {}
+            open fun fetch(any: Any): Container<T> = Container<T>(any)
+        }
+
+        class ExGenericClassTp : GenericClassTp<T>()
+        class ExGenericClassTpOutPrj : GenericClassTp<out T>()
+        class ExGenericClassTpInProj : GenericClassTp<in T>()
+        class ExGenericClassTpStarProj : GenericClassTp<*>()
+        class ExGenericClassTpBound : GenericClassTp<T : User>()
+
+        class ExGenericClassTpWithTp<R> : GenericClassTp<R>()
+        class ExGenericClassTpOutPrjWithTp<R> : GenericClassTp<out R>()
+        class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()
+        class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()
+
+        class ExGenericClassTpWithTpOfOutProj<out R> : GenericClassTp<R>()
+        class ExGenericClassTpWithTpOfinProj<in R> : GenericClassTp<R>()
+        class ExGenericClassTpWithTpOfStarProj<*> : GenericClassTp<*>()
+        class ExGenericClassTpWithTpBound<R : User> : GenericClassTp<R>()
+
+        class ExGenericClassTpReif : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTp<R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpOfOutProj<out R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpOfinProj<in R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpofStarPrj<*> : GenericClassTp<User>()
+    }
+}
+
+@RunWith(JUnit4::class)
 class KtGenericFuncParamTest {
 
     @Test
