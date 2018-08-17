@@ -662,13 +662,37 @@ class KtGenericClassTest {
 
         // Can not use type projections in inheritances
         // Error
-        class OutContainer<out T>(value: Any?) : Container<T>(value)
+        // class OutContainer<out T>(value: Any?) : Container<T>(value)
         // class InContainer<in T>(value: Any?) : Container<T>(value)
     }
 
+    /**
+     * Type projections
+     * Type parameters
+     * Type arguments
+     * Variance annotations
+     */
     fun projections2() {
         open class User(val name: String)
         class Guest : User("guest")
+
+        /**
+         * Type projections not work in inheritances
+         *
+         * ERROR 1: accidental override
+         * 1. For compiler, Foo#call has different function signature with ExFoo#call, thus 'override' can not be added
+         * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
+         *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
+         *
+         * ERROR 2: conflicting overloads
+         * JVM allows method overloads with different return type of signature, but it is forbidden by language design & compiler.
+         *
+         * ERROR 4: Type projections can only apply/occur in 'out/in' positions
+         * ERROR 0: Syntax error
+         *
+         * ERROR 3: Declaration-site variance error
+         * 1. Declaration-site variance annotations are only allowed for type parameters of classes and interfaces
+         */
 
         open class Container<T>(var value: Any? = null) {
             open fun get(): T = value as T
@@ -677,75 +701,184 @@ class KtGenericClassTest {
             }
         }
 
+        /**
+         * Class that has generic class as parameter or return
+         */
         open class GenericClass {
             open fun <T> call(container: Container<T>) {}
             open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
-            open fun call(container: Container<T2>) {}
         }
+
+        class ExGenericClass : GenericClass() {
+
+            /** ok **/
+            // override fun <T> call(container: Container<T>) {}
+            // override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
+
+            /**********
+             * ERROR 1, accidental override
+             * Compiler takes the generic classes as overloads of different types
+             *
+             *     'fun (Container<out/in T>)' with
+             *     'fun (ContainerT>)'
+             */
+            // override fun <T> call(container: Container<out T>) {}
+            // override fun <T> call(container: Container<in T>) {}
+            // fun <T> call(container: Container<out T>) {}
+            // fun <T> call(container: Container<in T>) {}
+            /**
+             *     'fun <T, R> (Container<T/R>)' with
+             *     'fun <T> (ContainerT>)'
+             */
+            // fun <T, R> call(container: Container<T>) {}
+            // fun <T, R> call(container: Container<R>) {}
+            /**
+             *********/
+
+            // ERROR 2, return type mismatch
+            //
+            //     Return type is 'Container<out/in T#1 (type parameter of ExGenericClass.fetch)>'
+            //     which is not a subtype of
+            //     overridden 'fun <T> fetch(any: Any): Container<T#2 (type parameter of GenericClass.fetch)>'
+            // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
+            // override fun <T> fetch(any: Any): Container<in T> = super.fetch(any)
+            //
+            //     Return type is 'Container<*>'
+            //     which is not a subtype of
+            //     overridden 'fun <T> fetch(any: Any): Container<T#1 (type parameter of GenericClass.fetch)>'
+            // override fun <T> fetch(any: Any): Container<*> = super.fetch<T>(any)
+
+            // ERROR 3, Conflicting overloads
+            //
+            //     'fun fetch(any: Any): Container<*>' with
+            //     'fun <T> fetch(any: Any): Container<T>'
+            // fun fetch(any: Any): Container<*> = super.fetch<Any>(any)
+            //     'fun <T, R> fetch(any: Any): Container<R>' with
+            //     'fun <T> fetch(any: Any): Container<T>'
+            // fun <T, R> fetch(any: Any): Container<R> = super.fetch(any)
+            // fun <T, R> fetch(any: Any): Container<T> = super.fetch(any)
+
+        }
+
+        class ExGenericClassWithTp<R> : GenericClass() {
+
+            // ok
+            // override fun <T> call(container: Container<T>) {}
+            // override fun <T> fetch(any: Any): Container<T> = super.fetch(any)
+            // override fun <R> call(container: Container<R>) {}
+            // override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
+
+            // ERROR 1, accidental override
+            //
+            // fun call(container: Container<R>) {}
+            // fun <T> call(container: Container<R>) {}
+            // fun <T, R> call(container: Container<T>) {}
+            // fun <T, R> call(container: Container<R>) {}
+            //
+            // fun <T : User> call(container: Container<T>) {}
+            // fun <T : User> fetch(any: Any): Container<T> = super.fetch(any)
+
+            // ERROR 2, return type mismatch
+            //
+            //     Return type is 'Container<R>', which is not a subtype of
+            //     overridden 'fun <T> fetch(any: Any): Container<T#1 (type parameter of GenericClass.fetch)>'
+            // override fun <T> fetch(any: Any): Container<R> = super.fetch(any)
+            //
+            //     Return type is 'Container<*>', which is not a subtype of
+            //     overridden 'fun <T> fetch(any: Any): Container<T#1 (type parameter of GenericClass.fetch)>'
+            // override fun <R> fetch(any: Any): Container<*> = super.fetch<R>(any)
+            // override fun <R> fetch(any: Any): Container<out R> = super.fetch(any)
+            // override fun <R> fetch(any: Any): Container<in R> = super.fetch(any)
+
+            // ERROR 3, Conflicting overloads
+            //
+            //     'fun fetch(any: Any): Container<R> of' with
+            //     'fun <T> fetch(any: Any): Container<T>'
+            // override fun fetch(any: Any): Container<R> = super.fetch(any)
+            // override fun <T, R> fetch(any: Any): Container<T> = super.fetch(any)
+            // override fun <T, R> fetch(any: Any): Container<R> = super.fetch(any)
+        }
+
 
         /**
-         * Type projections not work in inheritances
-         *
-         * ERROR 1:
-         * 1. For compiler, Foo#call has different function signature with ExFoo#call, thus 'override' can not be added
-         * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
-         *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
-         *
-         * ERROR 2: Type projections can only apply/occur in 'out/in' positions
-         * ERROR 3: Syntax error
-         *
-         * ERROR 4: Declaration-site variance error
-         * 1. Declaration-site variance annotations are only allowed for type parameters of classes and interfaces
+         * Class that has generic class as parameter or return, also has a type parameter.
          */
-        class ExGenericClass : GenericClass() {
-            // error 1, accidental override
-            // override fun <T> call(container: Container<out T>) {}
-            // override fun <T> call(container: Container<in T>) {}
-            // fun <T> call(container: Container<out T>) {}
-            // fun <T> call(container: Container<in T>) {}
-
-            // error 2, return type does not support projections
-            // override fun <T> fetch(any: Any): Container<in T> = super.fetch(any)
-            // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
-        }
-
-        class ExGenericClass2<T2> : GenericClass() {
-            override fun call(container: Container<T2>) {
-                super.call(container)
-            }
-            // error 1, accidental override
-            // override fun <T> call(container: Container<out T>) {}
-            // override fun <T> call(container: Container<in T>) {}
-            // fun <T> call(container: Container<out T>) {}
-            // fun <T> call(container: Container<in T>) {}
-
-            // error 2, return type does not support projections
-            // override fun <T> fetch(any: Any): Container<in T> = super.fetch(any)
-            // override fun <T> fetch(any: Any): Container<out T> = super.fetch(any)
-        }
-
-        open class NestedGenericClass<T> {
+        open class GenericClassTp<T> {
             open fun call(container: Container<T>) {}
             open fun fetch(any: Any): Container<T> = Container<T>(any)
         }
 
-        open class ExNestedGenericClass<T> : NestedGenericClass<T>() {
-            // error 1, accidental override
-            // override fun call(container: Container<out T>) {}
-            // override fun call(container: Container<in T>) {}
-            // fun call(container: Container<in T>) {}
-            // fun call(container: Container<out T>) {}
+        /**
+         *        -> R
+         * <T>    -> T
+         * <R>    -> R
+         * <T>    -> R
+         * <T, R> -> T
+         * <T, R> -> R
+         * <R: ?> -> R
+         *
+         *        -> <out R>
+         *        -> <in R>
+         *        -> <*>
+         */
+        class ExGenericClassTpWithTp<R> : GenericClassTp<R>() {
 
-            // error 2, return type does not support projections
-            // override fun fetch(any: Any): Container<out T> =  super.fetch(any)
-            // override fun fetch(any: Any): Container<in T> =  super.fetch(any)
+            // ok
+            // override fun call(container: Container<R>) {}
+            // override fun fetch(any: Any): Container<R> = super.fetch(any)
+
+            // ERROR 1, accidental override
+            //
+            // fun <T> call(container: Container<T>) {}
+            // fun <R> call(container: Container<R>) {}
+            // fun <T, R>call(container: Container<R>) {}
+            // fun <T, R>call(container: Container<T>) {}
+            //
+            // fun <R : User> call(container: Container<R>) {}
+            //
+            // fun call(container: Container<in R>) {}
+            // fun call(container: Container<out R>) {}
+            // fun call(container: Container<*>) {}
+
+            // ERROR 2, return type mismatch
+            //
+            // override fun fetch(any: Any): Container<in R> = super.fetch(any)
+            // override fun fetch(any: Any): Container<out R> = super.fetch(any)
+            // override fun fetch(any: Any): Container<*> = super.fetch(any)
+
+            // ERROR 3, Conflicting overloads
+            //
+            // fun <T> call(container: Container<R>) {}
+            // override fun <T> fetch(any: Any): Container<T> = super.fetch(any) as Container<T>
+            // override fun <R> fetch(any: Any): Container<R> = super.fetch(any) as Container<R>
+            // override fun <T> fetch(any: Any): Container<R> = super.fetch(any)
+            // override fun <T, R> fetch(any: Any): Container<R> = super.fetch(any) as Container<R>
+            // override fun <T, R> fetch(any: Any): Container<T> = super.fetch(any) as Container<T>
+            //
+            // override fun <R : User> fetch(any: Any): Container<R> = super.fetch(any)
         }
+
+        // class ExGenericClassTpOutPrjWithTp<R> : GenericClassTp<out R>()
+        // class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()
+        // class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()
+
+        // class ExGenericClassTpWithTpOfOutProj<out R> : GenericClassTp<R>()
+        // class ExGenericClassTpWithTpOfinProj<in R> : GenericClassTp<R>()
+        // class ExGenericClassTpWithTpOfStarProj<*> : GenericClassTp<*>()
+
+        class ExGenericClassTpWithTpBound<R : User> : GenericClassTp<R>()
+        class ExGenericClassTpReif : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTp<R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpOfOutProj<out R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpOfinProj<in R> : GenericClassTp<User>()
+        // class ExGenericClassTpReifWithTpofStarPrj<*> : GenericClassTp<User>()
 
 
         open class GenericFunc {
             open fun <T> call(t: T) {
                 println("I'm ${t.toString()}")
             }
+
             open fun <T> fetch(any: Any): T = with(any) {
                 println("Cast from ${any.javaClass.simpleName}")
                 return any as T
