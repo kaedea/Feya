@@ -935,26 +935,125 @@ class KtGenericInheritingTest {
 
 
         // ----------
-        //
+        // GenericClass With Type Parameter
+        // 1. Depends on generic class (Container<T>)
+        // 2. Has type parameter (T)
         // ----------
 
-        open class GenericClassTp<T> {
-            open fun call(container: Container<T>) {}
-            open fun fetch(any: Any): Container<T> = Container<T>(any)
+        /**
+         * # Principles of Generic Class Declaration
+         *
+         * ## Keywords
+         * Declaration-site:
+         * 1. TPC  : type parameter declaration of class/interface
+         * 2. TPF  : type parameter declaration of function
+         *
+         * Use-site:
+         * 1. TAS  : type argument single
+         * 2. TAC  : type argument of class
+         * 3. TAF  : type argument of function/property
+         * 4. TAI  : type argument immediate
+         *
+         * in/out position
+         * invariant position
+         *
+         * ## Use Cases:
+         * For class
+         * ```
+         *     class ClassName<TPC>
+         *     class ExClassName<TPC> : ClassName<TAI>
+         * ```
+         *
+         * For function
+         * ```
+         *     // Declaration
+         *     fun <TPF> functionName(TAS): TAR
+         *     fun <TPF> functionName(ClassName<TAC>): TAS
+         *     fun <TPF> functionName(ClassName<TAC>): ClassName<TAC>
+         *     fun <TPF> functionName(TAS): ClassName<TAC>
+         *
+         *     // Usage
+         *     // functionName<TAFP>()
+         * ```
+         *
+         * For reference
+         * ```
+         *     TAS = ...
+         *     ClassName<TAC> = ...
+         * ```
+         *
+         * ## Principles
+         */
+
+        // | Position   | out/in        | <*>            | <T : Bound> |
+        // |------------|---------------|----------------|-------------|
+        // |   TPC      | √             | ×              | √           |
+        // |   TPF      | ×             | ×              | √           |
+        // |------------|---------------|----------------|-------------|
+        // |   TAS      | √             | √              |             |
+        // |   TAC      | √             | √              |             |
+        // |   TAF      |               |                |             |
+        // |   TAI      | ×             | ×              | ×           |
+
+        // ----------
+        // Generic Function
+        // ----------
+        fun <T> funcTp(t: T): T = t
+        fun <out T> funcTpOutProj(t: T): T = t  // Variance annotations are only allowed for type parameters of classes and interfaces
+        fun <*> funcTpStarProj(t: Any): Any = t // Type parameter name expected
+        fun <T : User> funcTpBound(t: T): T = t // Type parameter name expected
+
+        fun funcWithInvariantClass1(container: Container<User>): Container<User> = container
+        fun funcWithInvariantClass2(container: Container<User>): Container<out User> = container
+        fun funcWithInvariantClass3(container: Container<in User>): Container<in User> = container
+        fun funcWithInvariantClass4(container: Container<User>): Container<*> = container
+        fun funcWithInvariantClass5(container: Container<out User>): Container<*> = container
+        fun funcWithInvariantClass6(container: Container<*>): Container<*> = container
+
+        fun <T> funcTpWithInvariantClass1(container: Container<T>): Container<T> = container
+        fun <T> funcTpWithInvariantClass2(container: Container<T>): Container<out T> = container
+        fun <T> funcTpWithInvariantClass3(container: Container<in T>): Container<in T> = container
+        fun <T> funcTpWithInvariantClass4(container: Container<T>): Container<*> = container
+        fun <T> funcTpWithInvariantClass5(container: Container<out T>): Container<*> = container
+        fun <T> funcTpWithInvariantClass6(container: Container<*>): Container<*> = container
+
+        fun <T> funcTpWithTpRef(t: T) {
+            val ref: T = funcTp(t)
         }
+
+
+        // ----------
+        // Generic Class Declaration
+        // ----------
+        class GenericClassDeclarationTp<T>
+        class GenericClassDeclarationTpOutProj<out T>
+        class GenericClassDeclarationTpInProj<in T>
+        class GenericClassDeclarationTpStarProj<*>   // Type parameter name expected, Start projection not allowed in TAD
+        class GenericClassDeclarationTpBound<out T : User>
+        class GenericClassDeclarationTpOutProjBound<out T : User>
+        class GenericClassDeclarationTpInProjBound<in T : User>
+        class GenericClassDeclarationTpBound1<out User> // User is TP here, not class
+        class GenericClassDeclarationTpBound2<in User>  // User is TP
+
+
+        // ----------
+        // Generic Class(Invariant) Inheritance
+        // ----------
+        open class GenericClassTp<T>
 
         class ExGenericClassTp : GenericClassTp<T>()
         class ExGenericClassTpOutPrj : GenericClassTp<out T>()
-        class ExGenericClassTpInProj : GenericClassTp<in T>()
-        class ExGenericClassTpStarProj : GenericClassTp<*>()
+        class ExGenericClassTpInProj : GenericClassTp<in T>() // Projections are not allowed for immediate arguments of a supertype
+        class ExGenericClassTpStarProj : GenericClassTp<*>()  // Projections are not allowed for immediate arguments of a supertype
         class ExGenericClassTpBound : GenericClassTp<T : User>()
 
         class ExGenericClassTpWithTp<R> : GenericClassTp<R>()
-        class ExGenericClassTpOutPrjWithTp<R> : GenericClassTp<out R>()
+        class ExGenericClassTpOutPrjWithTp<R> : GenericClassTp<out R>() // Projections are not allowed for immediate arguments of a supertype
         class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()
-        class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()
+        class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()   // Projections are not allowed for immediate arguments of a supertype
+        class ExGenericClassTpBoundWithTp<R> : GenericClassTp<R : User>()
 
-        class ExGenericClassTpWithTpOfOutProj<out R> : GenericClassTp<R>()
+        class ExGenericClassTpWithTpOfOutProj<out R> : GenericClassTp<R>() // Type parameter R is declared as 'out' but occurs in 'invariant' position in type GenericClassTp<R>
         class ExGenericClassTpWithTpOfinProj<in R> : GenericClassTp<R>()
         class ExGenericClassTpWithTpOfStarProj<*> : GenericClassTp<*>()
         class ExGenericClassTpWithTpBound<R : User> : GenericClassTp<R>()
@@ -964,6 +1063,60 @@ class KtGenericInheritingTest {
         class ExGenericClassTpReifWithTpOfOutProj<out R> : GenericClassTp<User>()
         class ExGenericClassTpReifWithTpOfinProj<in R> : GenericClassTp<User>()
         class ExGenericClassTpReifWithTpofStarPrj<*> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpBound<R : User> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithTpOutProjBound<out R : User> : GenericClassTp<User>()
+
+
+        // ----------
+        // Generic Class(Variant) Inheritance
+        // ----------
+        open class GenericClassOutTp<out T>
+        class ExGenericClassOutTpWithTp<R> : GenericClassOutTp<R>() // ???
+        class ExGenericClassOutTpWithOutTp<out R> : GenericClassOutTp<R>()
+        class ExGenericClassOutTpWithOutToBound<out R : User> : GenericClassOutTp<R>()
+        class ExGenericClassOutTpReif: GenericClassOutTp<User>()
+
+        open class GenericClassInTp<in T>
+        class ExGenericClassInTpWithTp<R> : GenericClassInTp<R>()
+        class ExGenericClassInTpWithInTp<in R> : GenericClassInTp<R>()
+        class ExGenericClassInTpWithInTpBound<in R : User> : GenericClassInTp<R>()
+        class ExGenericClassInTpReif : GenericClassInTp<User>()
+
+        open class GenericClassBoundTp<T : User>
+        class ExGenericClassBoundTpWithTp<R> : GenericClassBoundTp<R>()                  // Type argument is not within its bounds.
+        class ExGenericClassBoundTpWithTpBound<R: User> : GenericClassBoundTp<R>()
+        class ExGenericClassBoundTpWithTpLowerBound<R: Guest> : GenericClassBoundTp<R>() // 'Guest' is a final type, and thus a value of the type parameter is predetermined
+        class ExGenericClassBoundTpReifWithTp<R> : GenericClassBoundTp<User>()
+        class ExGenericClassBoundTpReifWithOutTp<out R> : GenericClassBoundTp<User>()
+        class ExGenericClassBoundTpReifWithTpBound<R: User> : GenericClassBoundTp<User>()
+        class ExGenericClassBoundTpReifWithInTpBound<in R: User> : GenericClassBoundTp<User>()
+        class ExGenericClassBoundTpReifWithTpHigherBound<R: Any> : GenericClassBoundTp<Guest>()
+
+        open class GenericClassOutBoundTp<out T : User>
+        class ExGenericClassOutBoundTpWithTpBound<R : User> : GenericClassOutBoundTp<R>()
+        class ExGenericClassOutBoundTpWithTpLowerBound<R : Guest> : GenericClassOutBoundTp<R>()
+        class ExGenericClassOutBoundTpWithOutTp<out R : User> : GenericClassOutBoundTp<R>()
+        class ExGenericClassOutBoundTpReif : GenericClassOutBoundTp<User>()
+
+        open class GenericClassInBoundTp<in T : User>
+        class ExGenericClassInBoundTpWithTpBound<R : User> : GenericClassInBoundTp<R>()
+        class ExGenericClassInBoundTpWithTpLowerBound<R : Guest> : GenericClassInBoundTp<R>()
+        class ExGenericClassInBoundTpWithInTp<in R : User> : GenericClassInBoundTp<R>()
+        class ExGenericClassInBoundTpReif : GenericClassInBoundTp<User>()
+
+
+        // ----------
+        // Generic Class Member
+        // ----------
+        class OutterGenericDeclarationTp<T> {
+            var member: Container<T>? = null
+            open inner class Inner<T>
+            inner class ExInnerTpWithTp<T> : Inner<T>()
+            inner class ExInnerTpOuterTpAsImmArgWithTp<R> : Inner<T>()
+
+            fun memerFuncTp(t: T): T = t
+            fun <T> memerFuncWithTp(t: T): T = t
+        }
     }
 }
 
