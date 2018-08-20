@@ -1106,19 +1106,19 @@ class KtGenericDeclarationTest {
          * 2.2 Generic class(variant) inheritance
          */
         open class GenericClassOutTp<out T>
-        class ExGenericClassOutTpWithTp<R> : GenericClassOutTp<R>() // ???
+        class ExGenericClassOutTpWithTp<R> : GenericClassOutTp<R>() // TODO
         class ExGenericClassOutTpWithOutTp<out R> : GenericClassOutTp<R>()
         class ExGenericClassOutTpWithOutTpBound<out R : User> : GenericClassOutTp<R>()
         class ExGenericClassOutTpReif: GenericClassOutTp<User>()
 
         open class GenericClassInTp<in T>
-        class ExGenericClassInTpWithTp<R> : GenericClassInTp<R>() // ???
+        class ExGenericClassInTpWithTp<R> : GenericClassInTp<R>()   // TODO
         class ExGenericClassInTpWithInTp<in R> : GenericClassInTp<R>()
         class ExGenericClassInTpWithInTpBound<in R : User> : GenericClassInTp<R>()
         class ExGenericClassInTpReif : GenericClassInTp<User>()
 
         open class GenericClassTpBound<T : User>
-        // class ExGenericClassTpBoundWithTp<R> : GenericClassTpBound<R>()                  // Type argument is not within its bounds.
+        // class ExGenericClassTpBoundWithTp<R> : GenericClassTpBound<R>()               // Type argument is not within its bounds.
         class ExGenericClassTpBoundWithTpBound<R: User> : GenericClassTpBound<R>()
         class ExGenericClassTpBoundWithTpLowerBound<R: Guest> : GenericClassTpBound<R>() // 'Guest' is a final type, and thus a value of the type parameter is predetermined
         class ExGenericClassTpBoundReifWithTp<R> : GenericClassTpBound<User>()
@@ -1144,14 +1144,18 @@ class KtGenericDeclarationTest {
          * 3.1 Generic class(invariant) members
          */
         class OutterGenericClassTp<T> {
-            var memberPropTypeArg : T? = null // ???
-            var membePropWithTp: Container<T>? = null
-            var membePropWithTpOutProj: Container<out T>? = null
-            var membePropWithTpInProj: Container<in T>? = null
-            var membePropWithTpStarProj: Container<*>? = null
-            var <T> membePropTp: Container<T>? = null // ??? Type parameter of a property must be used in its receiver type
 
-            fun <T> memverFuncTp(t: T): T = t
+            // Property with type argument is ok (Kotlin In Action, 9.1.1)
+            var memberPropWithTp : T? = null
+            var memberPropWithGenericClassTp: Container<T>? = null
+            var memberPropWithGenericClassTpOutProj: Container<out T>? = null
+            var memberPropWithGenericClassTpInProj: Container<in T>? = null
+            var memberPropWithGenericClassTpStarProj: Container<*>? = null
+
+            // Property with type parameter is NOT ok
+            // var <T> memberPropTp: Container<T>? = null // TODO: Type parameter of a property must be used in its receiver type
+
+            fun <T> memberFuncTp(t: T): T = t
             fun memberFuncWithTp(t: T): T = t
             fun memberFuncWithGenericClassTp1(container: Container<T>): Container<T> = container
             fun memberFuncWithGenericClassTp2(container: Container<T>): Container<out T> = container
@@ -1166,21 +1170,28 @@ class KtGenericDeclarationTest {
             inner class InnerExGenericClassTpOuterTpAsImmArg : GenericClassTp<T>()
             inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
             inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
+
+            // TODO: Ext function/property with tp
+            // var <T> Container<T>.extPropTp
+            // var Container<T>.extPropTpOuterTpAsImmArg
+            fun <T> Container<T>.extFuncTp(): T = this.get()
+            fun Container<T>.extFuncTpOuterTpAsImmArg(): T = this.get()
         }
 
         /**
          * 3.2 Generic class(covariant) members
          */
         class OutterGenericClassOutTp<out T> {
-            var memberPropTypeArg : T? = null                       // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type T?
-            var membePropWithTp: OutContainer<T>? = null            // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<T>?
-            var membePropWithTpOutProj: OutContainer<out T>? = null // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<out T>?
+            // var memberPropTypeArg : T? = null                       // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type T?
+            // var membePropWithTp: OutContainer<T>? = null            // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<T>?
+            // var membePropWithTpOutProj: OutContainer<out T>? = null // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<out T>?
 
             // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'out' but occurs in 'in' position in type T
-            fun memberFuncWithGenericClassOutTp(container: OutContainer<T>): OutContainer<T> = container                 // ???
-            fun memberFuncWithGenericClassOutTpOutProj1(container: OutContainer<T>): OutContainer<out T> = container     // ???
-            fun memberFuncWithGenericClassOutTpOutProj2(container: OutContainer<out T>): OutContainer<out T> = container // ???
-            fun memberFuncWithGenericClassInTpCast(container: InContainer<T>): InContainer<*> = container                // ???
+
+            // fun memberFuncWithGenericClassOutTp(container: OutContainer<T>): OutContainer<T> = container                 // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<T>
+            // fun memberFuncWithGenericClassOutTpOutProj1(container: OutContainer<T>): OutContainer<out T> = container     // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<T>
+            // fun memberFuncWithGenericClassOutTpOutProj2(container: OutContainer<out T>): OutContainer<out T> = container // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<out T>
+            fun memberFuncWithGenericClassInTpCast(container: InContainer<T>): InContainer<*> = container                   // TODO
 
             inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
         }
@@ -1189,14 +1200,15 @@ class KtGenericDeclarationTest {
          * 3.3 Generic class(covariant) members
          */
         class OutterGenericClassInTp<in T> {
-            var membePropWithTp: InContainer<T>? = null          // ??? Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<T>?
-            var membePropWithTpInProj: InContainer<in T>? = null // ??? Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<in T>?
+            // var membePropWithTp: InContainer<T>? = null          // TODO: Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<T>?
+            // var membePropWithTpInProj: InContainer<in T>? = null // TODO: Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<in T>?
 
             // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'in' but occurs in 'out' position in type T
-            fun memberFuncWithGenericClassInTp(container: InContainer<T>): InContainer<T> = container              // ???
-            fun memberFuncWithGenericClassInTpInProj1(container: InContainer<T>): InContainer<in T> = container    // ???
-            fun memberFuncWithGenericClassInTpInProj2(container: InContainer<in T>): InContainer<in T> = container // ???
-            fun memberFuncWithGenericClassOutTpCast(container: OutContainer<T>): OutContainer<*> = container       // ???
+
+            // fun memberFuncWithGenericClassInTp(container: InContainer<T>): InContainer<T> = container              // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<T>
+            // fun memberFuncWithGenericClassInTpInProj1(container: InContainer<T>): InContainer<in T> = container    // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<T>
+            // fun memberFuncWithGenericClassInTpInProj2(container: InContainer<in T>): InContainer<in T> = container // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<in T>
+            fun memberFuncWithGenericClassOutTpCast(container: OutContainer<T>): OutContainer<*> = container          // TODO
 
             inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
         }
