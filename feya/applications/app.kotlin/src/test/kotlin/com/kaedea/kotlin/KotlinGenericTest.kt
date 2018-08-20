@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.kaedea.kotlin
 
 import com.kaedea.kotlin.utils.Values
@@ -901,9 +903,95 @@ class KtGenericClassTest {
     }
 }
 
+/**
+ * # Principles of Generic Class/Function Declaration
+ *
+ * ## Keywords
+ *
+ * Declaration-site:
+ * 1. TPC  : type parameter declaration of class/interface
+ * 2. TPF  : type parameter declaration of function
+ *
+ * Use-site:
+ * 1. TAS  : type argument single, type argument as variable/parameter/return
+ * 2. TAC  : type argument of class
+ * 3. TAF  : type argument of function/property
+ * 4. TAI  : type argument immediate
+ *
+ * ## Use Cases of Type Parameter/Argument
+ *
+ * ```
+ * // For class
+ *
+ *     class ClassName<TPC>
+ *     class ExClassName<TPC> : ClassName<TAI>
+ *
+ *
+ * // For function
+ *
+ *     // Declaration
+ *     fun <TPF> functionName(TAS): TAS
+ *     fun <TPF> functionName(ClassName<TAC>): TAS
+ *     fun <TPF> functionName(ClassName<TAC>): ClassName<TAC>
+ *     fun <TPF> functionName(TAS): ClassName<TAC>
+ *
+ *     // Usage
+ *     // functionName<TAF>()
+ *
+ *
+ * // For reference
+ *
+ *     TAS = ...
+ *     ClassName<TAC> = ...
+ * ```
+ *
+ * ## Principles Table
+ *
+ * > | Position | out/in         | <*>            | <T : Bound>    |
+ *   |----------|----------------|----------------|----------------|
+ *   |   TPC    | √ (Variance)   | -              | √ (UpperBound) |
+ *   |   TPF    | × (Variance)   | -              | √ (UpperBound) |
+ *   |----------|----------------|----------------|----------------|
+ *   |   TAS    | × (Projection) | × (Projection) | -              |
+ *   |   TAC    | √ (Projection) | √ (Projection) | -              |
+ *   |   TAF    | × (Projection) | × (Projection) | -              |
+ *   |   TAI    | × (Projection) | × (Projection) | -              |
+ *
+ * ## OUT/IN Positions keywords
+ *
+ * 1. invariant : invariant position, only invariant is allowed
+ * 2. out       : out position, covariant & invariant are allowed
+ * 2. in        : in position, contravariant & invariant are allowed
+ *
+ * ## OUT/IN Positions of Type Argument
+ *
+ * ```
+ *     // Function
+ *     fun functionName('in'): 'out'
+ *
+ *     // Class
+ *     InvariantClass<'invariant'>
+ *     CovariantClass<'out'>
+ *     ContravariantClass<'in'>
+ *
+ *     ClassName<T...> {
+ *         memberProperty: 'invariant'
+ *         memberProperty: InvariantClass<'invariant'>
+ *         memberProperty: CovariantClass<'invariant'>
+ *         memberProperty: ContravariantClass<'invariant'>
+ *
+ *         fun functionName('in'): 'out'
+ *         fun functionName(InvariantClass<'invariant'>): [As Class]
+ *         fun functionName(CovariantClass<'in'>): [As Class]
+ *         fun functionName(ContravariantClass<'out'>): [As Class]
+ *     }
+ * ```
+ */
+@Suppress("unused")
 @RunWith(JUnit4::class)
 class KtGenericDeclarationTest {
 
+    @Suppress("UNUSED_VARIABLE")
     @Test
     @Ignore
     fun classInheriting() {
@@ -918,60 +1006,6 @@ class KtGenericDeclarationTest {
         }
         open class OutContainer<out T>(var value: Any? = null)
         open class InContainer<in T>(var value: Any? = null)
-
-        /**
-         * # Principles of Generic Class/Function Declaration
-         *
-         * ## Keywords
-         * Declaration-site:
-         * 1. TPC  : type parameter declaration of class/interface
-         * 2. TPF  : type parameter declaration of function
-         *
-         * Use-site:
-         * 1. TAS  : type argument single, type argument as variable/parameter/return
-         * 2. TAC  : type argument of class
-         * 3. TAF  : type argument of function/property
-         * 4. TAI  : type argument immediate
-         *
-         * ## Use Cases:
-         * For class
-         * ```
-         *     class ClassName<TPC>
-         *     class ExClassName<TPC> : ClassName<TAI>
-         * ```
-         *
-         * For function
-         * ```
-         *     // Declaration
-         *     fun <TPF> functionName(TAS): TAS
-         *     fun <TPF> functionName(ClassName<TAC>): TAS
-         *     fun <TPF> functionName(ClassName<TAC>): ClassName<TAC>
-         *     fun <TPF> functionName(TAS): ClassName<TAC>
-         *
-         *     // Usage
-         *     // functionName<TAF>()
-         * ```
-         *
-         * For reference
-         * ```
-         *     TAS = ...
-         *     ClassName<TAC> = ...
-         * ```
-         *
-         * ## Principles
-         */
-
-        // | Position | out/in         | <*>            | <T : Bound>    |
-        // |----------|----------------|----------------|----------------|
-        // |   TPC    | √ (Variance)   | -              | √ (UpperBound) |
-        // |   TPF    | × (Variance)   | -              | √ (UpperBound) |
-        // |----------|----------------|----------------|----------------|
-        // |   TAS    | × (Projection) | × (Projection) | -              |
-        // |   TAC    | √ (Projection) | √ (Projection) | -              |
-        // |   TAF    | × (Projection) | × (Projection) | -              |
-        // |   TAI    | × (Projection) | × (Projection) | -              |
-
-        // in/out position
 
         // ----------
         // Generic Function
@@ -1079,18 +1113,18 @@ class KtGenericDeclarationTest {
         open class GenericClassTp<T>
 
         class ExGenericClassTp : GenericClassTp<User>()
-        // class ExGenericClassTpStarProj : GenericClassTp<*>()     // TAI: Projections are not allowed for immediate arguments of a supertype
-        // class ExGenericClassTpBound : GenericClassTp<T : User>() // TAI: Syntax error
+        // class ExGenericClassTpStarProj : GenericClassTp<*>()                 // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpBound : GenericClassTp<T : User>()             // TAI: Syntax error
 
         class ExGenericClassTpWithTp<R> : GenericClassTp<R>()
-        // class ExGenericClassTpOutProjWithTp<R> : GenericClassTp<out R>()    // TAI: Projections are not allowed for immediate arguments of a supertype
-        // class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()      // TAI: Projections are not allowed for immediate arguments of a supertype
-        // class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()       // TAI: Projections are not allowed for immediate arguments of a supertype
-        // class ExGenericClassTpOfBoundWithTp<R> : GenericClassTp<R : User>() // TAI: Syntax error
+        // class ExGenericClassTpOutProjWithTp<R> : GenericClassTp<out R>()     // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()       // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()        // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpOfBoundWithTp<R> : GenericClassTp<R : User>()  // TAI: Syntax error
 
-        // class ExGenericClassTpWithOutTp<out R> : GenericClassTp<R>()  // TAI: Type parameter R is declared as 'out' but occurs in 'invariant' position
-        // class ExGenericClassTpWithInTp<in R> : GenericClassTp<R>()    // TAI: Type parameter R is declared as 'in' but occurs in 'invariant' position
-        // class ExGenericClassTpWithTpStarProj<*> : GenericClassTp<*>() // TPC, TAI: Projections are not allowed for type parameters, or immediate arguments of a supertype
+        // class ExGenericClassTpWithOutTp<out R> : GenericClassTp<R>()         // TAI: Type parameter R is declared as 'out' but occurs in 'invariant' position
+        // class ExGenericClassTpWithInTp<in R> : GenericClassTp<R>()           // TAI: Type parameter R is declared as 'in' but occurs in 'invariant' position
+        // class ExGenericClassTpWithTpStarProj<*> : GenericClassTp<*>()        // TPC, TAI: Projections are not allowed for type parameters, or immediate arguments of a supertype
         class ExGenericClassTpWithTpBound<R : User> : GenericClassTp<R>()
 
         class ExGenericClassTpReif : GenericClassTp<User>()
@@ -1141,76 +1175,73 @@ class KtGenericDeclarationTest {
 
 
         /**
-         * 3.1 Generic class(invariant) members
+         * 3. Generic class members
          */
-        class OutterGenericClassTp<T> {
+        class OuterGenericClassTp<T1, out T2, in T3> {
 
             // Property with type argument is ok (Kotlin In Action, 9.1.1)
-            var memberPropWithTp : T? = null
-            var memberPropWithGenericClassTp: Container<T>? = null
-            var memberPropWithGenericClassTpOutProj: Container<out T>? = null
-            var memberPropWithGenericClassTpInProj: Container<in T>? = null
+            var memberPropWithTp : T1? = null
+            // var memberPropWithOutTp : T2? = null // TAS: Type parameter T2 is declared as 'out' but occurs in 'invariant' position in type T2?
+            // var memberPropWithInTp : T3? = null  // TAS: Type parameter T3 is declared as 'in' but occurs in 'invariant' position in type T3?
+
+            var memberPropWithGenericClassTp: Container<T1>? = null
+            var memberPropWithGenericClassTpOutProj: Container<out T1>? = null
+            var memberPropWithGenericClassTpInProj: Container<in T1>? = null
+            var memberPropWithGenericClassOutTpOutProj: OutContainer<out T1>? = null // TODO: Auto projection ???
+            var memberPropWithGenericClassInTpInProj: InContainer<in T1>? = null     // TODO: Auto projection ???
             var memberPropWithGenericClassTpStarProj: Container<*>? = null
+            // var memberPropWithGenericClassOutTp: OutContainer<T2>? = null         // TAC: Type parameter T2 is declared as 'out' but occurs in 'invariant' position in type OutContainer<T2>?
+            // var memberPropWithGenericClassInTp: InContainer<T3>? = null           // TAC: Type parameter T3 is declared as 'in' but occurs in 'invariant' position in type InContainer<T3>?
 
             // Property with type parameter is NOT ok
-            // var <T> memberPropTp: Container<T>? = null // TODO: Type parameter of a property must be used in its receiver type
+            // var <T> memberPropTp: Container<T>? = null           // TODO: Type parameter of a property must be used in its receiver type
+            // var <out T> memberPropOutTp: OutContainer<T>? = null // TODO: Type parameter of a property must be used in its receiver type,
+                                                                    //  TPF: Variance annotations are only allowed for type parameters of classes and interfaces,
+                                                                    //  TAC: Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<T>?
+            // var <in T> memberPropInTp: InContainer<T>? = null    // TODO: Type parameter of a property must be used in its receiver type,
+                                                                    //  TPF:  Variance annotations are only allowed for type parameters of classes and interfaces,
+                                                                    //  TAC:  Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<T>?
 
             fun <T> memberFuncTp(t: T): T = t
-            fun memberFuncWithTp(t: T): T = t
-            fun memberFuncWithGenericClassTp1(container: Container<T>): Container<T> = container
-            fun memberFuncWithGenericClassTp2(container: Container<T>): Container<out T> = container
-            fun memberFuncWithGenericClassTp3(container: Container<in T>): Container<in T> = container
-            fun memberFuncWithGenericClassTp4(container: Container<out T>): Container<out T> = container
+            // fun <out T> memberFuncOutTp(t: T): T = t             // TPF:  Variance annotations are only allowed for type parameters of classes and interfaces
+            // fun <in T> memberFuncInTp(t: T): T = t               // TPF:  Variance annotations are only allowed for type parameters of classes and interfaces
+
+            fun memberFuncWithTp(t: T1): T1 = t
+            // fun memberFuncWithOutTp(t: T2): T2 = t               // TAS:  Type parameter T2 is declared as 'out' but occurs in 'in' position in type T2
+            // fun memberFuncWithInTp(t: T3): T3 = t                // TAS:  Type parameter T is declared as 'in' but occurs in 'out' position in type T
+
+            fun memberFuncWithGenericClassTp1(container: Container<T1>): Container<T1> = container
+            fun memberFuncWithGenericClassTp2(container: Container<T1>): Container<out T1> = container
+            fun memberFuncWithGenericClassTp3(container: Container<in T1>): Container<in T1> = container
+            fun memberFuncWithGenericClassTp4(container: Container<out T1>): Container<out T1> = container
             fun memberFuncWithGenericClassTp5(container: Container<*>): Container<*> = container
+
+            fun memberFuncWithGenericClassOutTp1(container: OutContainer<T1>): OutContainer<T1> = container
+            // fun memberFuncWithGenericClassOutTp2(container: OutContainer<T2>): OutContainer<T2> = container    // TODO: Type parameter T2 is declared as 'out' but occurs in 'in' position in type OutContainer<T2>
+            fun memberFuncWithGenericClassOutTp3(container: OutContainer<T3>): OutContainer<*> = container
+            fun memberFuncWithGenericClassInTp1(container: InContainer<T1>): InContainer<T1> = container
+            // fun memberFuncWithGenericClassInTp2(container: InContainer<T3>): InContainer<T3> = container       // TODO: Type parameter T3 is declared as 'in' but occurs in 'out' position in type InContainer<T3>
+            fun memberFuncWithGenericClassInTp3(container: InContainer<T2>): InContainer<*> = container
+            fun memberFuncWithGenericClassOutTpCast(container: OutContainer<out T3>): OutContainer<*> = container // TODO
+            fun memberFuncWithGenericClassInTpCast(container: InContainer<in T2>): InContainer<*> = container     // TODO
+
 
             inner class InnerTp<T>
             inner class InnerOutTp<out T>
             inner class InnerInTp<in T>
             inner class InnerExGenericClassTpWithTp<T> : GenericClassTp<T>()
-            inner class InnerExGenericClassTpOuterTpAsImmArg : GenericClassTp<T>()
-            inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
-            inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
+            inner class InnerExGenericClassTpOuterTpAsImmArg : GenericClassTp<T1>()
+            inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T1>()
+            inner class InnerExGenericClassOutTpOuterOutTpAsImmArg : GenericClassOutTp<T2>()
+            inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T1>()
+            inner class InnerExGenericClassInTpOuterInTpAsImmArg : GenericClassInTp<T3>()
+
 
             // TODO: Ext function/property with tp
             // var <T> Container<T>.extPropTp
-            // var Container<T>.extPropTpOuterTpAsImmArg
+            // var Container<T1>.extPropTpOuterTpAsImmArg
             fun <T> Container<T>.extFuncTp(): T = this.get()
-            fun Container<T>.extFuncTpOuterTpAsImmArg(): T = this.get()
-        }
-
-        /**
-         * 3.2 Generic class(covariant) members
-         */
-        class OutterGenericClassOutTp<out T> {
-            // var memberPropTypeArg : T? = null                       // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type T?
-            // var membePropWithTp: OutContainer<T>? = null            // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<T>?
-            // var membePropWithTpOutProj: OutContainer<out T>? = null // TODO: Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<out T>?
-
-            // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'out' but occurs in 'in' position in type T
-
-            // fun memberFuncWithGenericClassOutTp(container: OutContainer<T>): OutContainer<T> = container                 // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<T>
-            // fun memberFuncWithGenericClassOutTpOutProj1(container: OutContainer<T>): OutContainer<out T> = container     // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<T>
-            // fun memberFuncWithGenericClassOutTpOutProj2(container: OutContainer<out T>): OutContainer<out T> = container // TODO: Type parameter T is declared as 'out' but occurs in 'in' position in type OutContainer<out T>
-            fun memberFuncWithGenericClassInTpCast(container: InContainer<T>): InContainer<*> = container                   // TODO
-
-            inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
-        }
-
-        /**
-         * 3.3 Generic class(covariant) members
-         */
-        class OutterGenericClassInTp<in T> {
-            // var membePropWithTp: InContainer<T>? = null          // TODO: Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<T>?
-            // var membePropWithTpInProj: InContainer<in T>? = null // TODO: Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<in T>?
-
-            // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'in' but occurs in 'out' position in type T
-
-            // fun memberFuncWithGenericClassInTp(container: InContainer<T>): InContainer<T> = container              // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<T>
-            // fun memberFuncWithGenericClassInTpInProj1(container: InContainer<T>): InContainer<in T> = container    // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<T>
-            // fun memberFuncWithGenericClassInTpInProj2(container: InContainer<in T>): InContainer<in T> = container // TODO: Type parameter T is declared as 'in' but occurs in 'out' position in type InContainer<in T>
-            fun memberFuncWithGenericClassOutTpCast(container: OutContainer<T>): OutContainer<*> = container          // TODO
-
-            inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
+            fun Container<T1>.extFuncTpOuterTpAsImmArg(): T1 = this.get()
         }
 
         /**
