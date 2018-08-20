@@ -902,7 +902,7 @@ class KtGenericClassTest {
 }
 
 @RunWith(JUnit4::class)
-class KtGenericInheritingTest {
+class KtGenericDeclarationTest {
 
     @Test
     @Ignore
@@ -916,32 +916,11 @@ class KtGenericInheritingTest {
                 value = t
             }
         }
-
-        open class GenericClass {
-            open fun <T> call(container: Container<T>) {}
-            open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
-        }
-
-        class ExGenericClass : GenericClass()
-
-        class ExGenericClassWithTp<T> : GenericClass() {
-            override fun <T> call(container: Container<T>) {}
-            override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
-        }
-
-        class ExGenericClassWithTpOfOutProj<out T> : GenericClass()
-        class ExGenericClassWithTpOfInProj<in T> : GenericClass()
-        // class ExGenericClassWithTpOfStarProj<*> : GenericClass()
-
-
-        // ----------
-        // GenericClass With Type Parameter
-        // 1. Depends on generic class (Container<T>)
-        // 2. Has type parameter (T)
-        // ----------
+        open class OutContainer<out T>(var value: Any? = null)
+        open class InContainer<in T>(var value: Any? = null)
 
         /**
-         * # Principles of Generic Class Declaration
+         * # Principles of Generic Class/Function Declaration
          *
          * ## Keywords
          * Declaration-site:
@@ -949,13 +928,10 @@ class KtGenericInheritingTest {
          * 2. TPF  : type parameter declaration of function
          *
          * Use-site:
-         * 1. TAS  : type argument single
+         * 1. TAS  : type argument single, type argument as variable/parameter/return
          * 2. TAC  : type argument of class
          * 3. TAF  : type argument of function/property
          * 4. TAI  : type argument immediate
-         *
-         * in/out position
-         * invariant position
          *
          * ## Use Cases:
          * For class
@@ -967,13 +943,13 @@ class KtGenericInheritingTest {
          * For function
          * ```
          *     // Declaration
-         *     fun <TPF> functionName(TAS): TAR
+         *     fun <TPF> functionName(TAS): TAS
          *     fun <TPF> functionName(ClassName<TAC>): TAS
          *     fun <TPF> functionName(ClassName<TAC>): ClassName<TAC>
          *     fun <TPF> functionName(TAS): ClassName<TAC>
          *
          *     // Usage
-         *     // functionName<TAFP>()
+         *     // functionName<TAF>()
          * ```
          *
          * For reference
@@ -985,24 +961,65 @@ class KtGenericInheritingTest {
          * ## Principles
          */
 
-        // | Position   | out/in        | <*>            | <T : Bound> |
-        // |------------|---------------|----------------|-------------|
-        // |   TPC      | √             | ×              | √           |
-        // |   TPF      | ×             | ×              | √           |
-        // |------------|---------------|----------------|-------------|
-        // |   TAS      | √             | √              |             |
-        // |   TAC      | √             | √              |             |
-        // |   TAF      |               |                |             |
-        // |   TAI      | ×             | ×              | ×           |
+        // | Position | out/in         | <*>            | <T : Bound>    |
+        // |----------|----------------|----------------|----------------|
+        // |   TPC    | √ (Variance)   | -              | √ (UpperBound) |
+        // |   TPF    | × (Variance)   | -              | √ (UpperBound) |
+        // |----------|----------------|----------------|----------------|
+        // |   TAS    | × (Projection) | × (Projection) | -              |
+        // |   TAC    | √ (Projection) | √ (Projection) | -              |
+        // |   TAF    | × (Projection) | × (Projection) | -              |
+        // |   TAI    | × (Projection) | × (Projection) | -              |
+
+        // in/out position
 
         // ----------
         // Generic Function
         // ----------
-        fun <T> funcTp(t: T): T = t
-        fun <out T> funcTpOutProj(t: T): T = t  // Variance annotations are only allowed for type parameters of classes and interfaces
-        fun <*> funcTpStarProj(t: Any): Any = t // Type parameter name expected
-        fun <T : User> funcTpBound(t: T): T = t // Type parameter name expected
 
+        /**
+         * 1. Function with type parameter
+         */
+        fun <T> funcTp(t: T): T = t
+        // fun <out T> funcOutTp(t: T): T = t      // TPF: Variance annotations are only allowed for type parameters of classes and interfaces
+        // fun <in T> funcInTp(t: T): T = t        // TPF: Variance annotations are only allowed for type parameters of classes and interfaces
+        // fun <*> funcTpStarProj(t: Any): Any = t // TPF: Projections are not allowed for type parameters
+        fun <T : User> funcTpBound(t: T): T = t
+
+        /**
+         * 2. Function with type argument (single)
+         */
+        // fun <T> funcTpWithOutProj(t: out T): T = t        // TAS: Syntax error
+        // fun <T> funcTpWithReturnOutProj(t: T): out T = t  // TAS: Syntax error
+        // fun <T> funcTpWithInProj(t: in T): T = t          // TAS: Syntax error
+        // fun <T> funcTpWithReturnInProj(t: T): in T = t    // TAS: Syntax error
+        // fun <T> funcTpWithBound(t: T : User): T = t       // TAS: Syntax error
+        // fun <T> funcTpWithReturnBound(t: T): T : User = t // TAS: Syntax error
+
+        fun <T> typeArgSingleWithFuncTp(t: T) {
+            val refTp: T = funcTp<T>(t)
+            // val refOutTp: out T = funcTp<T>(t)      // TAS: Syntax error
+            // val refInTp: in T = funcTp<T>(t)        // TAS: Syntax error
+            // val refTpBound: T : User = funcTp<T>(t) // TAS: Syntax error
+        }
+
+        /**
+         * 3. Function with type argument of function
+         */
+        fun <T> typeArgFuncWithFuncTp(t: T) {
+            funcTp<T>(t)
+            // funcTp<out T>(t)    // TAF:  Projections are not allowed on type arguments of functions and properties
+            // funcTp<*>(t)        // TAF:  Projections are not allowed on type arguments of functions and properties
+            // funcTp<T : User>(t) // TAF: Syntax error
+
+            funcTp<User>(Guest())
+            funcTp<User>(Guest())
+            funcTp<Guest>(Guest())
+        }
+
+        /**
+         * 4. Function with generic class
+         */
         fun funcWithInvariantClass1(container: Container<User>): Container<User> = container
         fun funcWithInvariantClass2(container: Container<User>): Container<out User> = container
         fun funcWithInvariantClass3(container: Container<in User>): Container<in User> = container
@@ -1016,107 +1033,190 @@ class KtGenericInheritingTest {
         fun <T> funcTpWithInvariantClass4(container: Container<T>): Container<*> = container
         fun <T> funcTpWithInvariantClass5(container: Container<out T>): Container<*> = container
         fun <T> funcTpWithInvariantClass6(container: Container<*>): Container<*> = container
+        // fun <T> funcTpWithInvariantClass7(container: Container<T : User>): Container<*> = container          // TAC: Syntax error
+        // fun <T> funcTpWithInvariantClass8(container: Container<T>): Container<T : User> = container          // TAC: Syntax error
 
-        fun <T> funcTpWithTpRef(t: T) {
-            val ref: T = funcTp(t)
-        }
+        fun funcWithCovariantClass1(container: OutContainer<User>): OutContainer<User> = container
+        fun funcWithCovariantClass2(container: OutContainer<User>): OutContainer<out User> = container
+        // fun funcWithCovariantClass3(container: OutContainer<in User>): OutContainer<in User> = container     // TAC: Projection conflicting
+        fun funcWithCovariantClass4(container: OutContainer<User>): OutContainer<*> = container
+        fun funcWithCovariantClass5(container: OutContainer<*>): OutContainer<*> = container
+
+        fun <T> funcTpWithCovariantClass1(container: OutContainer<T>): OutContainer<T> = container
+        fun <T> funcTpWithCovariantClass2(container: OutContainer<T>): OutContainer<out T> = container
+        fun <T> funcTpWithCovariantClass3(container: OutContainer<out T>): OutContainer<*> = container
+
+        fun funcWithContravariantClass1(container: InContainer<User>): InContainer<User> = container
+        fun funcWithContravariantClass2(container: InContainer<User>): InContainer<in User> = container
+        // fun funcWithContravariantClass3(container: InContainer<out User>): InContainer<out User> = container // TAC: Projection conflicting
+
+        fun <T> funcTpWithContravariantClass1(container: InContainer<T>): InContainer<T> = container
+        fun <T> funcTpWithContravariantClass2(container: InContainer<T>): InContainer<in T> = container
+        fun <T> funcTpWithContravariantClass3(container: InContainer<*>): InContainer<*> = container
 
 
         // ----------
-        // Generic Class Declaration
+        // Generic Class
         // ----------
+
+        /**
+         * 1. Generic class with type parameter declaration
+         */
         class GenericClassDeclarationTp<T>
-        class GenericClassDeclarationTpOutProj<out T>
-        class GenericClassDeclarationTpInProj<in T>
-        class GenericClassDeclarationTpStarProj<*>   // Type parameter name expected, Start projection not allowed in TAD
+        class GenericClassDeclarationTpOutProj<out T>    // 'out/in' are variance annotations here, not projections
+        class GenericClassDeclarationTpInProj<in T>      // 'out/in' are variance annotations here, not projections
+        // class GenericClassDeclarationTpStarProj<*>    // TPC: Projections are not allowed for type parameters
         class GenericClassDeclarationTpBound<out T : User>
         class GenericClassDeclarationTpOutProjBound<out T : User>
         class GenericClassDeclarationTpInProjBound<in T : User>
-        class GenericClassDeclarationTpBound1<out User> // User is TP here, not class
-        class GenericClassDeclarationTpBound2<in User>  // User is TP
+        class GenericClassDeclarationTpBound1<out User>  // User is TP here, not class
+        class GenericClassDeclarationTpBound2<in User>   // User is TP here, not class
 
 
-        // ----------
-        // Generic Class(Invariant) Inheritance
-        // ----------
+        /**
+         * 2.1 Generic class(invariant) inheritance
+         */
         open class GenericClassTp<T>
 
-        class ExGenericClassTp : GenericClassTp<T>()
-        class ExGenericClassTpOutPrj : GenericClassTp<out T>()
-        class ExGenericClassTpInProj : GenericClassTp<in T>() // Projections are not allowed for immediate arguments of a supertype
-        class ExGenericClassTpStarProj : GenericClassTp<*>()  // Projections are not allowed for immediate arguments of a supertype
-        class ExGenericClassTpBound : GenericClassTp<T : User>()
+        class ExGenericClassTp : GenericClassTp<User>()
+        // class ExGenericClassTpStarProj : GenericClassTp<*>()     // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpBound : GenericClassTp<T : User>() // TAI: Syntax error
 
         class ExGenericClassTpWithTp<R> : GenericClassTp<R>()
-        class ExGenericClassTpOutPrjWithTp<R> : GenericClassTp<out R>() // Projections are not allowed for immediate arguments of a supertype
-        class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()
-        class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()   // Projections are not allowed for immediate arguments of a supertype
-        class ExGenericClassTpBoundWithTp<R> : GenericClassTp<R : User>()
+        // class ExGenericClassTpOutProjWithTp<R> : GenericClassTp<out R>()    // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpInProjWithTp<R> : GenericClassTp<in R>()      // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpStarProjWithTp<R> : GenericClassTp<*>()       // TAI: Projections are not allowed for immediate arguments of a supertype
+        // class ExGenericClassTpOfBoundWithTp<R> : GenericClassTp<R : User>() // TAI: Syntax error
 
-        class ExGenericClassTpWithTpOfOutProj<out R> : GenericClassTp<R>() // Type parameter R is declared as 'out' but occurs in 'invariant' position in type GenericClassTp<R>
-        class ExGenericClassTpWithTpOfinProj<in R> : GenericClassTp<R>()
-        class ExGenericClassTpWithTpOfStarProj<*> : GenericClassTp<*>()
+        // class ExGenericClassTpWithOutTp<out R> : GenericClassTp<R>()  // TAI: Type parameter R is declared as 'out' but occurs in 'invariant' position
+        // class ExGenericClassTpWithInTp<in R> : GenericClassTp<R>()    // TAI: Type parameter R is declared as 'in' but occurs in 'invariant' position
+        // class ExGenericClassTpWithTpStarProj<*> : GenericClassTp<*>() // TPC, TAI: Projections are not allowed for type parameters, or immediate arguments of a supertype
         class ExGenericClassTpWithTpBound<R : User> : GenericClassTp<R>()
 
         class ExGenericClassTpReif : GenericClassTp<User>()
         class ExGenericClassTpReifWithTp<R> : GenericClassTp<User>()
-        class ExGenericClassTpReifWithTpOfOutProj<out R> : GenericClassTp<User>()
-        class ExGenericClassTpReifWithTpOfinProj<in R> : GenericClassTp<User>()
-        class ExGenericClassTpReifWithTpofStarPrj<*> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithOutTp<out R> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithInTp<in R> : GenericClassTp<User>()
+        // class ExGenericClassTpReifWithTpStarProj<*> : GenericClassTp<User>() // TPC: Projections are not allowed for type parameters
         class ExGenericClassTpReifWithTpBound<R : User> : GenericClassTp<User>()
-        class ExGenericClassTpReifWithTpOutProjBound<out R : User> : GenericClassTp<User>()
+        class ExGenericClassTpReifWithOutTpBound<out R : User> : GenericClassTp<User>()
 
 
-        // ----------
-        // Generic Class(Variant) Inheritance
-        // ----------
+        /**
+         * 2.2 Generic class(variant) inheritance
+         */
         open class GenericClassOutTp<out T>
         class ExGenericClassOutTpWithTp<R> : GenericClassOutTp<R>() // ???
         class ExGenericClassOutTpWithOutTp<out R> : GenericClassOutTp<R>()
-        class ExGenericClassOutTpWithOutToBound<out R : User> : GenericClassOutTp<R>()
+        class ExGenericClassOutTpWithOutTpBound<out R : User> : GenericClassOutTp<R>()
         class ExGenericClassOutTpReif: GenericClassOutTp<User>()
 
         open class GenericClassInTp<in T>
-        class ExGenericClassInTpWithTp<R> : GenericClassInTp<R>()
+        class ExGenericClassInTpWithTp<R> : GenericClassInTp<R>() // ???
         class ExGenericClassInTpWithInTp<in R> : GenericClassInTp<R>()
         class ExGenericClassInTpWithInTpBound<in R : User> : GenericClassInTp<R>()
         class ExGenericClassInTpReif : GenericClassInTp<User>()
 
-        open class GenericClassBoundTp<T : User>
-        class ExGenericClassBoundTpWithTp<R> : GenericClassBoundTp<R>()                  // Type argument is not within its bounds.
-        class ExGenericClassBoundTpWithTpBound<R: User> : GenericClassBoundTp<R>()
-        class ExGenericClassBoundTpWithTpLowerBound<R: Guest> : GenericClassBoundTp<R>() // 'Guest' is a final type, and thus a value of the type parameter is predetermined
-        class ExGenericClassBoundTpReifWithTp<R> : GenericClassBoundTp<User>()
-        class ExGenericClassBoundTpReifWithOutTp<out R> : GenericClassBoundTp<User>()
-        class ExGenericClassBoundTpReifWithTpBound<R: User> : GenericClassBoundTp<User>()
-        class ExGenericClassBoundTpReifWithInTpBound<in R: User> : GenericClassBoundTp<User>()
-        class ExGenericClassBoundTpReifWithTpHigherBound<R: Any> : GenericClassBoundTp<Guest>()
+        open class GenericClassTpBound<T : User>
+        // class ExGenericClassTpBoundWithTp<R> : GenericClassTpBound<R>()                  // Type argument is not within its bounds.
+        class ExGenericClassTpBoundWithTpBound<R: User> : GenericClassTpBound<R>()
+        class ExGenericClassTpBoundWithTpLowerBound<R: Guest> : GenericClassTpBound<R>() // 'Guest' is a final type, and thus a value of the type parameter is predetermined
+        class ExGenericClassTpBoundReifWithTp<R> : GenericClassTpBound<User>()
+        class ExGenericClassTpBoundReifWithOutTp<out R> : GenericClassTpBound<User>()
+        class ExGenericClassTpBoundReifWithTpBound<R: User> : GenericClassTpBound<User>()
+        class ExGenericClassTpBoundReifWithInTpBound<in R: User> : GenericClassTpBound<User>()
+        class ExGenericClassTpBoundReifWithTpHigherBound<R: Any> : GenericClassTpBound<Guest>()
 
-        open class GenericClassOutBoundTp<out T : User>
-        class ExGenericClassOutBoundTpWithTpBound<R : User> : GenericClassOutBoundTp<R>()
-        class ExGenericClassOutBoundTpWithTpLowerBound<R : Guest> : GenericClassOutBoundTp<R>()
-        class ExGenericClassOutBoundTpWithOutTp<out R : User> : GenericClassOutBoundTp<R>()
-        class ExGenericClassOutBoundTpReif : GenericClassOutBoundTp<User>()
+        open class GenericClassOutTpBound<out T : User>
+        class ExGenericClassOutTpBoundWithTpBound<R : User> : GenericClassOutTpBound<R>()
+        class ExGenericClassOutTpBoundWithTpLowerBound<R : Guest> : GenericClassOutTpBound<R>()
+        class ExGenericClassOutTpBoundWithOutTp<out R : User> : GenericClassOutTpBound<R>()
+        class ExGenericClassOutTpBoundReif : GenericClassOutTpBound<User>()
 
-        open class GenericClassInBoundTp<in T : User>
-        class ExGenericClassInBoundTpWithTpBound<R : User> : GenericClassInBoundTp<R>()
-        class ExGenericClassInBoundTpWithTpLowerBound<R : Guest> : GenericClassInBoundTp<R>()
-        class ExGenericClassInBoundTpWithInTp<in R : User> : GenericClassInBoundTp<R>()
-        class ExGenericClassInBoundTpReif : GenericClassInBoundTp<User>()
+        open class GenericClassInTpBound<in T : User>
+        class ExGenericClassInTpBoundWithTpBound<R : User> : GenericClassInTpBound<R>()
+        class ExGenericClassInTpBoundWithTpLowerBound<R : Guest> : GenericClassInTpBound<R>()
+        class ExGenericClassInTpBoundWithInTp<in R : User> : GenericClassInTpBound<R>()
+        class ExGenericClassInTpBoundReif : GenericClassInTpBound<User>()
 
 
-        // ----------
-        // Generic Class Member
-        // ----------
-        class OutterGenericDeclarationTp<T> {
-            var member: Container<T>? = null
-            open inner class Inner<T>
-            inner class ExInnerTpWithTp<T> : Inner<T>()
-            inner class ExInnerTpOuterTpAsImmArgWithTp<R> : Inner<T>()
+        /**
+         * 3.1 Generic class(invariant) members
+         */
+        class OutterGenericClassTp<T> {
+            var memberPropTypeArg : T? = null // ???
+            var membePropWithTp: Container<T>? = null
+            var membePropWithTpOutProj: Container<out T>? = null
+            var membePropWithTpInProj: Container<in T>? = null
+            var membePropWithTpStarProj: Container<*>? = null
+            var <T> membePropTp: Container<T>? = null // ??? Type parameter of a property must be used in its receiver type
 
-            fun memerFuncTp(t: T): T = t
-            fun <T> memerFuncWithTp(t: T): T = t
+            fun <T> memverFuncTp(t: T): T = t
+            fun memberFuncWithTp(t: T): T = t
+            fun memberFuncWithGenericClassTp1(container: Container<T>): Container<T> = container
+            fun memberFuncWithGenericClassTp2(container: Container<T>): Container<out T> = container
+            fun memberFuncWithGenericClassTp3(container: Container<in T>): Container<in T> = container
+            fun memberFuncWithGenericClassTp4(container: Container<out T>): Container<out T> = container
+            fun memberFuncWithGenericClassTp5(container: Container<*>): Container<*> = container
+
+            inner class InnerTp<T>
+            inner class InnerOutTp<out T>
+            inner class InnerInTp<in T>
+            inner class InnerExGenericClassTpWithTp<T> : GenericClassTp<T>()
+            inner class InnerExGenericClassTpOuterTpAsImmArg : GenericClassTp<T>()
+            inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
+            inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
         }
+
+        /**
+         * 3.2 Generic class(covariant) members
+         */
+        class OutterGenericClassOutTp<out T> {
+            var memberPropTypeArg : T? = null                       // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type T?
+            var membePropWithTp: OutContainer<T>? = null            // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<T>?
+            var membePropWithTpOutProj: OutContainer<out T>? = null // ??? Type parameter T is declared as 'out' but occurs in 'invariant' position in type OutContainer<out T>?
+
+            // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'out' but occurs in 'in' position in type T
+            fun memberFuncWithGenericClassOutTp(container: OutContainer<T>): OutContainer<T> = container                 // ???
+            fun memberFuncWithGenericClassOutTpOutProj1(container: OutContainer<T>): OutContainer<out T> = container     // ???
+            fun memberFuncWithGenericClassOutTpOutProj2(container: OutContainer<out T>): OutContainer<out T> = container // ???
+            fun memberFuncWithGenericClassInTpCast(container: InContainer<T>): InContainer<*> = container                // ???
+
+            inner class InnerExGenericClassOutTpOuterTpAsImmArg : GenericClassOutTp<T>()
+        }
+
+        /**
+         * 3.3 Generic class(covariant) members
+         */
+        class OutterGenericClassInTp<in T> {
+            var membePropWithTp: InContainer<T>? = null          // ??? Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<T>?
+            var membePropWithTpInProj: InContainer<in T>? = null // ??? Type parameter T is declared as 'in' but occurs in 'invariant' position in type InContainer<in T>?
+
+            // fun memberFuncWithTp(t: T): T = t // TAS: Type parameter T is declared as 'in' but occurs in 'out' position in type T
+            fun memberFuncWithGenericClassInTp(container: InContainer<T>): InContainer<T> = container              // ???
+            fun memberFuncWithGenericClassInTpInProj1(container: InContainer<T>): InContainer<in T> = container    // ???
+            fun memberFuncWithGenericClassInTpInProj2(container: InContainer<in T>): InContainer<in T> = container // ???
+            fun memberFuncWithGenericClassOutTpCast(container: OutContainer<T>): OutContainer<*> = container       // ???
+
+            inner class InnerExGenericClassInTpOuterTpAsImmArg : GenericClassInTp<T>()
+        }
+
+        /**
+         * 4. Generic class without type parameter
+         */
+        open class GenericClass {
+            open fun <T> call(container: Container<T>) {}
+            open fun <T> fetch(any: Any): Container<T> = Container<T>(any)
+        }
+
+        class ExGenericClass : GenericClass()
+
+        class ExGenericClassWithTp<T> : GenericClass() {
+            override fun <T> call(container: Container<T>) {}
+            override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
+        }
+        class ExGenericClassWithOutTp<out T> : GenericClass()
+        class ExGenericClassWithInTp<in T> : GenericClass()
     }
 }
 
