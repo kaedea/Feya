@@ -13,14 +13,18 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Tweaking of Kotlin generic features:
+ * # The Kotlin's Generic
+ *
+ * ## Tweaking of Kotlin generic features:
+ *
  * - is-check & casting
  * - reified
  * - restrict of type parameter
  * - invariance & variance
  * - type projecting
  *
- * Runtime apis about Kotlin's generic:
+ * ## Runtime apis about Kotlin's generic:
+ *
  * - [kotlin.reflect.KVariance]
  * - [kotlin.reflect.KTypeParameter]
  * - [kotlin.reflect.KTypeProjection]
@@ -29,8 +33,9 @@ import kotlin.test.assertTrue
  * @since  2018/8/14
  */
 
+
 @RunWith(JUnit4::class)
-class KtGenericTest {
+class KtGenericBasicTest {
 
     @Test
     fun nullability() {
@@ -227,7 +232,6 @@ class KtGenericTest {
 
         fun <T> get(t: T) = t
         val get = get<User>(User("a"))
-
     }
 
     @Test
@@ -669,10 +673,10 @@ class KtGenericClassTest {
     }
 
     /**
-     * Type projections
      * Type parameters
      * Type arguments
      * Variance annotations
+     * Type projections
      */
     fun projections2() {
         open class User(val name: String)
@@ -904,6 +908,91 @@ class KtGenericClassTest {
 }
 
 /**
+ * Function With Type Parameters
+ * Function has no inheritance(?), thus function combined with type parameter has no subtyping complex.
+ *
+ * - Function with type parameter as parameters
+ * - Function with type parameter as return
+ * - Function with type parameter, combined with generic class
+ * - Function without type parameter, combined with generic class
+ */
+@RunWith(JUnit4::class)
+class KtGenericFuncParamTest {
+
+    open class User(val name: String)
+    class Guest : User("guest")
+
+    @Test
+    fun funcParam() {
+        fun <T> call(t: T) {
+            println("I'm ${t.toString()}")
+        }
+
+        call<User>(User("Kaede"))
+        call<User>(Guest())
+        call<Guest>(Guest())
+        call<Int>(Integer.valueOf(2233))
+        call<Any?>(null)
+        // error
+        // call<Guest>(User("Kaede"))
+        // call<Int>(null)
+
+        fun <T : User> callWithUpperBound(t: T) {
+            println("I'm ${t.toString()}, upper bound = User")
+        }
+
+        callWithUpperBound<User>(User("Kaede"))
+        callWithUpperBound<Guest>(Guest())
+        callWithUpperBound<User>(Guest())
+        // error
+        // callWithUpperBound<Int>(Integer.valueOf(2233))
+    }
+
+    @Test
+    fun funcReturn() {
+        fun <T> fetch(any: Any): T = with(any) {
+            println("Cast from ${any.javaClass.simpleName}")
+            return any as T
+        }
+
+        val user1: User = fetch<User>(User("Kaede"))
+        val user2: User = fetch<Guest>(Guest())
+        val guest1: Guest = fetch<Guest>(Guest())
+        val any: Any? = fetch<Int>(Integer.valueOf(2233))
+        // error
+        // val guest2: Guest = get<User>(Guest())
+        // val int: Int = get<Any?>(Integer.valueOf(2233))
+
+
+        fun <T : User> getWithUpperBound(any: Any): T = any as T
+
+        val userBound1: User = getWithUpperBound<User>(User("Kaede"))
+        val userBound2: User = getWithUpperBound<Guest>(Guest())
+        val guestBound1: Guest = getWithUpperBound<Guest>(Guest())
+        // error
+        // val intBound: Int = getWithUpperBound<Int>(Integer.valueOf(2233))
+    }
+
+    /**
+     * For function without type parameter, check the following.
+     *
+     * @see [KtGenericBasicTest.invariant]
+     * @see [KtGenericBasicTest.covariant]
+     */
+    @Test
+    fun funcWithGenericClass() {
+        fun <T : User> allUsers(users: Array<T>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
+
+        val users: Array<User> = arrayOf(User("a"), User("b"))
+        assertEquals("[a,b]", allUsers<User>(users))
+
+        val guests: Array<Guest> = arrayOf(Guest(), Guest())
+        assertEquals("[guest,guest]", allUsers<Guest>(guests)) // ok
+        // assertEquals("[guest,guest]", allUsers<User>(guests))        // compile error, type mismatch
+    }
+}
+
+/**
  * # Principles of Generic Class/Function Declaration
  *
  * ## Keywords
@@ -974,16 +1063,17 @@ class KtGenericClassTest {
  *     CovariantClass<'out'>
  *     ContravariantClass<'in'>
  *
+ *     // Class members
  *     ClassName<T...> {
- *         memberProperty: 'invariant'
- *         memberProperty: InvariantClass<'invariant'>
- *         memberProperty: CovariantClass<'invariant'>
- *         memberProperty: ContravariantClass<'invariant'>
- *
- *         fun functionName('in'): 'out'
- *         fun functionName(InvariantClass<'invariant'>): [As Class]
- *         fun functionName(CovariantClass<'in'>): [As Class]
- *         fun functionName(ContravariantClass<'out'>): [As Class]
+ *         memberProperty: 'invariant'                              reverse?
+ *         memberProperty: InvariantClass<'invariant'>                  |
+ *         memberProperty: CovariantClass<'invariant'> // <-------------|
+ *         memberProperty: ContravariantClass<'invariant'> // <---------|
+ *                                                                      |
+ *         fun functionName('in'): 'out'                                |
+ *         fun functionName(InvariantClass<'invariant'>): [As Class]    |
+ *         fun functionName(CovariantClass<'in'>): [As Class] // <------|
+ *         fun functionName(ContravariantClass<'out'>): [As Class] // <-|
  *     }
  * ```
  */
@@ -1260,92 +1350,5 @@ class KtGenericDeclarationTest {
         }
         class ExGenericClassWithOutTp<out T> : GenericClass()
         class ExGenericClassWithInTp<in T> : GenericClass()
-    }
-}
-
-@RunWith(JUnit4::class)
-class KtGenericFuncParamTest {
-
-    @Test
-    @Ignore("TP as func param is not invariant")
-    fun invariant() {
-    }
-
-    @Test
-    fun covariant() {
-        open class User(val name: String)
-        class Guest : User("guest")
-
-
-        fun <T> call(t: T) {
-            println("I'm ${t.toString()}")
-        }
-
-        call<User>(User("Kaede"))
-        call<User>(Guest())
-        call<Guest>(Guest())
-        call<Int>(Integer.valueOf(2233))
-        call<Any?>(null)
-        // error
-        // call<Guest>(User("Kaede"))
-        // call<Int>(null)
-
-        fun <T : User> callWithUpperBound(t: T) {
-            println("I'm ${t.toString()}, upper bound = User")
-        }
-
-        callWithUpperBound<User>(User("Kaede"))
-        callWithUpperBound<Guest>(Guest())
-        callWithUpperBound<User>(Guest())
-        // error
-        // callWithUpperBound<Int>(Integer.valueOf(2233))
-    }
-
-    @Test
-    @Ignore("TP as func param is not contravariant")
-    fun contravariant() {
-    }
-}
-
-@RunWith(JUnit4::class)
-class KtGenericFuncReturnTest {
-
-    @Test
-    @Ignore("TP as func return is not invariant")
-    fun invariant() {
-    }
-
-    @Test
-    fun covariant() {
-        open class User(val name: String)
-        class Guest : User("guest")
-
-
-        fun <T> fetch(any: Any): T = with(any) {
-            println("Cast from ${any.javaClass.simpleName}")
-            return any as T
-        }
-
-        val user1: User = fetch<User>(User("Kaede"))
-        val user2: User = fetch<Guest>(Guest())
-        val guest1: Guest = fetch<Guest>(Guest())
-        val any: Any? = fetch<Int>(Integer.valueOf(2233))
-        // error
-        // val guest2: Guest = get<User>(Guest())
-        // val int: Int = get<Any?>(Integer.valueOf(2233))
-
-
-        fun <T : User> getWithUpperBound(any: Any): T = any as T
-
-        val userBound1: User = getWithUpperBound<User>(User("Kaede"))
-        val userBound2: User = getWithUpperBound<Guest>(Guest())
-        val guestBound1: Guest = getWithUpperBound<Guest>(Guest())
-        // error
-        // val intBound: Int = getWithUpperBound<Int>(Integer.valueOf(2233))
-    }
-
-    @Test
-    @Ignore("TP as func return is not contravariant")
-    fun contravariant() {
     }
 }
