@@ -8,21 +8,21 @@ import java.time.LocalDate
 import java.time.Period
 
 /**
+ * Kotlin type-safe dsl tweaking:
+ *
+ * Kotlin's DSL-like apis are supported by the following features:
+ * 1. __Extension function type__ as function parameter
+ * 2. __Extension function__ of basic type
+ * 3. __Extension property__
+ * 4. __Member extension__: extension function/property within class
+ *
+ * 5. Invoke operator
+ * 6. Infix function
+ * 7. Empty class/object as trick parameter
+ *
  * @author Kaede
  * @since  2018/8/10
  */
-
-/*
-Kotlin's DSL-like apis are supported by the following features:
-1. __Extension function type__ as function parameter
-2. __Extension function__ of basic type
-3. __Extension property__
-4. __Member extension__: extension function/property within class
-
-5. Invoke operator
-6. Infix function
-7. Empty class/object as trick parameter
-*/
 
 @RunWith(JUnit4::class)
 class KtDslFuncTest {

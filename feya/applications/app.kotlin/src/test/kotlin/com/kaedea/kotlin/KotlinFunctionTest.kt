@@ -8,6 +8,15 @@ import org.junit.runners.JUnit4
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
+/**
+ * The __full function type__ feature of Kotlin lies on:
+ * 1. Primary function
+ * 2. Extension function
+ * 3. Extension function type
+ *
+ * @author Kaede
+ * @since  2018/8/8
+ */
 @RunWith(JUnit4::class)
 class KtExtFuncTest {
 
