@@ -27,6 +27,7 @@ import kotlin.test.*
  * - restrict of type parameter
  * - invariance & variance
  * - type projecting
+ * - overrides of generic
  *
  * ## Tests Structure
  *
