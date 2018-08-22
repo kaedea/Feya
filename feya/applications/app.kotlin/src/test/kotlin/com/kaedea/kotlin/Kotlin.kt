@@ -10,27 +10,44 @@ package com.kaedea.kotlin
 /**
  * # WIP
  *
- * ## KotlinFunctionTest.kt
+ * ## Function
+ * KotlinFunctionTest.kt
+ *
  * - Primary function
  * - Extension function
  * - Extension function type
  *
- * ## KotlinDSLTest.kt
+ *
+ * ## DSL
+ * KotlinDSLTest.kt
+ *
  * - Type-safe builder
  * - Read-friendly snippets
  *
- * ## KotlinStdUtilTest.kt
+ *
+ * ## Scoping Functions
+ * KotlinStdUtilTest.kt
+ *
  * - [kotlin.Standard.kt]
  *
- * ## KotlinReflectTest.kt
+ *
+ * ## Reflection
+ * KotlinReflectTest.kt
+ *
  * - [kotlin.reflect]
  * - [kotlin.reflect.full]
  * - [kotlin.reflect.jvm]
  *
- * ## KotlinAnnotationTest.kt
+ *
+ * ## Annotations
+ * KotlinAnnotationTest.kt
+ *
  * - [kotlin.annotation]
  *
- * ## KotlinGenericTest.kt
+ *
+ * ## Generic
+ * KotlinGenericTest.kt
+ *
  * - Generic usage
  * - Principles & compatibility
  * - Subtyping complex
