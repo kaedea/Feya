@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "UNUSED_VARIABLE", "UNUSED_PARAMETER", "MemberVisibilityCanBePrivate")
 
 package com.kaedea.kotlin
 
@@ -27,6 +27,15 @@ import kotlin.test.*
  * - restrict of type parameter
  * - invariance & variance
  * - type projecting
+ *
+ * ## Tests Structure
+ *
+ * - [Basic Usage][KtGenericBasicTest]
+ * - [Generic Class Tweak][KtGenericClassTest]
+ * - [Generic Function Tweak][KtGenericFuncTest]
+ * - [Subtyping Tweak][KtGenericSubtypingTest]
+ * - [Principles of Generic Tweak][KtGenericPrincipleTest]
+ * - [Overrides of Generic Tweak][KtGenericOverrideTest]
  *
  * ## Runtime apis about Kotlin's generic:
  *
@@ -65,11 +74,13 @@ class KtGenericBasicTest {
     }
 
     /**
+     * # 'is-check' of Generic
+     *
      * ## Raw check : is-check of type parameter
      * All raw check are meaningless because cast of ClassName<T> is regarded as ClassName<*>. Thus
      * `ClassName<*> is ClassName<String>` or `ClassName<*> is ClassName<Int>` is always true.
      *
-     * ## Generic class check : is-check of generic class itself
+     * ## Class check : is-check of generic class itself
      * The is-check of ClassName class works the same with normal class.
      */
     @Test
@@ -95,11 +106,13 @@ class KtGenericBasicTest {
     }
 
     /**
-     * Raw cast : casting of type parameter
+     * # 'casting' of Generic
+     *
+     * ## Raw cast : casting of type parameter
      * All raw cast are meaningless because cast of ClassName<T> is regarded as ClassName<*>. Every
      * raw cast should be wrapped with protecting codes.
      *
-     * Generic class cast : casting of generic class itself
+     * ## Class cast : casting of generic class itself
      * The casting of ClassName class works the same with normal class.
      */
     @Test
@@ -163,34 +176,35 @@ class KtGenericBasicTest {
         // Array<T>
         // Array<Guest> is not subtype of Array<User>
         // Array<Any>   is not subtype of Array<User>
-        fun allUsers(users: Array<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
+        fun fetchUsers(users: Array<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
 
         val users: Array<User> = arrayOf(User("a"), User("b"))
-        assertEquals("[a,b]", allUsers(users))
+        assertEquals("[a,b]", fetchUsers(users))
 
         val guests: Array<Guest> = arrayOf(Guest(), Guest())
-        // assertEquals("[guest,guest]", allUsers(guests)) // compile error, type mismatch
+        // compile error, type mismatch
+        // assertEquals("[guest,guest]", fetchUsers(guests))
 
         val castToAnys = guests as Array<Any>
-        // assertEquals("[guest,guest]", allUsers(castToAnys)) // compile error, type mismatch
+        // compile error, type mismatch
+        // assertEquals("[guest,guest]", fetchUsers(castToAnys))
 
         val castToUsers = guests as Array<User>
-        assertEquals("[guest,guest]", allUsers(castToUsers))
+        assertEquals("[guest,guest]", fetchUsers(castToUsers))
     }
 
     /**
      * `User<T>` & `Guest<T> : User<T>`
      * Subtyping:
      * 1. Subtyping of T within User
-     * 2. Subtyping of T within Guest (Subtyping of inheritant)
+     * 2. Subtyping of T within Guest (Subtyping of inheritances)
      * 3. Subtyping of projection (how does User effect Guest is projection)
      *
-     * Usecases:
+     * Use Cases:
      * 1. As parameter
      * 2. As return type
      * 3. As variable
      */
-
     @Test
     fun covariant() {
         open class User(val name: String)
@@ -199,49 +213,45 @@ class KtGenericBasicTest {
         // Out/Extend/Covariant Projection
         // List<out E>
         // List<Guest> is subtype of List<User>
-        fun dumpUsers(users: List<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
+        fun fetchUsers(users: List<User>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
 
-        // Subtyping of TYPE PARAMETER
+        /** Subtyping of TYPE PARAMETER **/
         // 1. current type
         val users: List<User> = listOf(User("a"), User("b"))
-        assertEquals("[a,b]", dumpUsers(users))
+        assertEquals("[a,b]", fetchUsers(users))
 
         // 2. subtype
         val guests: List<Guest> = listOf(Guest(), Guest())
-        assertEquals("[guest,guest]", dumpUsers(guests))
+        assertEquals("[guest,guest]", fetchUsers(guests))
 
         // 3. supertype
         val anys = users as List<Any>
         // compile error, type mismatch
-        // assertEquals("[a,b]", allUsers(anys))
+        // assertEquals("[a,b]", fetchUsers(anys))
 
         // 4. star projection
         val stars = users as List<*>
         // compile error, type mismatch
-        // assertEquals("[a,b]", allUsers(stars))
+        // assertEquals("[a,b]", fetchUsers(stars))
 
-        // Subtyping of TYPE PARAMETER, combined with SubType of GENERIC CLASS
+        /** Subtyping of TYPE PARAMETER, combined with SubType of GENERIC CLASS **/
         // 1. current type
         val arrayListUser: ArrayList<User> = arrayListOf(User("a"), User("b"))
-        assertEquals("[a,b]", dumpUsers(arrayListUser))
+        assertEquals("[a,b]", fetchUsers(arrayListUser))
 
         // 2. subtype
         val arrayListGuest: ArrayList<Guest> = arrayListOf(Guest(), Guest())
-        assertEquals("[guest,guest]", dumpUsers(arrayListGuest))
+        assertEquals("[guest,guest]", fetchUsers(arrayListGuest))
 
         // 3. supertype
         val arrayListAny = arrayListUser as ArrayList<Any>
         // compile error, type mismatch
-        // assertEquals("[a,b]", allUsers(arrayListAny))
+        // assertEquals("[a,b]", fetchUsers(arrayListAny))
 
         // 4. star projection
         val arrayListStar = arrayListUser as ArrayList<*>
         // compile error, type mismatch
-        // assertEquals("[guest,guest]", allUsers(arrayListStar))
-
-
-        fun <T> get(t: T) = t
-        val get = get<User>(User("a"))
+        // assertEquals("[guest,guest]", fetchUsers(arrayListStar))
     }
 
     @Test
@@ -251,21 +261,16 @@ class KtGenericBasicTest {
 
         // Comparator<in T>
         // Comparator<User> is subtype of Comparator<Guest>
-        val userCompa = Comparator<User> { a, b ->
-            a.age - b.age
-        }
-        assertTrue(userCompa.compare(User(17), User(27)) < 0)
+        val userCompa = Comparator<User> { a, b -> a.age - b.age }
+        val guestCompa = Comparator<Guest> { a, b -> a.age - b.age }
+        val anyCompa = Comparator<Any> { a, b -> 0 }
 
-        val guestCompa = Comparator<Guest> { a, b ->
-            a.age - b.age
-        }
+        assertTrue(userCompa.compare(User(17), User(27)) < 0)
         assertTrue(guestCompa.compare(Guest(), Guest()) == 0)
         assertTrue(userCompa.compare(Guest(), Guest()) == 0)
-        // assertTrue(guestCompa.compare(User(17), User(27)) < 0) // compile error, type mismatch
+        // compile error, type mismatch
+        // assertTrue(guestCompa.compare(User(17), User(27)) < 0)
 
-        val anyCompa = Comparator<Any> { a, b ->
-            0
-        }
         assertTrue(anyCompa.compare(Guest(), Guest()) == 0)
         assertTrue(anyCompa.compare(User(17), User(27)) == 0)
         assertTrue(anyCompa.compare(User(17), Guest()) == 0)
@@ -286,22 +291,27 @@ class KtGenericBasicTest {
         // source is out
         copy(listOf<User>(), arrayListOf<User>())
         copy(listOf<Guest>(), arrayListOf<User>())
-        // copy(listOf<Any>(), arrayListOf<User>()) // compile error
+        // compile error
+        // copy(listOf<Any>(), arrayListOf<User>())
 
         // dest is in
         copy(listOf<User>(), arrayListOf<Any>())
-        // copy(listOf<User>(), arrayListOf<Guest>()) // compile error
+        // compile error
+        // copy(listOf<User>(), arrayListOf<Guest>())
 
-        // return is in project, star project, or variance with star project
-        val copy1: ArrayList<in User> = copy(listOf<User>(), arrayListOf<User>())
-        val copy2: ArrayList<in User> = copy(listOf<User>(), arrayListOf<Any>())
-
-        val copy3: ArrayList<*> = copy(listOf<User>(), arrayListOf<User>())
+        // return with in/out/star projection
+        // compile error, ArrayList<in User> to ArrayList<User>
+        // val copy1: ArrayList<User> = copy(listOf<User>(), arrayListOf<Any>())
+        // compile error,  ArrayList<in User> to ArrayList<out User>
+        // val copy2: ArrayList<out User> = copy(listOf<User>(), arrayListOf<User>())
+        val copy3: ArrayList<in User> = copy(listOf<User>(), arrayListOf<User>())
         val copy4: ArrayList<*> = copy(listOf<User>(), arrayListOf<Any>())
 
-        // val copy: List<in User> = copy(listOf<User>(), arrayListOf<User>()) // in project with variance is conflicting
-        val copy5: List<*> = copy(listOf<User>(), arrayListOf<User>())
-        val copy6: List<*> = copy(listOf<User>(), arrayListOf<Any>())
+        // in Kotlin, List is out while ArrayList is invariant
+        // out/in projection with List<T> is conflicting
+        // val copy5: List<out User> = copy(listOf<User>(), arrayListOf<User>())
+        // val copy6: List<in User> = copy(listOf<User>(), arrayListOf<User>())
+        val copy7: List<*> = copy(listOf<User>(), arrayListOf<User>())
     }
 
     inline fun <reified T : Any> isGivenTypeReified(instance: Any): Boolean {
@@ -318,6 +328,18 @@ class KtGenericBasicTest {
 /**
  * # Class With Type Parameter
  *
+ * Variance is subtyping complex of class with type parameter (dual types),
+ * containing:
+ *
+ * - invariant     : Array<Child> & Array<Father> is not subtype of each other
+ * - covariant     : List<Child> is subtype of List<Father>
+ * - contravariant : Comparator<Father> is subtype Comparator<Child>
+ * - non-variant   : this<Father> & this<Child>
+ *
+ * Note that subtyping complex only exists with type parameter and the subtyping of generic class itself is
+ * just the same as normal class. ArrayList<*> is subtype of List, while ArrayList<Father> is nothing
+ * with List<Child> (subtype conflicting ?).
+ *
  * ## Variance Annotations
  * Declaring generic class as invariant/variant, also called "Declaration-site Variance".
  * @see [invariant], [covariant], [contravariant]
@@ -325,6 +347,7 @@ class KtGenericBasicTest {
  * ## Type Projections
  * Make an invariant type argument be variant is use, also called "Use-site Variance".
  * @see [projections], [starProjection]
+ *
  */
 @RunWith(JUnit4::class)
 class KtGenericClassTest {
@@ -341,7 +364,7 @@ class KtGenericClassTest {
             }
         }
 
-        /* 1. Constructor : invariant */
+        /** 1. Constructor : invariant **/
         val userContainer1: Container<User> = Container<User>(User("Kaede"))
         val guestContainer1: Container<Guest> = Container<Guest>(Guest())
         val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
@@ -351,7 +374,7 @@ class KtGenericClassTest {
         // val anyContainer: Container<Any?> = Container<Int>(Integer.valueOf(2233))
 
 
-        /* 2.1 Member param : covariant */
+        /** 2.1 Member param : non **/
         Container<User>().set(User("Kaedea"))
         Container<User>().set(Guest())
         Container<Guest>().set(Guest())
@@ -359,7 +382,7 @@ class KtGenericClassTest {
         // error
         // Container<Guest>().set(User("Kaede"))
 
-        /* 2.2 Member return : covariant  */
+        /** 2.2 Member return : non  **/
         val user1: User = Container<User>(User("Kaede")).get()
         val user2: User = Container<Guest>(Guest()).get()
         val guest1: Guest = Container<Guest>(Guest()).get()
@@ -372,7 +395,7 @@ class KtGenericClassTest {
             println("I'm ${container.get()} from ${container}")
         }
 
-        /* 3.1 Func param : invariant */
+        /** 3.1 Func param : invariant **/
         call<User>(Container<User>(User("Kaede")))
         call<Guest>(Container<Guest>(Guest()))
         // error
@@ -386,7 +409,7 @@ class KtGenericClassTest {
             return Container<T>(any)
         }
 
-        /* 3.2 Func return : invariant */
+        /** 3.2 Func return : invariant **/
         val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
         val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
         val anyFetch: Any = fetch<User>(User("Kaede"))
@@ -398,7 +421,7 @@ class KtGenericClassTest {
 
         class ExContainer<T>(value: Any?) : Container<T>(value)
 
-        /* 4.1 Ext constructor : invariant */
+        /** 4.1 Ext constructor : invariant **/
         val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
         val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
         val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
@@ -407,14 +430,14 @@ class KtGenericClassTest {
         // val userExContainer2: ExContainer<User> = ExContainer<Guest>(Guest())
         // val userContainerCast2: Container<User> = ExContainer<Guest>(Guest())
 
-        /* 4.2 Ext func param : invariant */
+        /** 4.2 Ext func param : invariant **/
         call<User>(ExContainer<User>(User("Kaede")))
         call<Guest>(ExContainer<Guest>(Guest()))
         // error
         // call<Guest>(ExContainer<User>(User("Kaede")))
         // call<User>(ExContainer<Guest>(Guest()))
 
-        /* 4.2 Ext func param : invariant */
+        /** 4.2 Ext func param : type mismatch **/
         // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
         // val guestExContainerFetch1: ExContainer<Guest> = fetch<Guest>(Guest())
     }
@@ -430,7 +453,7 @@ class KtGenericClassTest {
             // fun set(t: T) { value = t }
         }
 
-        /* 1. Constructor : covariant */
+        /** 1. Constructor : covariant **/
         val userContainer1: Container<User> = Container<User>(User("Kaede"))
         val guestContainer1: Container<Guest> = Container<Guest>(Guest())
         val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
@@ -439,8 +462,8 @@ class KtGenericClassTest {
         // error
         // val guestContainer2: Container<Guest> = Container<User>(User("Kaede"))
 
-        /* 2.1 Member param : not support */
-        /* 2.2 Member return : covariant  */
+        /** 2.1 Member param : not support **/
+        /** 2.2 Member return : non  **/
         val user1: User = Container<User>(User("Kaede")).get()
         val user2: User = Container<Guest>(Guest()).get()
         val guest1: Guest = Container<Guest>(Guest()).get()
@@ -453,7 +476,7 @@ class KtGenericClassTest {
             println("I'm ${container.get()} from ${container}")
         }
 
-        /* 3.1 Func param : covariant */
+        /** 3.1 Func param : covariant **/
         call<User>(Container<User>(User("Kaede")))
         call<Guest>(Container<Guest>(Guest()))
         call<User>(Container<Guest>(Guest()))
@@ -467,7 +490,7 @@ class KtGenericClassTest {
             return Container<T>(any)
         }
 
-        /* 3.2 Func return : covariant */
+        /** 3.2 Func return : covariant **/
         val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
         val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
         val userContainerFetch2: Container<User> = fetch<Guest>(Guest())
@@ -479,7 +502,7 @@ class KtGenericClassTest {
 
         class ExContainer<out T>(value: Any?) : Container<T>(value)
 
-        /* 4.1 Ext constructor : covariant */
+        /** 4.1 Ext constructor : covariant **/
         val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
         val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
         val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
@@ -496,14 +519,14 @@ class KtGenericClassTest {
         // val guestExContainerCast3: ExContainer<Guest> = Container<User>(User("Kaede"))
         // val guestExContainerCast4: ExContainer<Guest> = Container<Guest>(Guest)
 
-        /* 4.2 Ext func param : covariant */
+        /** 4.2 Ext func param : covariant **/
         call<User>(ExContainer<User>(User("Kaede")))
         call<Guest>(ExContainer<Guest>(Guest()))
         call<User>(ExContainer<Guest>(Guest()))
         // error
         // call<Guest>(ExContainer<User>(User("Kaede")))
 
-        /* 4.2 Ext func return : n/a */
+        /** 4.2 Ext func return : type mismatch **/
         // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
         // val userExContainerFetch2: ExContainer<User> = fetch<Guest>(Guest())
         // val guestExContainerFetch1: ExContainer<Guest> = fetch<Guest>(Guest())
@@ -523,7 +546,7 @@ class KtGenericClassTest {
             }
         }
 
-        /* 1. Constructor : contravariant */
+        /** 1. Constructor : contravariant **/
         val userContainer1: Container<User> = Container<User>(User("Kaede"))
         val guestContainer1: Container<Guest> = Container<Guest>(Guest())
         val intContainer: Container<Int> = Container<Int>(Integer.valueOf(2233))
@@ -533,8 +556,8 @@ class KtGenericClassTest {
         // val userContainer2: Container<User> = Container<Guest>(User("Kaede"))
         // val anyContainer: Container<Any?> = Container<Int>(Integer.valueOf(2233))
 
-        /* 2.1 Member param : covariant */
-        /* 2.2 Member return : not support */
+        /** 2.1 Member param : non **/
+        /** 2.2 Member return : not support **/
         Container<User>().set(User("Kaedea"))
         Container<User>().set(Guest())
         Container<Guest>().set(Guest())
@@ -547,7 +570,7 @@ class KtGenericClassTest {
             println("I'm ${container}")
         }
 
-        /* 3.1 Func param : contravariant */
+        /** 3.1 Func param : contravariant **/
         call<User>(Container<User>(User("Kaede")))
         call<Guest>(Container<Guest>(Guest()))
         call<Guest>(Container<User>(User("Kaede")))
@@ -562,7 +585,7 @@ class KtGenericClassTest {
             return Container<T>(any)
         }
 
-        /* 3.2 Func return : contravariant */
+        /** 3.2 Func return : contravariant **/
         val userContainerFetch1: Container<User> = fetch<User>(User("Kaede"))
         val guestContainerFetch1: Container<Guest> = fetch<Guest>(Guest())
         val guestContainerFetch2: Container<Guest> = fetch<User>(User("Kaede"))
@@ -574,7 +597,7 @@ class KtGenericClassTest {
 
         class ExContainer<in T>(value: Any? = null) : Container<T>(value)
 
-        /* 4.1 Ext constructor : contravariant */
+        /** 4.1 Ext constructor : contravariant **/
         val userExContainer1: ExContainer<User> = ExContainer<User>(User("Kaede"))
         val userContainerCast1: Container<User> = ExContainer<User>(User("Kaede"))
         val guestExContainer1: ExContainer<Guest> = ExContainer<Guest>(Guest())
@@ -591,7 +614,7 @@ class KtGenericClassTest {
         // val guestExContainerCast3: ExContainer<Guest> = Container<User>(User("Kaede"))
         // val guestExContainerCast4: ExContainer<Guest> = Container<Guest>(Guest)
 
-        /* 4.2 Ext func param : contravariant */
+        /** 4.2 Ext func param : contravariant **/
         call<User>(ExContainer<User>(User("Kaede")))
         call<Guest>(ExContainer<Guest>(Guest()))
         call<Guest>(ExContainer<User>(User("Kaede")))
@@ -599,7 +622,7 @@ class KtGenericClassTest {
         // error
         // call<User>(ExContainer<Guest>(Guest()))
 
-        /* 4.2 Ext func return : n/a */
+        /** 4.2 Ext func return : type mismatch **/
         // casting error
         // val userExContainerFetch1: ExContainer<User> = fetch<User>(User("Kaede"))
         // val userExContainerFetch2: ExContainer<User> = fetch<Guest>(Guest())
@@ -650,6 +673,7 @@ class KtGenericClassTest {
         // error
         // callOutProject<Guest>(Container<User>(User("Kaede")))
 
+        // TODO
         // out projection with upper bound of Container<T>
         fun callOutProjectBound(container: Container<out User>) {
             println("I'm ${container.get()} from ${container}")
@@ -677,6 +701,7 @@ class KtGenericClassTest {
         // callInProject<User>(Container<Guest>(Guest()))
         // callInProject<Any>(Container<User>(User("Kaede")))
 
+        // TODO
         // in projection with upper bound of Container<T>
         fun callInProjectBound(container: Container<in User>) {
             println("I'm ${container}")
@@ -709,7 +734,7 @@ class KtGenericClassTest {
  * - Function without type parameter, combined with generic class
  */
 @RunWith(JUnit4::class)
-class KtGenericFuncParamTest {
+class KtGenericFuncTest {
 
     open class User(val name: String)
     class Guest : User("guest")
@@ -773,14 +798,14 @@ class KtGenericFuncParamTest {
      */
     @Test
     fun funcWithGenericClass() {
-        fun <T : User> allUsers(users: Array<T>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
+        fun <T : User> fetchUsers(users: Array<T>) = users.joinToString(",", prefix = "[", postfix = "]") { it.name }
 
         val users: Array<User> = arrayOf(User("a"), User("b"))
-        assertEquals("[a,b]", allUsers<User>(users))
+        assertEquals("[a,b]", fetchUsers<User>(users))
 
         val guests: Array<Guest> = arrayOf(Guest(), Guest())
-        assertEquals("[guest,guest]", allUsers<Guest>(guests)) // ok
-        // assertEquals("[guest,guest]", allUsers<User>(guests))        // compile error, type mismatch
+        assertEquals("[guest,guest]", fetchUsers<Guest>(guests)) // ok
+        // assertEquals("[guest,guest]", fetchUsers<User>(guests))        // compile error, type mismatch
     }
 }
 
@@ -793,15 +818,22 @@ class KtGenericSubtypingTest {
     }
 
     @Test
+    fun upperBound() {
+        todo {}
+    }
+
+    @Test
     fun projections() {
         todo {}
     }
 }
 
 /**
- * # Principles of Generic Class/Function Declaration
+ * # Principles & Compactibility of Generic Class/Function
  *
- * ## Keywords
+ * ## Principles of Use Cases
+ *
+ * ### Keywords
  *
  * Declaration-site:
  * 1. TPC  : type parameter declaration of class/interface
@@ -813,7 +845,7 @@ class KtGenericSubtypingTest {
  * 3. TAF  : type argument of function/property
  * 4. TAI  : type argument immediate
  *
- * ## Use Cases of Type Parameter/Argument
+ * ### Use Cases of Type Parameter/Argument
  *
  * ```
  * // For class
@@ -840,25 +872,29 @@ class KtGenericSubtypingTest {
  *     ClassName<TAC> = ...
  * ```
  *
- * ## Principles Table
+ * ### Principles Table
  *
- * > | Position | out/in         | <*>            | <T : Bound>    |
- *   |----------|----------------|----------------|----------------|
- *   |   TPC    | √ (Variance)   | -              | √ (UpperBound) |
- *   |   TPF    | × (Variance)   | -              | √ (UpperBound) |
- *   |----------|----------------|----------------|----------------|
- *   |   TAS    | × (Projection) | × (Projection) | -              |
- *   |   TAC    | √ (Projection) | √ (Projection) | -              |
- *   |   TAF    | × (Projection) | × (Projection) | -              |
- *   |   TAI    | × (Projection) | × (Projection) | -              |
+ * > | Use Cases | out/in         | <*>            | <T : Bound>    |
+ *   |-----------|----------------|----------------|----------------|
+ *   |    TPC    | √ (Variance)   | -              | √ (UpperBound) |
+ *   |    TPF    | × (Variance)   | -              | √ (UpperBound) |
+ *   |-----------|----------------|----------------|----------------|
+ *   |    TAS    | × (Projection) | × (Projection) | -              |
+ *   |    TAC    | √ (Projection) | √ (Projection) | -              |
+ *   |    TAF    | × (Projection) | × (Projection) | -              |
+ *   |    TAI    | × (Projection) | × (Projection) | -              |
  *
- * ## OUT/IN Positions keywords
+ * Note: You should first distinguish between Variance & Projection.
+ *
+ * ## Compactibility of 'out/in' Positions
+ *
+ * ### keywords
  *
  * 1. invariant : invariant position, only invariant is allowed
  * 2. out       : out position, covariant & invariant are allowed
  * 2. in        : in position, contravariant & invariant are allowed
  *
- * ## OUT/IN Positions of Type Argument
+ * ### 'out/in' Positions of Type Argument
  *
  * ```
  *     // Function
@@ -882,10 +918,22 @@ class KtGenericSubtypingTest {
  *         fun functionName(ContravariantClass<'out'>): [As Class] // <-|
  *     }
  * ```
+ *
+ * ### 'out/in' Compactibility Table
+ *
+ * > | Position  | invariant | covariant | contra | out      | in       | <*> |
+ *   |-----------|-----------|-----------|--------|----------|----------|-----|
+ *   |'invariant'| √         | ×         | ×      | √ (Proj) | √ (Proj) | √   |
+ *   |   'out'   | √         | √         | ×      | √ (Proj) | × (Proj) | √   |
+ *   |   'in'    | √         | ×         | √      | × (Proj) | √ (Proj) | √   |
+ *
+ * 1. invariant: allow type argument invariant,     projections in/out/star
+ * 2. out      : allow type argument out/invariant, projections out/star
+ * 3. in       : allow type argument in/invariant,  projections in/star
+ * 4. projections are not allowed for any postion of type argument single
  */
-@Suppress("unused")
 @RunWith(JUnit4::class)
-class KtGenericDeclarationTest {
+class KtGenericPrincipleTest {
     open class User(val name: String)
     class Guest : User("guest")
 
@@ -898,7 +946,6 @@ class KtGenericDeclarationTest {
     open class OutContainer<out T>(var value: Any? = null)
     open class InContainer<in T>(var value: Any? = null)
 
-    @Suppress("UNUSED_VARIABLE")
     @Test
     @Ignore
     fun genericFunc() {
@@ -1156,24 +1203,36 @@ class KtGenericDeclarationTest {
 }
 
 /**
- * Type projections not work in inheritances
- *
- * ERROR 1: accidental override
- * 1. For compiler, Foo#call has different function signature with ExFoo#call, thus 'override' can not be added
- * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
- *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
- *
- * ERROR 2: conflicting overloads
- * JVM allows method overloads with different return type of signature, but it is forbidden by language design & compiler.
- *
- * ERROR 4: Type projections can only apply/occur in 'out/in' positions
- * ERROR 0: Syntax error
- *
- * ERROR 3: Declaration-site variance error
- * 1. Declaration-site variance annotations are only allowed for type parameters of classes and interfaces
+ * Subtyping & projections in inheritances of generic class
  */
 @RunWith(JUnit4::class)
 class KtGenericOverrideTest {
+    sealed class ERROR {
+        class Syntax : ERROR()
+        class TypeMismatch : ERROR()
+
+        /**
+         * 'out/in' use cases error
+         * 1. Declaration-site variance annotations are only allowed for type parameters of classes and interfaces
+         * 2. Projections are not allowed for type parameters, or immediate arguments of a supertype
+         */
+        class Principles : ERROR()
+
+        /**
+         * accidental override
+         * 1. For compiler, Foo#call has different function signature with ExFoo#call, thus 'override' can not be added
+         * 2. If 'override' is omitted, Foo#call & ExFoo#call are regarded as different functions.
+         *    But compiler can infer that Foo#call & ExFoo#call has same jvm signature, thus something called 'accidental override' occurs
+         */
+        class AccidentalOverride : ERROR()
+
+        /**
+        * conflicting overloads
+        * JVM allows method overloads with different return type of signature, but it is forbidden by language design & compiler.
+        */
+        class ConflictingOverloads : ERROR()
+    }
+
     open class User(val name: String)
     class Guest : User("guest")
 
@@ -1202,7 +1261,7 @@ class KtGenericOverrideTest {
 
         class ExGenericFuncClass : GenericFuncClass() {
             /**********
-             ** error 3, syntax
+             ** [ERROR.Syntax]
              */
             // override fun <T> call(t: out T) {}
             // override fun <T> call(t: in T) {}
@@ -1211,7 +1270,8 @@ class KtGenericOverrideTest {
             /*********/
 
             /**********
-             ** error 4, variance annotations are only allowed for type parameters of classes and interfaces
+             ** [ERROR.Principles]
+             ** variance annotations are only allowed for type parameters of classes and interfaces
              */
             // override fun <out T> call(t: T) {}
             // override fun <in T> call(t: T) {}
@@ -1235,7 +1295,7 @@ class KtGenericOverrideTest {
             // override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
 
             /**********
-             ** ERROR 1, accidental override
+             ** [ERROR.AccidentalOverride]
              ** Compiler takes the generic classes as overloads of different types
              **
              **     'fun (Container<out/in T>)' with
@@ -1254,7 +1314,7 @@ class KtGenericOverrideTest {
             /*********/
 
             /**********
-             ** ERROR 2, return type mismatch
+             ** [ERROR.TypeMismatch]
              **
              **     Return type is 'Container<out/in T#1 (type parameter of ExGenericClass.fetch)>'
              **     which is not a subtype of
@@ -1271,7 +1331,7 @@ class KtGenericOverrideTest {
             /*********/
 
             /**********
-             ** ERROR 3, Conflicting overloads
+             ** [ERROR.ConflictingOverloads]
              **
              **     'fun fetch(any: Any): Container<*>' with
              **     'fun <T> fetch(any: Any): Container<T>'
@@ -1295,7 +1355,7 @@ class KtGenericOverrideTest {
             // override fun <R> fetch(any: Any): Container<R> = super.fetch(any)
 
             /**********
-             ** ERROR 1, accidental override
+             ** [ERROR.AccidentalOverride]
              */
             // fun call(container: Container<R>) {}
             // fun <T> call(container: Container<R>) {}
@@ -1308,7 +1368,7 @@ class KtGenericOverrideTest {
 
 
             /**********
-             ** ERROR 2, return type mismatch
+             ** [ERROR.TypeMismatch]
              **
              **     Return type is 'Container<R>', which is not a subtype of
              **     overridden 'fun <T> fetch(any: Any): Container<T#1 (type parameter of GenericClass.fetch)>'
@@ -1324,7 +1384,7 @@ class KtGenericOverrideTest {
             /*********/
 
             /**********
-             ** ERROR 3, Conflicting overloads
+             ** [ERROR.ConflictingOverloads]
              *
              *     'fun fetch(any: Any): Container<R> of' with
              *     'fun <T> fetch(any: Any): Container<T>'
@@ -1333,7 +1393,6 @@ class KtGenericOverrideTest {
             // override fun <T, R> fetch(any: Any): Container<T> = super.fetch(any)
             // override fun <T, R> fetch(any: Any): Container<R> = super.fetch(any)
             /*********/
-
         }
     }
 
@@ -1366,9 +1425,8 @@ class KtGenericOverrideTest {
             // override fun call(container: Container<R>) {}
             // override fun fetch(any: Any): Container<R> = super.fetch(any)
 
-
             /**********
-             ** ERROR 1, accidental override
+             ** [ERROR.AccidentalOverride]
              */
             // fun <T> call(container: Container<T>) {}
             // fun <R> call(container: Container<R>) {}
@@ -1383,17 +1441,15 @@ class KtGenericOverrideTest {
             /*********/
 
             /**********
-             ** ERROR 2, return type mismatch
+             ** [ERROR.TypeMismatch]
              */
             // override fun fetch(any: Any): Container<in R> = super.fetch(any)
             // override fun fetch(any: Any): Container<out R> = super.fetch(any)
             // override fun fetch(any: Any): Container<*> = super.fetch(any)
             /*********/
-            // ERROR 2, return type mismatch
-            //
 
             /**********
-             ** ERROR 3, conflicting overloads
+             ** [ERROR.ConflictingOverloads]
              */
             // fun <T> call(container: Container<R>) {}
             // override fun <T> fetch(any: Any): Container<T> = super.fetch(any) as Container<T>
