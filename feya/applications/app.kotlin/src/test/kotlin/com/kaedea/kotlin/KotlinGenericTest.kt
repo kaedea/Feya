@@ -148,6 +148,7 @@ class KtGenericBasicTest {
 
     @Test
     fun typeParameterLiteral() {
+        // What do I mean by writing 'type parameter literal' here?
         todo {}
     }
 
@@ -742,9 +743,11 @@ class KtGenericClassTest {
                 value = t
             }
         }
+
         open class ContainerOut<out T>(var value: Any? = null) {
             fun get(): T = value as T
         }
+
         open class ContainerIn<in T>(var value: Any? = null) {
             fun set(t: T) {
                 value = t
@@ -777,41 +780,51 @@ class KtGenericClassTest {
          * 2. Star of invariant
          * Foo<*> is equivalent to Foo<out TUpper> for reading values and to Foo<in Nothing> for writing values.
          */
+        val starOfInvariant: Container<*> = Container<User>(User("Kaede"))
+        val any1: Any? = starOfInvariant.get()
+
         open class Foo<T : User>(var value: Any? = null) {
             open fun get(): T = value as T
             open fun set(t: T) {
                 value = t
             }
         }
-        val starOfInvariant : Foo<*> = Foo<User>(User("Kaede"))
-        val get1: User = starOfInvariant.get()
+
+        val starOfInvariantBound: Foo<*> = Foo<User>(User("Kaede"))
+        val get1: User = starOfInvariantBound.get()
         // error
         // Out-projected type 'Foo<*>' prohibits the use of 'fun set(t: T): Unit'
-        // starOfInvariant.set(User("Akatsuki"))
+        // starOfInvariantBound.set(User("Akatsuki"))
 
         /**
          * 3. Star of covariant
+         * Foo<*> is equivalent to Foo<out Any?>
          * Foo<*> is equivalent to Foo<out TUpper>. It means that when the T is unknown you can safely read values of TUpper from Foo<*>.
          */
-        open class FooOut<out T: User>(var value: Any? = null) {
+        val starOfCovariant: ContainerOut<*> = ContainerOut<User>(User("Kaede"))
+        val any2: Any? = starOfCovariant.get()
+
+        open class FooOut<out T : User>(var value: Any? = null) {
             fun get(): T = value as T
         }
-        val starOfCovariant : FooOut<*> = FooOut<User>(User("Kaede"))
-        val get2: User = starOfCovariant.get()
+
+        val starOfCovariantBound: FooOut<*> = FooOut<User>(User("Kaede"))
+        val get2: User = starOfCovariantBound.get()
 
         /**
          * 4. Star of contravariant
          * Foo<*> is equivalent to Foo<in Nothing>. It means there is nothing you can write to Foo<*> in a safe way when T is unknown.
          */
-        open class FooIn<in T: User>(var value: Any? = null) {
+        open class FooIn<in T : User>(var value: Any? = null) {
             fun set(t: T) {
                 value = t
             }
         }
-        val starOfContravariant : FooIn<*> = FooIn<User>(User("Kaede"))
+
+        val starOfContravariantBound: FooIn<*> = FooIn<User>(User("Kaede"))
         // error
         // Out-projected type 'FooIn<*>' prohibits the use of 'fun set(t: T): Unit'
-        // starOfContravariant.set(User("Akatsuki"))
+        // starOfContravariantBound.set(User("Akatsuki"))
     }
 }
 
