@@ -148,6 +148,7 @@ class KtGenericBasicTest {
 
     @Test
     fun typeParameterLiteral() {
+        // What do I mean by writing 'type parameter literal' here?
         todo {}
     }
 
@@ -329,7 +330,7 @@ class KtGenericBasicTest {
 /**
  * # Class With Type Parameter
  *
- * Variance is subtyping complex of class with type parameter (dual types),
+ * Variance is subtyping complex of class with type parameter (dual typing),
  * containing:
  *
  * - invariant     : Array<Child> & Array<Father> is not subtype of each other
@@ -719,9 +720,111 @@ class KtGenericClassTest {
         // class InContainer<in T>(value: Any?) : Container<T>(value)
     }
 
+    /**
+     * 1. Star projection is super type of each generic type.
+     * 2. Star projection is a special out projection (most upper of out projection).
+     * 3. Star projection always work with reading, while writing with star projection is nonsense.
+     * 4. Star projection combined with upper bounding can have more exact type referring.
+     * 5. Star projection is very much like Java's raw type, but safe.
+     */
     @Test
     fun starProjection() {
-        todo {}
+        open class User(val name: String)
+        class Guest : User("guest")
+
+        /**
+         * 1. Subtyping
+         * Star projection is super type of each concrete instantiation of generic type. It offers a safe
+         * way to reference the generic type when you know nothing about the type argument.
+         */
+        open class Container<T>(var value: Any? = null) {
+            open fun get(): T = value as T
+            open fun set(t: T) {
+                value = t
+            }
+        }
+
+        open class ContainerOut<out T>(var value: Any? = null) {
+            fun get(): T = value as T
+        }
+
+        open class ContainerIn<in T>(var value: Any? = null) {
+            fun set(t: T) {
+                value = t
+            }
+        }
+        // Container<*> is now super type of Container<T>
+        val userContainer1: Container<*> = Container<User>(User("Kaede"))
+        val guestContainer1: Container<*> = Container<Guest>(Guest())
+        val intContainer: Container<*> = Container<Int>(Integer.valueOf(2233))
+        val userContainer2: Container<*> = Container<Guest>(User("Kaede"))
+        val guestContainer2: Container<*> = Container<User>(User("Kaede"))
+        val anyContainer: Container<*> = Container<Int>(Integer.valueOf(2233))
+        // Container<*> is also super type of ContainerOut<T>
+        val userContainerOut1: ContainerOut<*> = ContainerOut<User>(User("Kaede"))
+        val guestContainerOut1: ContainerOut<*> = ContainerOut<Guest>(Guest())
+        val intContainerOut: ContainerOut<*> = ContainerOut<Int>(Integer.valueOf(2233))
+        val userContainerOut2: ContainerOut<*> = ContainerOut<Guest>(User("Kaede"))
+        val anyContainerOut: ContainerOut<*> = ContainerOut<Int>(Integer.valueOf(2233))
+        val guestContainerOut2: ContainerOut<*> = ContainerOut<User>(User("Kaede"))
+        // Container<*> is also super type of ContainerIn<T>
+        val userContainerIn1: ContainerIn<*> = ContainerIn<User>(User("Kaede"))
+        val guestContainerIn1: ContainerIn<*> = ContainerIn<Guest>(Guest())
+        val intContainerIn: ContainerIn<*> = ContainerIn<Int>(Integer.valueOf(2233))
+        val guestContainerIn2: ContainerIn<*> = ContainerIn<User>(User("Kaede"))
+        val guestContainerIn3: ContainerIn<*> = ContainerIn<Any?>()
+        val userContainerIn2: ContainerIn<*> = ContainerIn<Guest>(User("Kaede"))
+        val anyContainerIn: ContainerIn<*> = ContainerIn<Int>(Integer.valueOf(2233))
+
+        /**
+         * 2. Star of invariant
+         * Foo<*> is equivalent to Foo<out TUpper> for reading values and to Foo<in Nothing> for writing values.
+         */
+        val starOfInvariant: Container<*> = Container<User>(User("Kaede"))
+        val any1: Any? = starOfInvariant.get()
+
+        open class Foo<T : User>(var value: Any? = null) {
+            open fun get(): T = value as T
+            open fun set(t: T) {
+                value = t
+            }
+        }
+
+        val starOfInvariantBound: Foo<*> = Foo<User>(User("Kaede"))
+        val get1: User = starOfInvariantBound.get()
+        // error
+        // Out-projected type 'Foo<*>' prohibits the use of 'fun set(t: T): Unit'
+        // starOfInvariantBound.set(User("Akatsuki"))
+
+        /**
+         * 3. Star of covariant
+         * Foo<*> is equivalent to Foo<out Any?>
+         * Foo<*> is equivalent to Foo<out TUpper>. It means that when the T is unknown you can safely read values of TUpper from Foo<*>.
+         */
+        val starOfCovariant: ContainerOut<*> = ContainerOut<User>(User("Kaede"))
+        val any2: Any? = starOfCovariant.get()
+
+        open class FooOut<out T : User>(var value: Any? = null) {
+            fun get(): T = value as T
+        }
+
+        val starOfCovariantBound: FooOut<*> = FooOut<User>(User("Kaede"))
+        val get2: User = starOfCovariantBound.get()
+
+        /**
+         * 4. Star of contravariant
+         * Foo<*> is equivalent to Foo<in Nothing>. It means there is nothing you can write to Foo<*> in a safe way when T is unknown.
+         */
+        open class FooIn<in T : User>(var value: Any? = null) {
+            fun set(t: T) {
+                value = t
+            }
+        }
+
+        val starOfContravariantBound: FooIn<*> = FooIn<User>(User("Kaede"))
+        // error
+        // Out-projected type 'FooIn<*>' prohibits the use of 'fun set(t: T): Unit'
+        // starOfContravariantBound.set(User("Akatsuki"))
     }
 }
 
