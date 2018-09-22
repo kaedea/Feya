@@ -919,7 +919,13 @@ class KtGenericSubtypingTest {
     open class User()
     open class Guest : User()
 
-
+    open class Container<T>(var value: Any? = null) {
+        open fun get(): T = value as T
+        open fun set(t: T) {
+            value = t
+        }
+    }
+    
     @Test
     fun functions() {
         todo {}
@@ -933,8 +939,6 @@ class KtGenericSubtypingTest {
      */
     @Test
     fun upperBound() {
-        open class Container<T : User>(var value: Any? = null) {}
-
         /** assign **/
         val fatherContainer1: Container<User> = Container<User>(User())
         // error
@@ -1002,57 +1006,107 @@ class KtGenericSubtypingTest {
         //     abstract override fun foo(): Container<User>
         // }
 
-        // error, <T2 : User> is not subtype of <T1 : User>, when Type Parameter is not reified.
+        // error
+        // Container<T2 : User> is not subtype of Container<T1 : User>, when Type Parameter is not reified.
         // abstract class ExGenericClass11<T1 : User, T2 : User>: GenericClass<T1>() {
         //     abstract override fun foo() : Container<T2>
         // }
     }
 
+    /**
+     * For Generic<out T>, B --> A
+     * (B --> A : B is subtype of A)
+     *
+     * - Generic<B> --> Generic<A>
+     * - Generic<T> --> Generic<out T>
+     * - Generic<B> --> Generic<out B>
+     * - Generic<B> --> Generic<out B> --> Generic<out A>
+     * - Generic<B> --> Generic<A>     --> Generic<out A>
+     * - Generic<A> !-> Generic<out B>
+     */
     @Test
-    fun projections() {
-        open class Container<T>(var value: Any? = null) {
-            open fun get(): T = value as T
-            open fun set(t: T) {
-                value = t
-            }
-        }
-
-        open abstract class GenericClass<T : User> {
+    fun outProjection() {
+        open abstract class GenericClass<T> {
             abstract fun foo() : Container<out T>
         }
 
-        abstract class ExGenericClass1<T : User> : GenericClass<T>() {
+        // Container<T> --> Container<out T>
+        abstract class ExGenericClass1<T> : GenericClass<T>() {
             abstract override fun foo() : Container<T>
         }
-        abstract class ExGenericClass2<T : User> : GenericClass<T>() {
+        // Container<out T> --> Container<out T>
+        abstract class ExGenericClass2<T> : GenericClass<T>() {
             abstract override fun foo() : Container<out T>
         }
+        // Container<out User> --> Container<out User>
         abstract class ExGenericClass3 : GenericClass<User>() {
             abstract override fun foo() : Container<out User>
         }
+        // Container<out Guest> --> Container<out User>
         abstract class ExGenericClass4 : GenericClass<User>() {
             abstract override fun foo() : Container<out Guest>
         }
+        // Container<out Guest> --> Container<out User>
+        abstract class ExGenericClass5 : ExGenericClass3() {
+            abstract override fun foo() : Container<out Guest>
+        }
+        // Container<User> --> Container<out User>
+        abstract class ExGenericClass6 : ExGenericClass3() {
+            abstract override fun foo() : Container<User>
+        }
+        // error
+        // Container<User> !-> Container<out Guest>
+        // abstract class ExGenericClass7 : ExGenericClass4() {
+        //     abstract override fun foo() : Container<User>
+        // }
+    }
 
-        abstract class ExGenericClass5 : ExGenericClass4() {
-            abstract override fun foo() : Container<Guest>
+    /**
+     * For Generic<in T>, B --> A
+     * (B --> A : B is subtype of A)
+     *
+     * - Generic<A> --> Generic<B>
+     * - Generic<T> --> Generic<in T>
+     * - Generic<A> --> Generic<in A>
+     * - Generic<A> --> Generic<in A> --> Generic<in B>
+     * - Generic<A> --> Generic<B>    --> Generic<in B>
+     * - Generic<B> !-> Generic<in A>
+     */
+    @Test
+    fun inProjection() {
+        open abstract class GenericClass<T> {
+            abstract fun foo() : Container<in T>
         }
 
-
-
-
-
-        fun <T : User> foo1(container: Container<out T>) {}
-        foo1<User>(Container<User>(User()))
-        foo1<User>(Container<User>(Guest()))
-        foo1<Guest>(Container<Guest>(Guest()))
-        foo1<Guest>(Container<Guest>(User()))
-
-        fun <T : User> foo2(container: Container<in T>) {}
-        foo2<User>(Container<User>(User()))
-        foo2<User>(Container<User>(Guest()))
-        foo2<Guest>(Container<Guest>(Guest()))
-        foo2<Guest>(Container<Guest>(User()))
+        // Container<T> --> Container<in T>
+        abstract class ExGenericClass1<T> : GenericClass<T>() {
+            abstract override fun foo() : Container<T>
+        }
+        // Container<in T> --> Container<in T>
+        abstract class ExGenericClass2<T> : GenericClass<T>() {
+            abstract override fun foo() : Container<in T>
+        }
+        // Container<in Guest> --> Container<in Guest>
+        abstract class ExGenericClass3 : GenericClass<Guest>() {
+            abstract override fun foo() : Container<in Guest>
+        }
+        // Container<in User> --> Container<in Guest>
+        abstract class ExGenericClass4 : GenericClass<Guest>() {
+            abstract override fun foo() : Container<in User>
+        }
+        // Container<User> --> Container<in Guest>
+        abstract class ExGenericClass5 : ExGenericClass3() {
+            abstract override fun foo() : Container<User>
+        }
+        // Container<Guest> --> Container<in Guest>
+        abstract class ExGenericClass6 : ExGenericClass3() {
+            abstract override fun foo() : Container<Guest>
+        }
+        // error
+        // Container<Guest> !-> Container<in User>
+        // abstract class ExGenericClass7 : ExGenericClass4() {
+        //     abstract override fun foo() : Container<Guest>
+        // }
     }
 }
 
