@@ -925,7 +925,7 @@ class KtGenericSubtypingTest {
             value = t
         }
     }
-    
+
     @Test
     fun functions() {
         todo {}
@@ -1059,6 +1059,14 @@ class KtGenericSubtypingTest {
         // abstract class ExGenericClass7 : ExGenericClass4() {
         //     abstract override fun foo() : Container<User>
         // }
+
+
+        fun foo(): Array<Guest> {
+            return arrayOf<Guest>()
+        }
+        // Array<Guest> --> Array<out Guest> --> Array<out User>
+        val get1: Array<out Guest> = foo()
+        val get2: Array<out User> = get1
     }
 
     /**
@@ -1107,6 +1115,13 @@ class KtGenericSubtypingTest {
         // abstract class ExGenericClass7 : ExGenericClass4() {
         //     abstract override fun foo() : Container<Guest>
         // }
+
+        fun foo(): Array<User> {
+            return arrayOf<User>()
+        }
+        // Array<User> --> Array<in User> --> Array<in Guest>
+        val get1: Array<in User> = foo()
+        val get2: Array<in Guest> = get1
     }
 }
 
