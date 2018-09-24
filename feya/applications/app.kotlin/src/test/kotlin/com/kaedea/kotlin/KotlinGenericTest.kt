@@ -148,8 +148,47 @@ class KtGenericBasicTest {
 
     @Test
     fun typeParameterLiteral() {
-        // What do I mean by writing 'type parameter literal' here?
-        todo {}
+        // Generic function
+        fun <T> funcGerneric() {}
+
+        // Generic function with upper bound
+        fun <T : User> funcGenericBound() {}
+
+        // Generic class
+        open class GenericClass<T>
+
+        // Generic class with immediate type parameter
+        open class ExGenericClass<R> : GenericClass<R>()
+
+        // Generic class with upper bound
+        open class GenericClassBound<T : User>
+
+        // Generic class with reified type argument
+        open class GenericClassReified : GenericClass<User>()
+
+        // Generic class with covariant type parameter
+        open class GenericClassCovariant<out T>
+
+        // Generic class with contravariant type parameter
+        open class GenericClassContravariant<in T>
+
+        // Generic class with bounded covariant type parameter
+        open class GenericClassCovariantBound<out T : User>
+
+        // Generic class with bounded contravariant type parameter
+        open class GenericClassContravariantBound<in T : User>
+
+        // Generic class with type parameter of out projection as parameter of a generic function
+        fun <T> funcOutProjection(g: GenericClass<out T>) {}
+
+        // Generic class with type parameter of in projection as parameter of a generic function
+        fun <T> funcInProjection(g: GenericClass<in T>) {}
+
+        // Generic class with reified type argument of out projection as parameter of a generic function
+        fun funcOutProjectionReified(g: GenericClass<out User>) {}
+
+        // Generic class with reified type argument of in projection as parameter of a generic function
+        fun funcInProjectionReified(g: GenericClass<in User>) {}
     }
 
     @Test
