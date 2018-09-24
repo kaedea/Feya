@@ -952,11 +952,26 @@ class KtGenericFuncTest {
     }
 }
 
+
+/**
+ * When Type Parameter is not reified(type info unknown), generic classes with different type parameters
+ * are not subtype of each other. e.g. Generic<R> is not subtype Generic<T>, vice versa.
+ *
+ * Only when Type Parameter is presented with exact Type Argument, it can have subtypes. i.e. variances.
+ *
+ * In particular, Type Parameter is subtype of its projections.
+ * e.g. Generic<T> is subtype of Generic<out T> & Generic<in T>
+ * @see [outProjection], [inProjection]
+ */
 @RunWith(JUnit4::class)
 class KtGenericSubtypingTest {
 
-    open class User()
-    open class Guest : User()
+    open class User() {
+        open fun father() {}
+    }
+    open class Guest : User() {
+        open fun child() {}
+    }
 
     open class Container<T>(var value: Any? = null) {
         open fun get(): T = value as T
@@ -968,9 +983,7 @@ class KtGenericSubtypingTest {
     /**
      * For Invariant<T>, Invariant<Child> is not subtype of Invariant<Father>, vice versa.
      * For Invariant<T : Bound>, it is the same.
-     * When Type Parameter is not reified, generic classes with different type parameters are not
-     * subtype of each other.
-     */
+    */
     @Test
     fun upperBound() {
         /** assign **/
@@ -1063,6 +1076,8 @@ class KtGenericSubtypingTest {
      * - Generic<B> --> Generic<A>     --> Generic<out A>
      * - Generic<A> !-> Generic<out B>
      * - Generic<out B> !-> Generic<A>, Invariant
+     *
+     * Besides, Reference of Generic<out A> can access apis of A.
      */
     @Test
     fun outProjection() {
@@ -1116,6 +1131,18 @@ class KtGenericSubtypingTest {
         // Array<Guest> --> Array<out Guest> --> Array<out User>
         val get1: Array<out Guest> = foo()
         val get2: Array<out User> = get1
+
+
+        // Reference of Array<out Guest>
+        // Can access apis of Guest
+        get1.forEach {
+            it.father()
+            it.child()
+        }
+        // Reference of Array<out User>
+        get2.forEach {
+            it.father()
+        }
     }
 
     /**
@@ -1128,6 +1155,8 @@ class KtGenericSubtypingTest {
      * - Generic<A> --> Generic<in A> --> Generic<in B>
      * - Generic<A> --> Generic<B>    --> Generic<in B>
      * - Generic<B> !-> Generic<in A>
+     *
+     * Besides, Reference of Generic<in A> can NOT access apis of A.
      */
     @Test
     fun inProjection() {
@@ -1176,6 +1205,15 @@ class KtGenericSubtypingTest {
         // Array<User> --> Array<in User> --> Array<in Guest>
         val get1: Array<in User> = foo()
         val get2: Array<in Guest> = get1
+
+        // Reference of Array<in Guest>
+        // Can only access apis of Any?
+        get1.forEach {
+            val any: Any? = it
+        }
+        get2.forEach {
+            val any: Any? = it
+        }
     }
 
     /**
